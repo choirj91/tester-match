@@ -5,7 +5,6 @@ const ServerEnv = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   BREVO_API_KEY: z.string().min(1).optional(),
   TOSS_SECRET_KEY: z.string().min(1).optional(),
-  AUTH_SECRET: z.string().min(1).optional(),
 });
 
 const ClientEnv = z.object({

@@ -7,11 +7,13 @@
 
 ## 즉시 (사용자 액션)
 
-- [ ] `cd 03-output/app && pnpm install` — lockfile 생성 + 의존성 설치
-- [ ] `pnpm dev` → http://localhost:3000 에서 랜딩 렌더 확인
-- [ ] GitHub Private 레포 생성 → `git push -u origin main` → CI 동작 확인
-- [ ] Supabase 프로젝트 생성 → URL/키 → `03-output/app/.env.local` 채우기
-- [ ] `supabase link --project-ref <ref>` → `supabase db push` (12개 테이블 적용)
+- [x] ~~pnpm install + dev 검증~~ (2026-05-04 완료)
+- [x] ~~Supabase 프로젝트 연결 + 12 테이블 적용~~ (2026-05-04 완료)
+- [x] ~~Waitlist API ↔ Supabase end-to-end 검증~~ (2026-05-04 완료)
+- [ ] **Google OAuth 자격증명 등록** — [03-output/infra/supabase-auth-setup.md](03-output/infra/supabase-auth-setup.md) 1~3단계
+- [ ] **마이그레이션 #2 적용** — `cd 03-output && supabase db push` (`auth_user_id` + 트리거)
+- [ ] `/auth/login` Google 로그인 검증 → `public.users` 자동 생성 확인
+- [ ] GitHub Private 레포 푸시는 완료. CI 그린 확인 (Actions 탭)
 - [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지, 5분 ping)
 
 ## Discovery 병행 (Week 1 잔여)

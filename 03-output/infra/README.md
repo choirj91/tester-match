@@ -5,6 +5,7 @@
 | 파일 | 내용 |
 |---|---|
 | [cloudflare-pages.md](cloudflare-pages.md) | Cloudflare Pages 배포 절차 + 환경 변수 + 호환성 주의 |
+| [supabase-auth-setup.md](supabase-auth-setup.md) | Google OAuth Client 생성 → Supabase Provider 활성화 → 검증 절차 |
 
 ## 추가 예정
 
