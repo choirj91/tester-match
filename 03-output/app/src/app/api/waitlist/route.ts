@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "edge";
 
 const Body = z.object({
   email: z.string().email().max(254),
 });
+
+async function hashIp(ip: string | null): Promise<string | null> {
+  if (!ip) return null;
+  const data = new TextEncoder().encode(ip);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
 export async function POST(req: Request) {
   let payload: z.infer<typeof Body>;
@@ -18,9 +28,29 @@ export async function POST(req: Request) {
     );
   }
 
-  // TODO(week-2): Supabase `waitlist_signups` 테이블에 INSERT.
-  // 현재는 로그만 남기고 성공 응답. PII는 프로덕션에서 마스킹 필수.
-  console.log("[waitlist] signup", { email: payload.email, ts: new Date().toISOString() });
+  const ip =
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    null;
+  const userAgent = req.headers.get("user-agent");
+  const referer = req.headers.get("referer");
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase.from("waitlist_signups").insert({
+    email: payload.email,
+    source: referer,
+    user_agent: userAgent,
+    ip_hash: await hashIp(ip),
+  });
+
+  // 23505 = unique_violation. 동일 이메일 재등록은 사용자에게 성공으로 응답.
+  if (error && error.code !== "23505") {
+    console.error("[waitlist] insert failed", { code: error.code, message: error.message });
+    return NextResponse.json(
+      { ok: false, message: "잠시 후 다시 시도해주세요." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }
