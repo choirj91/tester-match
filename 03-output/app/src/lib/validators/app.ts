@@ -33,3 +33,9 @@ export const AppCreateSchema = z.object({
 });
 
 export type AppCreateInput = z.infer<typeof AppCreateSchema>;
+
+export const AppUpdateSchema = AppCreateSchema.partial().extend({
+  status: z.enum(["matching", "paused", "completed"]).optional(),
+});
+
+export type AppUpdateInput = z.infer<typeof AppUpdateSchema>;

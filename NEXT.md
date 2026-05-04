@@ -11,7 +11,7 @@
 - [x] ~~Supabase 프로젝트 연결 + 12 테이블 적용~~ (2026-05-04 완료)
 - [x] ~~Waitlist API ↔ Supabase end-to-end 검증~~ (2026-05-04 완료)
 - [ ] **Google OAuth 자격증명 등록** — [03-output/infra/supabase-auth-setup.md](03-output/infra/supabase-auth-setup.md) 1~3단계
-- [ ] **마이그레이션 #4 적용** — `cd 03-output && supabase db push` (auth_link + RLS 정책 + apps 폼 필드)
+- [ ] **마이그레이션 #5 적용** — `cd 03-output && supabase db push` (게시판 posts/comments + users_public_profile view)
 - [ ] `/auth/login` Google 로그인 검증 → `public.users` 자동 생성 확인
 - [ ] GitHub Private 레포 푸시는 완료. CI 그린 확인 (Actions 탭)
 - [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지, 5분 ping)

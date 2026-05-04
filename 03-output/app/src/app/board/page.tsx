@@ -1,0 +1,119 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { SiteHeader } from "@/components/site-header";
+import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { POST_CATEGORIES } from "@/lib/validators/post";
+
+export const metadata = { title: "게시판" };
+
+type Props = { searchParams: Promise<{ category?: string }> };
+
+export default async function BoardPage({ searchParams }: Props) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/auth/login?next=/board");
+
+  const { category } = await searchParams;
+  const activeCategory =
+    category && (POST_CATEGORIES as readonly string[]).includes(category) ? category : null;
+
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from("posts")
+    .select(
+      "id, category, title, view_count, created_at, author_user_id, users_public_profile!inner(nickname)",
+    )
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (activeCategory) query = query.eq("category", activeCategory);
+
+  const { data: posts } = await query;
+
+  return (
+    <>
+      <SiteHeader user={user} />
+      <main className="mx-auto max-w-4xl px-6 py-12">
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-neutral-900">게시판</h1>
+            <p className="mt-1 text-sm text-neutral-600">
+              개발자끼리 정보를 나누고 매칭에 대해 이야기합니다.
+            </p>
+          </div>
+          <Link
+            href="/board/new"
+            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+          >
+            + 글 쓰기
+          </Link>
+        </header>
+
+        <nav className="mt-6 flex flex-wrap items-center gap-2">
+          <FilterChip href="/board" label="전체" active={!activeCategory} />
+          {POST_CATEGORIES.map((c) => (
+            <FilterChip
+              key={c}
+              href={`/board?category=${encodeURIComponent(c)}`}
+              label={c}
+              active={activeCategory === c}
+            />
+          ))}
+        </nav>
+
+        <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          {posts && posts.length > 0 ? (
+            <ul className="divide-y divide-neutral-100">
+              {posts.map((post) => {
+                const author = Array.isArray(post.users_public_profile)
+                  ? post.users_public_profile[0]
+                  : post.users_public_profile;
+                return (
+                  <li key={post.id}>
+                    <Link
+                      href={`/board/${post.id}`}
+                      className="flex flex-col gap-1 px-5 py-4 transition hover:bg-neutral-50 sm:flex-row sm:items-center sm:gap-4"
+                    >
+                      <span className="shrink-0 rounded-full bg-trust-50 px-2 py-0.5 text-xs font-semibold text-trust-700">
+                        {post.category}
+                      </span>
+                      <span className="flex-1 truncate text-sm font-medium text-neutral-900">
+                        {post.title}
+                      </span>
+                      <span className="shrink-0 text-xs text-neutral-500">
+                        {author?.nickname ?? "—"}
+                        {" · "}
+                        {new Date(post.created_at).toLocaleDateString("ko-KR")}
+                        {" · "}
+                        조회 <span className="tabular">{post.view_count}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="px-6 py-12 text-center">
+              <p className="text-sm text-neutral-600">아직 글이 없습니다. 첫 글을 작성해보세요.</p>
+            </div>
+          )}
+        </div>
+      </main>
+    </>
+  );
+}
+
+function FilterChip({ href, label, active }: { href: string; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+        active
+          ? "bg-trust-600 text-white"
+          : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
