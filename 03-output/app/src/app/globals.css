@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans:
+    "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", "D2Coding", ui-monospace, monospace;
+
+  --color-trust-50: #eff6ff;
+  --color-trust-500: #3b82f6;
+  --color-trust-600: #2563eb;
+  --color-trust-700: #1d4ed8;
+  --color-trust-800: #1e40af;
+
+  --color-spark-50: #fff1ee;
+  --color-spark-500: #ff6b5b;
+  --color-spark-600: #e85546;
+
+  --color-mint-500: #10b981;
+  --color-amber-500: #f59e0b;
+  --color-crimson-500: #ef4444;
+  --color-sky-500: #0ea5e9;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+}
+
+:where(.tabular) {
+  font-variant-numeric: tabular-nums;
+}

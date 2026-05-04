@@ -1,0 +1,59 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Office lock files
+~$*
+*.tmp
+.~lock.*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code (local user settings)
+.claude/settings.local.json
+
+# Node / Next.js (03-output/app/)
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# Env / Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Supabase
+.supabase/
+supabase/.temp/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Coverage / Test
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Local artifacts
+tmp/
+temp/
+.cache/
