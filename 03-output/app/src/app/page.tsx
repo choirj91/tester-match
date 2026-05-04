@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { getCurrentUser } from "@/lib/auth";
 
 const STEPS = [
   {
@@ -18,18 +20,40 @@ const STEPS = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+
   return (
     <main className="min-h-screen">
       <header className="border-b border-neutral-200">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <span className="text-lg font-bold tracking-tight text-trust-600">Tester Match</span>
-          <a
-            href="#waitlist"
-            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white hover:bg-trust-700"
-          >
-            사전 등록
-          </a>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="hidden text-sm text-neutral-500 sm:inline">{user.nickname}</span>
+              <Link
+                href="/apps"
+                className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white hover:bg-trust-700"
+              >
+                내 앱 →
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link
+                href="/auth/login"
+                className="text-sm font-medium text-neutral-700 hover:text-neutral-900"
+              >
+                로그인
+              </Link>
+              <a
+                href="#waitlist"
+                className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white hover:bg-trust-700"
+              >
+                사전 등록
+              </a>
+            </div>
+          )}
         </div>
       </header>
 
