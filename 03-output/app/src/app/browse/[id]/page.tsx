@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { OptInButton } from "./opt-in-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -27,6 +28,15 @@ export default async function BrowseDetailPage({ params }: Props) {
     .maybeSingle();
 
   if (!app) notFound();
+
+  // 본인이 이 앱에 이미 active 매칭으로 참여 중인지
+  const { data: existingMatch } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("app_id", appId)
+    .eq("tester_user_id", user.id)
+    .in("status", ["pending", "active"])
+    .maybeSingle();
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
@@ -64,20 +74,28 @@ export default async function BrowseDetailPage({ params }: Props) {
         </dl>
 
         <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
+          <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
           <p className="mt-1 text-sm text-neutral-600">
-            본인 기기에서 아래 링크 중 하나로 Closed Testing 에 참여하세요. 참여 후 14일 유지가
-            중요합니다.
+            참여하면 14일 카운트가 시작됩니다. 본인 디바이스에서 아래 링크로 Closed Testing 에 가입하세요.
           </p>
 
           <div className="mt-5 space-y-3">
             <LinkRow label="안드로이드" url={app.store_invite_url} />
             <LinkRow label="웹 (브라우저)" url={app.web_invite_url} />
           </div>
+
+          <div className="mt-6">
+            <OptInButton
+              appId={app.id}
+              alreadyJoined={!!existingMatch}
+              isOwn={app.owner_user_id === user.id}
+              isFull={app.required_testers <= 0}
+            />
+          </div>
         </section>
 
         <p className="mt-6 text-xs text-neutral-500">
-          * 매칭 시스템은 베타 단계입니다. 자동 옵트인은 정식 출시 후 활성화됩니다.
+          * 옵트아웃은 언제든 가능하지만 5일 이상 미체크인 시 페널티가 부과됩니다 (F-CHK-06, 추후 활성).
         </p>
       </main>
     </>
