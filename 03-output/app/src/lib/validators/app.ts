@@ -1,0 +1,41 @@
+import { z } from "zod";
+
+const playStoreUrl = z
+  .string()
+  .url({ message: "올바른 URL 형식이 아닙니다." })
+  .refine((v) => /play\.google\.com/i.test(v), {
+    message: "play.google.com 도메인이 포함된 링크여야 합니다.",
+  });
+
+export const AppCreateSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(1, "닉네임을 입력해주세요.")
+    .max(32, "닉네임은 32자 이하로 입력해주세요."),
+  name: z
+    .string()
+    .trim()
+    .min(1, "앱 이름을 입력해주세요.")
+    .max(100, "앱 이름은 100자 이하로 입력해주세요."),
+  store_invite_url: playStoreUrl,
+  web_invite_url: playStoreUrl,
+  required_testers: z.coerce
+    .number()
+    .int({ message: "정수만 입력해주세요." })
+    .min(1, "1명 이상이어야 합니다.")
+    .max(12, "12명 이하로 입력해주세요."),
+  short_description: z
+    .string()
+    .trim()
+    .min(1, "앱 설명을 입력해주세요.")
+    .max(140, "앱 설명은 140자 이하로 입력해주세요."),
+});
+
+export type AppCreateInput = z.infer<typeof AppCreateSchema>;
+
+export const AppUpdateSchema = AppCreateSchema.partial().extend({
+  status: z.enum(["matching", "paused", "completed"]).optional(),
+});
+
+export type AppUpdateInput = z.infer<typeof AppUpdateSchema>;
