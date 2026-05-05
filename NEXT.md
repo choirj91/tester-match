@@ -1,7 +1,7 @@
 # NEXT — 다음 액션
 
-> **현재 위치**: 12주 로드맵 **Week 2** (코드 스켈레톤 완료, 외부 서비스 연결 대기)
-> **마지막 업데이트**: 2026-05-04
+> **현재 위치**: 12주 로드맵 **Week 5** (핵심 기능 완료, 관리자 도구 운영 중)
+> **마지막 업데이트**: 2026-05-05
 
 ---
 
@@ -9,12 +9,16 @@
 
 - [x] ~~pnpm install + dev 검증~~ (2026-05-04 완료)
 - [x] ~~Supabase 프로젝트 연결 + 12 테이블 적용~~ (2026-05-04 완료)
-- [x] ~~Waitlist API ↔ Supabase end-to-end 검증~~ (2026-05-04 완료)
-- [ ] **Google OAuth 자격증명 등록** — [03-output/infra/supabase-auth-setup.md](03-output/infra/supabase-auth-setup.md) 1~3단계
-- [ ] **마이그레이션 #5 적용** — `cd 03-output && supabase db push` (게시판 posts/comments + users_public_profile view)
-- [ ] PR #1 머지 후 PR #2 (`feat/matching`) 생성 — 매칭 엔진 v1 (자율 옵트인)
-- [ ] `/auth/login` Google 로그인 검증 → `public.users` 자동 생성 확인
-- [ ] GitHub Private 레포 푸시는 완료. CI 그린 확인 (Actions 탭)
+- [x] ~~Google OAuth 자격증명 등록~~ (2026-05-04 완료)
+- [x] ~~매칭 엔진 v1~~ (2026-05-05 완료)
+- [x] ~~14일 체크인 + 크레딧~~ (2026-05-05 완료)
+- [x] ~~앱 상태 관리 (matching/reviewing/launched)~~ (2026-05-05 완료)
+- [x] ~~게시판~~ (2026-05-05 완료)
+- [x] ~~관리자 일괄 등록~~ (2026-05-05 완료)
+- [x] ~~맞리뷰 + 신뢰도 헤더~~ (2026-05-05 완료)
+- [ ] **`supabase db push`** — feat/admin-bulk-import 브랜치 마이그레이션 적용 (admin role 트리거 fix + store_invite_url nullable)
+- [ ] **feat/admin-bulk-import PR** 생성 + 머지
+- [ ] **관리자 role 부여** — `supabase db push` 후 재시도: `update public.users set role='admin' where email='choirj91@gmail.com';`
 - [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지, 5분 ping)
 
 ## Discovery 병행 (Week 1 잔여)
