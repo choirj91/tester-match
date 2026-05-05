@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata = { title: "내 앱" };
@@ -18,7 +18,7 @@ export default async function AppsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/apps");
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data: apps } = await supabase
     .from("apps")
     .select("id, name, status, required_testers, short_description, created_at")

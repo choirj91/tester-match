@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AppUpdateSchema } from "@/lib/validators/app";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "edge";
@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 ID" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("apps")
     .select(
@@ -54,7 +54,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   // 닉네임 변경은 users 테이블 직접 갱신 (apps 컬럼 아님)
   const { nickname, ...appPatch } = payload;
@@ -92,7 +92,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   }
 
   // soft delete
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { error } = await supabase
     .from("apps")
     .update({ status: "deleted" })

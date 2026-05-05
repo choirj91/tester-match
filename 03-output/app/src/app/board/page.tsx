@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { POST_CATEGORIES } from "@/lib/validators/post";
 
 export const metadata = { title: "게시판" };
@@ -17,7 +17,7 @@ export default async function BoardPage({ searchParams }: Props) {
   const activeCategory =
     category && (POST_CATEGORIES as readonly string[]).includes(category) ? category : null;
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("posts")
     .select(

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -17,7 +17,7 @@ export default async function BrowseDetailPage({ params }: Props) {
   const appId = Number(id);
   if (!Number.isInteger(appId)) notFound();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data: app } = await supabase
     .from("apps")
     .select(

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { EditPostForm } from "./edit-post-form";
 
 type Props = { params: Promise<{ id: string }> };
@@ -17,7 +17,7 @@ export default async function EditPostPage({ params }: Props) {
   const postId = Number(id);
   if (!Number.isInteger(postId)) notFound();
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data: post } = await supabase
     .from("posts")
     .select("id, category, title, body, author_user_id")

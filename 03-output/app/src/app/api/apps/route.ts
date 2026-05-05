@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { AppCreateSchema } from "@/lib/validators/app";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "edge";
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   // 닉네임 변경 시 users 갱신 (보호 트리거가 role/trust_score/status 는 차단).
   if (payload.nickname !== user.nickname) {

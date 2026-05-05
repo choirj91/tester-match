@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { POST_CATEGORIES, PostCreateSchema } from "@/lib/validators/post";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "edge";
@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   const category = url.searchParams.get("category");
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 30), 100);
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   let query = supabase
     .from("posts")
     .select(
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("posts")
     .insert({

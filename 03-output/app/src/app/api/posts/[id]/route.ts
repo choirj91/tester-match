@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { PostUpdateSchema } from "@/lib/validators/post";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "edge";
@@ -15,7 +15,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 ID" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("posts")
     .select(
@@ -59,7 +59,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { error } = await supabase
     .from("posts")
     .update(payload)
@@ -84,7 +84,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 ID" }, { status: 400 });
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { error } = await supabase
     .from("posts")
     .update({ deleted_at: new Date().toISOString() })

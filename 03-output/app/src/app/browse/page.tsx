@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "매칭 가능 앱" };
 
@@ -10,7 +10,7 @@ export default async function BrowsePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/browse");
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
   const { data: apps } = await supabase
     .from("apps")
     .select(
