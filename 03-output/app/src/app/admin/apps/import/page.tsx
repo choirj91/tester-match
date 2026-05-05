@@ -28,18 +28,20 @@ export default async function AdminAppImportPage() {
     "email": "owner@example.com",
     "nickname": "닉네임 (선택)",
     "app_name": "앱 이름",
-    "store_invite_url": "https://play.google.com/apps/test/...",
-    "web_invite_url": "https://play.google.com/apps/testing/...",
+    "store_invite_url": "https://play.google.com/apps/test/... (선택)",
+    "web_invite_url": "https://play.google.com/apps/testing/... (선택)",
     "required_testers": 12,
     "short_description": "한 줄 설명",
     "status": "matching"
   }
 ]`}</pre>
           <ul className="mt-3 space-y-1 text-xs text-neutral-600">
-            <li>· <strong>required_testers</strong> 기본 12, 1~12 범위</li>
+            <li>· <strong>store_invite_url / web_invite_url</strong> 선택. 없으면 생략 가능 (나중에 앱 소유자가 등록)</li>
+            <li>· <strong>required_testers</strong> 기본 12, 0~100 범위</li>
             <li>· <strong>status</strong> 기본 &quot;matching&quot;. 다른 값: reviewing / launched / paused</li>
             <li>· <strong>nickname</strong> 생략 시 이메일 prefix 가 사용됨</li>
-            <li>· 한 번에 최대 200건</li>
+            <li>· <strong>short_description</strong> 이 비어 있으면 기본 문구가 사용됨</li>
+            <li>· 200건 단위로 나눠 순차 등록됩니다</li>
           </ul>
         </section>
 

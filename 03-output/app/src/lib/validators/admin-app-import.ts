@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const DEFAULT_IMPORT_SHORT_DESCRIPTION = "앱 테스트 참여자를 모집합니다.";
+
 const playStoreUrl = z
   .string()
   .url({ message: "올바른 URL 형식이 아닙니다." })
@@ -9,15 +11,31 @@ const playStoreUrl = z
 
 export const AppImportRowSchema = z.object({
   email: z.string().email().max(254),
-  nickname: z.string().trim().min(1).max(32).optional(),
+  nickname: z.preprocess(
+    (v) => (v == null || (typeof v === "string" && v.trim() === "") ? undefined : v),
+    z.string().trim().min(1).max(32).optional(),
+  ),
   app_name: z.string().trim().min(1).max(100),
-  store_invite_url: playStoreUrl,
-  web_invite_url: playStoreUrl,
-  required_testers: z.coerce.number().int().min(1).max(12).default(12),
-  short_description: z.string().trim().min(1).max(140),
-  status: z
-    .enum(["matching", "reviewing", "launched", "paused"])
-    .default("matching"),
+  store_invite_url: z.preprocess(
+    (v) => (v == null || (typeof v === "string" && v.trim() === "") ? undefined : v),
+    playStoreUrl.optional(),
+  ),
+  web_invite_url: z.preprocess(
+    (v) => (v == null || (typeof v === "string" && v.trim() === "") ? undefined : v),
+    playStoreUrl.optional(),
+  ),
+  required_testers: z.preprocess(
+    (v) => (v == null || v === "" ? undefined : v),
+    z.coerce.number().int().min(0).max(100).default(12),
+  ),
+  short_description: z.preprocess(
+    (v) =>
+      v == null || (typeof v === "string" && v.trim() === "")
+        ? DEFAULT_IMPORT_SHORT_DESCRIPTION
+        : v,
+    z.string().trim().min(1),
+  ),
+  status: z.enum(["matching", "reviewing", "launched", "paused"]).default("matching"),
 });
 
 export const AppImportBatchSchema = z
