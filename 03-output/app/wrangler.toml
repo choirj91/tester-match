@@ -1,0 +1,21 @@
+# Cloudflare Pages — Cron Triggers
+# pages:deploy 후 Cloudflare Dashboard 에서 cron 활성화 또는 wrangler 로 적용.
+
+name = "tester-match"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = [
+  # 매일 KST 20:00 (UTC 11:00) — 일일 체크인 리마인더
+  "0 11 * * *",
+]
+
+# 환경 변수는 Cloudflare Dashboard 에서 설정 (Encrypt 권장):
+#   - RESEND_API_KEY
+#   - RESEND_FROM_EMAIL
+#   - SUPABASE_SECRET_KEY
+#   - CRON_SECRET (cron 엔드포인트 보호용)
+#   - NEXT_PUBLIC_SUPABASE_URL
+#   - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+#   - NEXT_PUBLIC_APP_URL
