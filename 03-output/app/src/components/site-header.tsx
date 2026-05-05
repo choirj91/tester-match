@@ -41,6 +41,15 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         <div className="flex shrink-0 items-center gap-4">
           {user ? (
             <>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="hidden rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600 hover:bg-spark-50/80 sm:inline-flex"
+                  title="관리자"
+                >
+                  관리자
+                </Link>
+              )}
               <Link
                 href="/credits"
                 className="hidden rounded-full bg-trust-50 px-3 py-1 text-xs font-semibold text-trust-700 hover:bg-trust-50/80 sm:inline-flex tabular"
