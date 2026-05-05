@@ -48,7 +48,12 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
               >
                 {formatKrw(user.balance)} ⓒ
               </Link>
-              <span className="hidden text-sm text-neutral-500 sm:inline">{user.nickname}</span>
+              <Link
+                href="/profile"
+                className="hidden text-sm text-neutral-500 hover:text-neutral-900 sm:inline"
+              >
+                {user.nickname}
+              </Link>
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
