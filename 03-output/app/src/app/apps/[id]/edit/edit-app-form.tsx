@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { EDITABLE_APP_STATUSES } from "@/lib/app-status";
 
 type Initial = {
   nickname: string;
@@ -10,7 +11,7 @@ type Initial = {
   store_invite_url: string;
   web_invite_url: string;
   required_testers: number;
-  status: "matching" | "paused" | "completed";
+  status: "matching" | "reviewing" | "launched" | "paused";
 };
 
 const inputClass =
@@ -96,7 +97,7 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         />
       </Field>
 
-      <Field label="현재 남은 테스터 수">
+      <Field label="목표 테스터 수">
         <input
           name="required_testers"
           type="number"
@@ -121,9 +122,11 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
 
       <Field label="상태">
         <select name="status" defaultValue={initial.status} className={inputClass}>
-          <option value="matching">매칭 진행중</option>
-          <option value="paused">일시정지</option>
-          <option value="completed">완료</option>
+          {EDITABLE_APP_STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
         </select>
       </Field>
 

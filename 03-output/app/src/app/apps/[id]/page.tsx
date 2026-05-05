@@ -3,17 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 
 type Props = { params: Promise<{ id: string }> };
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: "대기",
-  matching: "매칭 진행중",
-  completed: "완료",
-  paused: "일시정지",
-  deleted: "삭제됨",
-};
 
 const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
   active: { text: "진행중", tone: "bg-trust-50 text-trust-700" },
@@ -56,6 +49,7 @@ export default async function AppDetailPage({ params }: Props) {
 
   const activeCount = matches?.filter((m) => m.status === "active").length ?? 0;
   const completedCount = matches?.filter((m) => m.status === "completed").length ?? 0;
+  const statusLabel = APP_STATUS_LABEL[(app.status as AppStatus) ?? "draft"];
 
   return (
     <>
@@ -68,9 +62,11 @@ export default async function AppDetailPage({ params }: Props) {
         <div className="mt-4 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900">{app.name}</h1>
-            <p className="mt-2 text-sm text-neutral-600">
-              {STATUS_LABEL[app.status] ?? app.status}
-            </p>
+            <span
+              className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusLabel.tone}`}
+            >
+              {statusLabel.text}
+            </span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Link
@@ -88,9 +84,9 @@ export default async function AppDetailPage({ params }: Props) {
         </p>
 
         <dl className="mt-8 grid gap-3 sm:grid-cols-3">
-          <Stat label="남은 테스터" value={`${app.required_testers}명`} />
-          <Stat label="진행중" value={`${activeCount}명`} />
+          <Stat label="참여중" value={`${activeCount}명`} />
           <Stat label="완주" value={`${completedCount}명`} />
+          <Stat label="목표 인원" value={`${app.required_testers}명`} />
         </dl>
 
         <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
