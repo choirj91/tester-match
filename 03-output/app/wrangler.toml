@@ -7,8 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 
 [triggers]
 crons = [
-  # 매일 KST 20:00 (UTC 11:00) — 일일 체크인 리마인더
+  # 매일 KST 20:00 (UTC 11:00) — 일일 체크인 리마인더 (F-CHK-01)
   "0 11 * * *",
+  # 매일 KST 21:00 (UTC 12:00) — 미체크인 페널티 sweep (F-CHK-06)
+  "0 12 * * *",
+  # 6시간 간격 — 앱 초대 링크 HEAD 검증 (F-APP-02)
+  "0 */6 * * *",
 ]
 
 # 환경 변수는 Cloudflare Dashboard 에서 설정 (Encrypt 권장):
