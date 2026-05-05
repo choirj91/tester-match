@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
+import { OptInButton } from "./opt-in-button";
+import { AppCommentsSection } from "./comments-section";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -18,19 +21,84 @@ export default async function BrowseDetailPage({ params }: Props) {
   if (!Number.isInteger(appId)) notFound();
 
   const supabase = createSupabaseAdminClient();
-  const { data: app } = await supabase
-    .from("apps")
-    .select(
-      "id, name, short_description, store_invite_url, web_invite_url, required_testers, status, is_boost, created_at, owner_user_id, users_public_profile!inner(nickname, trust_score)",
-    )
-    .eq("id", appId)
-    .maybeSingle();
+
+  const [{ data: app }, { data: existingMatch }, { count: activeCount }, { data: comments }, { data: ownAppsForPromote }] =
+    await Promise.all([
+      supabase
+        .from("apps")
+        .select(
+          "id, name, short_description, store_invite_url, web_invite_url, status, is_boost, created_at, owner_user_id, users_public_profile!inner(nickname, trust_score)",
+        )
+        .eq("id", appId)
+        .maybeSingle(),
+      supabase
+        .from("matches")
+        .select("id")
+        .eq("app_id", appId)
+        .eq("tester_user_id", user.id)
+        .in("status", ["pending", "active"])
+        .maybeSingle(),
+      supabase
+        .from("matches")
+        .select("id", { count: "exact", head: true })
+        .eq("app_id", appId)
+        .eq("status", "active"),
+      supabase
+        .from("app_comments")
+        .select(
+          "id, body, created_at, author_user_id, promoted_app_id, users_public_profile!inner(nickname)",
+        )
+        .eq("app_id", appId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("apps")
+        .select("id, name, status")
+        .eq("owner_user_id", user.id)
+        .in("status", ["matching", "reviewing", "launched"])
+        .neq("id", appId)
+        .order("created_at", { ascending: false }),
+    ]);
 
   if (!app) notFound();
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
     : app.users_public_profile;
+  const isOwn = app.owner_user_id === user.id;
+  const joined = !!existingMatch;
+  const linksRevealed = joined || isOwn;
+  const statusLabel = APP_STATUS_LABEL[(app.status as AppStatus) ?? "matching"];
+
+  // promoted_app_id → 이름 매핑 (한 번에 fetch)
+  const promotedIds = (comments ?? [])
+    .map((c) => c.promoted_app_id)
+    .filter((v): v is number => v != null);
+  const promotedAppMap: Record<number, string> = {};
+  if (promotedIds.length > 0) {
+    const { data: promotedApps } = await supabase
+      .from("apps")
+      .select("id, name")
+      .in("id", promotedIds);
+    for (const p of promotedApps ?? []) {
+      promotedAppMap[p.id] = p.name;
+    }
+  }
+
+  const enrichedComments = (comments ?? []).map((c) => {
+    const author = Array.isArray(c.users_public_profile)
+      ? c.users_public_profile[0]
+      : c.users_public_profile;
+    return {
+      id: c.id,
+      body: c.body,
+      created_at: c.created_at,
+      author_user_id: c.author_user_id,
+      author_nickname: author?.nickname ?? "—",
+      promoted_app_id: c.promoted_app_id,
+      promoted_app_name: c.promoted_app_id ? (promotedAppMap[c.promoted_app_id] ?? null) : null,
+    };
+  });
 
   return (
     <>
@@ -54,41 +122,78 @@ export default async function BrowseDetailPage({ params }: Props) {
         </p>
 
         <dl className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Stat label="남은 테스터" value={`${app.required_testers}명`} />
-          <Stat label="등록자" value={owner?.nickname ?? "—"} />
-          <Stat label="신뢰 점수" value={`${owner?.trust_score ?? 50}`} />
+          <Stat label="참여중" value={`${activeCount ?? 0}명`} />
           <Stat
-            label="등록일"
-            value={new Date(app.created_at).toLocaleDateString("ko-KR")}
+            label="상태"
+            value={statusLabel.text}
+            tone={statusLabel.tone}
           />
+          <Stat label="등록자" value={owner?.nickname ?? "—"} />
+          <Stat label="등록일" value={new Date(app.created_at).toLocaleDateString("ko-KR")} />
         </dl>
 
         <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
-          <p className="mt-1 text-sm text-neutral-600">
-            본인 기기에서 아래 링크 중 하나로 Closed Testing 에 참여하세요. 참여 후 14일 유지가
-            중요합니다.
-          </p>
+          <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
+          {linksRevealed ? (
+            <>
+              <p className="mt-1 text-sm text-neutral-600">
+                {isOwn
+                  ? "본인 앱입니다. 등록한 링크를 확인합니다."
+                  : "참여 후 14일 카운트가 시작됩니다. 본인 디바이스에서 아래 링크로 Closed Testing 에 가입하세요."}
+              </p>
+              <div className="mt-5 space-y-3">
+                <LinkRow label="안드로이드" url={app.store_invite_url} />
+                <LinkRow label="웹 (브라우저)" url={app.web_invite_url} />
+              </div>
+            </>
+          ) : (
+            <div className="mt-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-center">
+              <p className="text-sm font-medium text-neutral-700">
+                안드로이드 / 웹 초대 링크는 참여 후 공개됩니다.
+              </p>
+              <p className="mt-1 text-xs text-neutral-500">
+                참여하면 14일 카운트가 시작되고, 매칭 완주 시 800 크레딧이 적립됩니다.
+              </p>
+            </div>
+          )}
 
-          <div className="mt-5 space-y-3">
-            <LinkRow label="안드로이드" url={app.store_invite_url} />
-            <LinkRow label="웹 (브라우저)" url={app.web_invite_url} />
-          </div>
+          {!isOwn && (
+            <div className="mt-6">
+              <OptInButton
+                appId={app.id}
+                alreadyJoined={joined}
+                isOwn={false}
+                isFull={false}
+              />
+            </div>
+          )}
         </section>
 
-        <p className="mt-6 text-xs text-neutral-500">
-          * 매칭 시스템은 베타 단계입니다. 자동 옵트인은 정식 출시 후 활성화됩니다.
-        </p>
+        <AppCommentsSection
+          appId={app.id}
+          currentUserId={user.id}
+          initialComments={enrichedComments}
+          ownPromotableApps={(ownAppsForPromote ?? []).map((a) => ({
+            id: a.id,
+            name: a.name,
+          }))}
+        />
       </main>
     </>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
       <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="mt-1 text-base font-semibold text-neutral-900 tabular">{value}</dd>
+      <dd
+        className={`mt-1 inline-flex rounded-md px-2 py-0.5 text-base font-semibold tabular ${
+          tone ?? "text-neutral-900"
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }

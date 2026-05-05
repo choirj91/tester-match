@@ -106,8 +106,8 @@ export function AppForm({ initialNickname, email }: Props) {
       </Field>
 
       <Field
-        label="현재 남은 테스터 수"
-        hint="아직 부족한 인원. 12명 중 이미 5명 모였다면 7."
+        label="목표 테스터 수"
+        hint="모집 목표 인원. 보통 12명. 이미 일부 모였다면 부족한 인원수만 입력하세요."
       >
         <input
           name="required_testers"

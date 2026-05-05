@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getBalance } from "@/lib/credits";
 
 export type AppUser = {
   id: number;
@@ -8,6 +9,7 @@ export type AppUser = {
   nickname: string;
   trustScore: number;
   role: "user" | "admin";
+  balance: number;
 };
 
 /**
@@ -38,6 +40,8 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
   if (error || !data) return null;
 
+  const balance = await getBalance(admin, data.id);
+
   return {
     id: data.id,
     authUserId: data.auth_user_id,
@@ -45,5 +49,6 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     nickname: data.nickname,
     trustScore: data.trust_score,
     role: data.role,
+    balance,
   };
 }

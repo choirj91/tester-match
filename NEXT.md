@@ -12,6 +12,7 @@
 - [x] ~~Waitlist API ↔ Supabase end-to-end 검증~~ (2026-05-04 완료)
 - [ ] **Google OAuth 자격증명 등록** — [03-output/infra/supabase-auth-setup.md](03-output/infra/supabase-auth-setup.md) 1~3단계
 - [ ] **마이그레이션 #5 적용** — `cd 03-output && supabase db push` (게시판 posts/comments + users_public_profile view)
+- [ ] PR #1 머지 후 PR #2 (`feat/matching`) 생성 — 매칭 엔진 v1 (자율 옵트인)
 - [ ] `/auth/login` Google 로그인 검증 → `public.users` 자동 생성 확인
 - [ ] GitHub Private 레포 푸시는 완료. CI 그린 확인 (Actions 탭)
 - [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지, 5분 ping)

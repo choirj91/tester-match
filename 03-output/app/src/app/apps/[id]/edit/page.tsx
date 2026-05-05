@@ -55,7 +55,7 @@ export default async function EditAppPage({ params }: Props) {
               store_invite_url: app.store_invite_url,
               web_invite_url: app.web_invite_url ?? "",
               required_testers: app.required_testers,
-              status: app.status as "matching" | "paused" | "completed",
+              status: app.status as "matching" | "reviewing" | "launched" | "paused",
             }}
           />
         </div>
