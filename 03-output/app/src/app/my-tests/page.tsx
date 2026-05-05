@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { currentDayN } from "@/lib/checkin";
 import { OptOutButton } from "./opt-out-button";
+import { CheckInButton } from "./check-in-button";
 
 export const metadata = { title: "내 테스트" };
 
@@ -14,13 +16,6 @@ const STATUS_LABEL: Record<string, { text: string; tone: string }> = {
   penalized: { text: "페널티", tone: "bg-crimson-500/10 text-crimson-500" },
 };
 
-function dayCount(optedInAt: string | null): number {
-  if (!optedInAt) return 0;
-  const start = new Date(optedInAt).getTime();
-  const days = Math.floor((Date.now() - start) / (24 * 60 * 60 * 1000));
-  return Math.min(Math.max(days, 0), 14);
-}
-
 export default async function MyTestsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/my-tests");
@@ -29,7 +24,7 @@ export default async function MyTestsPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, matched_at, opted_in_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, owner_user_id, users_public_profile!inner(nickname, trust_score))",
+      "id, status, matched_at, opted_in_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
     )
     .eq("tester_user_id", user.id)
     .order("opted_in_at", { ascending: false });
@@ -41,7 +36,7 @@ export default async function MyTestsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">내 테스트</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            참여중인 앱과 14일 카운트를 한 화면에서 추적합니다.
+            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 완주 시 800 크레딧 자동 적립.
           </p>
         </header>
 
@@ -54,7 +49,12 @@ export default async function MyTestsPage() {
                 const owner = Array.isArray(app.users_public_profile)
                   ? app.users_public_profile[0]
                   : app.users_public_profile;
-                const days = dayCount(m.opted_in_at);
+                const checkins = (m.checkins ?? []) as Array<{ id: number; day_n: number }>;
+                const checkedDays = new Set(checkins.map((c) => c.day_n));
+                const checkedCount = checkedDays.size;
+                const todayDayN = m.opted_in_at ? currentDayN(m.opted_in_at) : 0;
+                const alreadyCheckedToday = todayDayN > 0 && checkedDays.has(todayDayN);
+                const expired = todayDayN === 0;
                 const label = STATUS_LABEL[m.status] ?? STATUS_LABEL.active;
                 const isActive = m.status === "active";
 
@@ -79,26 +79,32 @@ export default async function MyTestsPage() {
                       </span>
                     </div>
 
-                    {isActive && (
+                    {(isActive || m.status === "completed") && (
                       <div className="mt-4">
                         <div className="flex items-center justify-between text-xs text-neutral-500">
                           <span className="tabular">
-                            {days}일차 / 14일
+                            체크인 <strong className="text-trust-600">{checkedCount}</strong>일
+                            {" / 14일"}
                           </span>
-                          <span>
-                            등록자 {owner?.nickname ?? "—"}
-                          </span>
+                          <span>등록자 {owner?.nickname ?? "—"}</span>
                         </div>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                           <div
                             className="h-full bg-trust-600 transition-all"
-                            style={{ width: `${(days / 14) * 100}%` }}
+                            style={{ width: `${(checkedCount / 14) * 100}%` }}
                           />
                         </div>
                       </div>
                     )}
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {isActive && (
+                        <CheckInButton
+                          matchId={m.id}
+                          alreadyCheckedToday={alreadyCheckedToday}
+                          expired={expired}
+                        />
+                      )}
                       {app.store_invite_url && (
                         <a
                           href={app.store_invite_url}

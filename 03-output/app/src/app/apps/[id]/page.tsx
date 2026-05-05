@@ -23,13 +23,6 @@ const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
   pending: { text: "대기", tone: "bg-neutral-100 text-neutral-700" },
 };
 
-function dayCount(optedInAt: string | null): number {
-  if (!optedInAt) return 0;
-  const start = new Date(optedInAt).getTime();
-  const days = Math.floor((Date.now() - start) / (24 * 60 * 60 * 1000));
-  return Math.min(Math.max(days, 0), 14);
-}
-
 export default async function AppDetailPage({ params }: Props) {
   const user = await getCurrentUser();
   if (!user) {
@@ -56,7 +49,7 @@ export default async function AppDetailPage({ params }: Props) {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, opted_in_at, tester_user_id, users_public_profile!inner(nickname, trust_score)",
+      "id, status, opted_in_at, tester_user_id, users_public_profile!inner(nickname, trust_score), checkins(id, day_n)",
     )
     .eq("app_id", appId)
     .order("opted_in_at", { ascending: false });
@@ -110,7 +103,8 @@ export default async function AppDetailPage({ params }: Props) {
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">
-            참여중인 테스터 <span className="tabular text-neutral-500">{matches?.length ?? 0}</span>
+            참여중인 테스터{" "}
+            <span className="tabular text-neutral-500">{matches?.length ?? 0}</span>
           </h2>
           <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
             {matches && matches.length > 0 ? (
@@ -119,8 +113,9 @@ export default async function AppDetailPage({ params }: Props) {
                   const tester = Array.isArray(m.users_public_profile)
                     ? m.users_public_profile[0]
                     : m.users_public_profile;
+                  const checkins = (m.checkins ?? []) as Array<{ day_n: number }>;
+                  const distinctDays = new Set(checkins.map((c) => c.day_n)).size;
                   const label = MATCH_STATUS_LABEL[m.status] ?? MATCH_STATUS_LABEL.pending;
-                  const days = dayCount(m.opted_in_at);
 
                   return (
                     <li
@@ -133,13 +128,15 @@ export default async function AppDetailPage({ params }: Props) {
                         </p>
                         <p className="text-xs text-neutral-500">
                           신뢰 <span className="tabular">{tester?.trust_score ?? 50}</span>
-                          {m.opted_in_at && (
-                            <>
-                              {" · "}
-                              <span className="tabular">{days}</span>일차 / 14일
-                            </>
-                          )}
+                          {" · "}
+                          체크인 <span className="tabular">{distinctDays}</span>/14일
                         </p>
+                        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-neutral-100">
+                          <div
+                            className="h-full bg-trust-600"
+                            style={{ width: `${(distinctDays / 14) * 100}%` }}
+                          />
+                        </div>
                       </div>
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${label.tone}`}
