@@ -10,6 +10,7 @@ describe("SiteHeader", () => {
     nickname: "테스터",
     trustScore: 50,
     role: "user" as const,
+    balance: 1600,
   };
 
   it("renders nav links", () => {
@@ -29,6 +30,11 @@ describe("SiteHeader", () => {
     render(<SiteHeader user={user} />);
     expect(screen.getByText("테스터")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "로그아웃" })).toBeInTheDocument();
+  });
+
+  it("renders credit balance chip when authenticated", () => {
+    render(<SiteHeader user={user} />);
+    expect(screen.getByTitle("크레딧 잔액")).toHaveTextContent("1,600");
   });
 
   it("renders login button when unauthenticated", () => {

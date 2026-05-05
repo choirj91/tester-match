@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { AppUser } from "@/lib/auth";
+import { formatKrw } from "@/lib/credits";
 
 type NavItem = { href: string; label: string; soon?: boolean };
 
@@ -9,6 +10,7 @@ const NAV: readonly NavItem[] = [
   { href: "/board", label: "게시판" },
   { href: "/my-tests", label: "내 테스트" },
   { href: "/apps", label: "내 앱" },
+  { href: "/credits", label: "크레딧" },
 ];
 
 export function SiteHeader({ user }: { user: AppUser | null }) {
@@ -39,6 +41,13 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         <div className="flex shrink-0 items-center gap-4">
           {user ? (
             <>
+              <Link
+                href="/credits"
+                className="hidden rounded-full bg-trust-50 px-3 py-1 text-xs font-semibold text-trust-700 hover:bg-trust-50/80 sm:inline-flex tabular"
+                title="크레딧 잔액"
+              >
+                {formatKrw(user.balance)} ⓒ
+              </Link>
               <span className="hidden text-sm text-neutral-500 sm:inline">{user.nickname}</span>
               <form action="/auth/signout" method="post">
                 <button
