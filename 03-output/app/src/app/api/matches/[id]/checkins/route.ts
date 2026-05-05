@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { currentDayN } from "@/lib/checkin";
+import { sendEmail } from "@/lib/email";
+import { matchCompletedEmail } from "@/lib/email-templates";
 
 export const runtime = "edge";
 
@@ -102,6 +104,31 @@ export async function POST(_req: Request, { params }: Ctx) {
     if (credErr) {
       console.error("[checkins/POST] credit insert failed", credErr);
     }
+
+    // 완주 알림 메일 (실패해도 무시)
+    void (async () => {
+      try {
+        const { data: appRow } = await supabase
+          .from("apps")
+          .select("name")
+          .eq("id", match.app_id)
+          .maybeSingle();
+        const appName = appRow?.name ?? "앱";
+        const tmpl = matchCompletedEmail({
+          testerNickname: user.nickname,
+          appName,
+          reward: COMPLETION_REWARD,
+        });
+        await sendEmail({
+          to: user.email,
+          subject: tmpl.subject,
+          html: tmpl.html,
+          text: tmpl.text,
+        });
+      } catch (err) {
+        console.error("[checkins/POST] completion email failed", err);
+      }
+    })();
   } else {
     // day_count 갱신 (현재 누적 체크인 수)
     await supabase

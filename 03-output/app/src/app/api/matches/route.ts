@@ -3,6 +3,8 @@ import { ZodError } from "zod";
 import { MatchOptInSchema } from "@/lib/validators/match";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { sendEmail } from "@/lib/email";
+import { matchOptInEmail } from "@/lib/email-templates";
 
 export const runtime = "edge";
 
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
   // 1) 앱 상태 확인 + 본인 앱 차단
   const { data: app, error: appErr } = await supabase
     .from("apps")
-    .select("id, owner_user_id, status, required_testers")
+    .select("id, name, owner_user_id, status, required_testers")
     .eq("id", payload.app_id)
     .maybeSingle();
 
@@ -81,11 +83,58 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: "참여에 실패했습니다." }, { status: 500 });
   }
 
-  // 3) required_testers decrement (best-effort, 작은 race window 허용 — MVP 수준).
+  // 3) required_testers decrement
+  const newRemaining = app.required_testers - 1;
   await supabase
     .from("apps")
-    .update({ required_testers: app.required_testers - 1 })
+    .update({ required_testers: newRemaining })
     .eq("id", payload.app_id);
 
+  // 4) 앱 등록자에게 매칭 알림 (F-MATCH-06). 실패해도 응답은 성공.
+  void notifyOwner({
+    ownerUserId: app.owner_user_id,
+    appName: app.name,
+    appId: app.id,
+    testerNickname: user.nickname,
+    testerTrustScore: user.trustScore,
+    remainingCount: newRemaining,
+  });
+
   return NextResponse.json({ ok: true, match_id: match.id });
+}
+
+async function notifyOwner(args: {
+  ownerUserId: number;
+  appName: string;
+  appId: number;
+  testerNickname: string;
+  testerTrustScore: number;
+  remainingCount: number;
+}): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data: owner } = await admin
+      .from("users")
+      .select("email, nickname")
+      .eq("id", args.ownerUserId)
+      .maybeSingle();
+    if (!owner?.email || owner.email.endsWith("@deleted.local")) return;
+
+    const tmpl = matchOptInEmail({
+      ownerNickname: owner.nickname,
+      appName: args.appName,
+      testerNickname: args.testerNickname,
+      testerTrustScore: args.testerTrustScore,
+      remainingCount: args.remainingCount,
+      appId: args.appId,
+    });
+    await sendEmail({
+      to: owner.email,
+      subject: tmpl.subject,
+      html: tmpl.html,
+      text: tmpl.text,
+    });
+  } catch (err) {
+    console.error("[matches/POST] notifyOwner failed", err);
+  }
 }
