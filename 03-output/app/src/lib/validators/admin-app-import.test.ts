@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { AppImportBatchSchema, AppImportRowSchema } from "./admin-app-import";
+import {
+  AppImportBatchSchema,
+  AppImportRowSchema,
+  DEFAULT_IMPORT_SHORT_DESCRIPTION,
+} from "./admin-app-import";
 
 const validRow = {
   email: "user@example.com",
@@ -21,6 +25,32 @@ describe("AppImportRowSchema", () => {
     expect(r.nickname).toBe("아무개");
   });
 
+  it("treats null nickname as omitted", () => {
+    const r = AppImportRowSchema.parse({ ...validRow, nickname: null });
+    expect(r.nickname).toBeUndefined();
+  });
+
+  it("defaults null short_description", () => {
+    const r = AppImportRowSchema.parse({ ...validRow, short_description: null });
+    expect(r.short_description).toBe(DEFAULT_IMPORT_SHORT_DESCRIPTION);
+  });
+
+  it("defaults blank short_description", () => {
+    const r = AppImportRowSchema.parse({ ...validRow, short_description: "   " });
+    expect(r.short_description).toBe(DEFAULT_IMPORT_SHORT_DESCRIPTION);
+  });
+
+  it("accepts long short_description", () => {
+    const value = "x".repeat(500);
+    const r = AppImportRowSchema.parse({ ...validRow, short_description: value });
+    expect(r.short_description).toBe(value);
+  });
+
+  it("defaults null required_testers to 12", () => {
+    const r = AppImportRowSchema.parse({ ...validRow, required_testers: null });
+    expect(r.required_testers).toBe(12);
+  });
+
   it("rejects invalid email", () => {
     expect(AppImportRowSchema.safeParse({ ...validRow, email: "not-email" }).success).toBe(false);
   });
@@ -34,12 +64,18 @@ describe("AppImportRowSchema", () => {
     ).toBe(false);
   });
 
-  it("clamps required_testers to 1-12", () => {
+  it("accepts required_testers 0", () => {
     expect(
       AppImportRowSchema.safeParse({ ...validRow, required_testers: 0 }).success,
+    ).toBe(true);
+  });
+
+  it("rejects required_testers outside 0-100", () => {
+    expect(
+      AppImportRowSchema.safeParse({ ...validRow, required_testers: -1 }).success,
     ).toBe(false);
     expect(
-      AppImportRowSchema.safeParse({ ...validRow, required_testers: 13 }).success,
+      AppImportRowSchema.safeParse({ ...validRow, required_testers: 101 }).success,
     ).toBe(false);
   });
 

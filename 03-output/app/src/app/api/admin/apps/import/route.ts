@@ -32,6 +32,7 @@ export async function POST(req: Request) {
   const supabase = createSupabaseAdminClient();
   const errors: ImportError[] = [];
   let imported = 0;
+  let placeholdersCreated = 0;
 
   // 같은 batch 안에서 동일 이메일 사용자 캐시 (중복 lookup 회피)
   const userIdByEmail = new Map<string, number>();
@@ -68,13 +69,14 @@ export async function POST(req: Request) {
             .single();
           if (insErr || !created) {
             errors.push({
-              row: i,
+              row: i + 1,
               email: row.email,
               reason: `user_create_failed: ${insErr?.message ?? "unknown"}`,
             });
             continue;
           }
           userId = created.id;
+          placeholdersCreated++;
         }
         userIdByEmail.set(row.email, userId);
       }
@@ -91,7 +93,7 @@ export async function POST(req: Request) {
       });
       if (appErr) {
         errors.push({
-          row: i,
+          row: i + 1,
           email: row.email,
           reason: `app_insert_failed: ${appErr.message}`,
         });
@@ -100,7 +102,7 @@ export async function POST(req: Request) {
       imported++;
     } catch (e) {
       errors.push({
-        row: i,
+        row: i + 1,
         email: row.email,
         reason: `exception: ${String(e)}`,
       });
@@ -112,7 +114,7 @@ export async function POST(req: Request) {
     imported,
     skipped: errors.length,
     total: rows.length,
-    placeholders_created: userIdByEmail.size,
+    placeholders_created: placeholdersCreated,
     errors,
   });
 }

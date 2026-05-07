@@ -107,24 +107,23 @@ export function AppForm({ initialNickname, email }: Props) {
 
       <Field
         label="목표 테스터 수"
-        hint="모집 목표 인원. 보통 12명. 이미 일부 모였다면 부족한 인원수만 입력하세요."
+        hint="모집 목표 인원. 보통 12명. 0~100명까지 입력할 수 있습니다."
       >
         <input
           name="required_testers"
           type="number"
-          min={1}
-          max={12}
+          min={0}
+          max={100}
           defaultValue={12}
           required
           className={`${inputClass} tabular`}
         />
       </Field>
 
-      <Field label="앱 설명" hint="140자 이내. 매칭 페이지에 노출됩니다.">
+      <Field label="앱 설명" hint="매칭 페이지에 노출됩니다.">
         <textarea
           name="short_description"
           rows={3}
-          maxLength={140}
           required
           placeholder="앱의 핵심 가치와 테스터에게 부탁할 내용을 한 문장으로."
           className={`${inputClass} resize-y`}

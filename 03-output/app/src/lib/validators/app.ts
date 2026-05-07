@@ -23,13 +23,12 @@ export const AppCreateSchema = z.object({
   required_testers: z.coerce
     .number()
     .int({ message: "정수만 입력해주세요." })
-    .min(1, "1명 이상이어야 합니다.")
-    .max(12, "12명 이하로 입력해주세요."),
+    .min(0, "0명 이상이어야 합니다.")
+    .max(100, "100명 이하로 입력해주세요."),
   short_description: z
     .string()
     .trim()
-    .min(1, "앱 설명을 입력해주세요.")
-    .max(140, "앱 설명은 140자 이하로 입력해주세요."),
+    .min(1, "앱 설명을 입력해주세요."),
 });
 
 export type AppCreateInput = z.infer<typeof AppCreateSchema>;
