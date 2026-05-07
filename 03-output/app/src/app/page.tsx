@@ -1,22 +1,20 @@
 import Link from "next/link";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { SiteHeader } from "@/components/site-header";
+import { AppScrollBanner } from "@/components/app-scroll-banner";
 import { getCurrentUser } from "@/lib/auth";
 
 // ── 문제 카드 ────────────────────────────────────────────────────────
 const PAINS = [
   {
-    emoji: "🙏",
     title: "지인 부탁은 피드백이 아닙니다",
-    desc: "호의로 설치한 앱은 진짜로 쓰이지 않습니다. 어, 잘 되던데 — 한 마디로 끝나는 테스트는 출시에 도움이 되지 않습니다.",
+    desc: "호의로 설치한 앱은 진짜로 쓰이지 않습니다. 잘 됐어 — 한 마디로 끝나는 테스트는 출시에 도움이 되지 않습니다.",
   },
   {
-    emoji: "💬",
-    title: "채팅방 12개, 14일을 버티지 못합니다",
-    desc: "처음엔 열정적이다가 3일 후엔 읽씹. 12명이 모였다고 해서 12명이 남아있지 않습니다. 한 명 빠지면 다시 처음부터.",
+    title: "채팅방 모집, 14일을 버티지 못합니다",
+    desc: "처음엔 열정적이다가 3일 후엔 읽씹. 여러 명이 모였다고 해서 끝까지 남아있지 않습니다. 한 명 빠지면 다시 처음부터.",
   },
   {
-    emoji: "📊",
     title: "숫자만 채우면 피드백이 비어있습니다",
     desc: "Google Play 요건을 통과해도, 진짜 피드백 없이 출시한 앱은 혼자입니다. 테스터의 수가 아니라 테스터의 진심이 필요합니다.",
   },
@@ -67,16 +65,16 @@ const FAQ = [
     a: "출시 전 앱을 누구보다 먼저 체험할 수 있습니다. 곧 오픈되는 급구 서비스에서는 테스트 완주 시 100원의 크레딧이 지급됩니다. 크레딧은 내 앱 매칭에도 쓸 수 있습니다.",
   },
   {
+    q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
+    a: "물론입니다. 앱 등록 없이 테스터로만 참여해도 됩니다. 관심 있는 앱을 골라 14일 동안 써주시면 됩니다.",
+  },
+  {
     q: "Google Play 정책 위반 아닌가요?",
-    a: "비공개 테스트 12명 요건은 Google이 명시한 출시 전 절차입니다. 저희는 인센티브 리뷰·별점 작성을 금지하고, 실제 14일 사용만 매칭합니다.",
+    a: "비공개 테스트 요건은 Google이 명시한 출시 전 절차입니다. 저희는 인센티브 리뷰·별점 작성을 금지하고, 실제 14일 사용만 매칭합니다.",
   },
   {
     q: "내 앱 정보가 노출되나요?",
     a: "매칭 목록에 올라간 동안 다른 사용자에게 앱 이름·소개·초대 링크가 보입니다. 소스코드·내부 빌드는 노출되지 않습니다.",
-  },
-  {
-    q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
-    a: "물론입니다. 앱 등록 없이 테스터로만 참여해도 됩니다. 관심 있는 앱을 골라 14일 동안 써주시면 됩니다.",
   },
   {
     q: "iOS 도 지원하나요?",
@@ -116,7 +114,7 @@ export default async function HomePage() {
                 href="/apps/new"
                 className="rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
               >
-                + 내 앱 등록하기
+                내 앱 등록하기
               </Link>
               <Link
                 href="/browse"
@@ -144,57 +142,77 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Problem */}
-      <section className="bg-neutral-50 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
-            테스터를 구하기 어려운 진짜 이유
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-base text-neutral-600">
-            사람이 없는 게 아닙니다. 14일을 실제로 써줄 사람을 만나기 어려운 겁니다.
+      {/* 앱 스크롤 배너 */}
+      <section className="bg-neutral-50 py-12">
+        <div className="mb-8 px-6 text-center">
+          <p className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+            지금 테스터를 기다리는 앱들
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {PAINS.map((p) => (
-              <div
-                key={p.title}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-              >
-                <span className="text-2xl">{p.emoji}</span>
-                <h3 className="mt-3 text-base font-semibold text-neutral-900">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{p.desc}</p>
-              </div>
-            ))}
-          </div>
+          <h2 className="mt-2 text-xl font-bold text-neutral-900 sm:text-2xl">
+            세상에 나오기 직전, 이 앱들을 가장 먼저 써볼 수 있습니다
+          </h2>
+        </div>
+        <AppScrollBanner />
+        <div className="mt-8 text-center">
+          <Link
+            href={user ? "/browse" : "/auth/login"}
+            className="inline-flex rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50"
+          >
+            전체 앱 보기 →
+          </Link>
+        </div>
+      </section>
+
+      {/* Problem */}
+      <section className="mx-auto max-w-6xl px-6 py-20">
+        <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
+          테스터를 구하기 어려운 진짜 이유
+        </h2>
+        <p className="mx-auto mt-3 max-w-xl text-center text-base text-neutral-600">
+          사람이 없는 게 아닙니다. 14일을 실제로 써줄 사람을 만나기 어려운 겁니다.
+        </p>
+        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+          {PAINS.map((p) => (
+            <div
+              key={p.title}
+              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+            >
+              <h3 className="text-base font-semibold text-neutral-900">{p.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{p.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* For testers */}
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <div className="mb-12 text-center">
-          <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
-            테스터에게
-          </span>
-          <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
-            세상에 나오기 전 앱,
-            <br />
-            <span className="text-trust-600">당신이 가장 먼저 씁니다</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">
-            개발자도 테스터도 아니어도 괜찮습니다.
-            <br />
-            새로운 것을 먼저 써보고 싶은 사람이라면 누구에게나 열려 있습니다.
-          </p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-3">
-          {TESTER_CARDS.map((c) => (
-            <div
-              key={c.title}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-            >
-              <h3 className="text-base font-semibold text-neutral-900">{c.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
-            </div>
-          ))}
+      <section className="bg-neutral-50 py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-12 text-center">
+            <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
+              테스터에게
+            </span>
+            <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
+              세상에 나오기 전 앱,
+              <br />
+              <span className="text-trust-600">당신이 가장 먼저 씁니다</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">
+              개발자가 아니어도 괜찮습니다.
+              <br />
+              새로운 것을 먼저 써보고 싶은 사람이라면 누구에게나 열려 있습니다.
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {TESTER_CARDS.map((c) => (
+              <div
+                key={c.title}
+                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-base font-semibold text-neutral-900">{c.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -209,7 +227,7 @@ export default async function HomePage() {
           <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
             진짜 쓰는 테스터 한 명이
             <br />
-            <span className="text-trust-600">지인 12명보다 낫습니다</span>
+            <span className="text-trust-600">지인 여럿보다 낫습니다</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-neutral-600">
             Tester Match의 테스터는 형식적으로 설치만 하지 않습니다.
@@ -248,7 +266,7 @@ export default async function HomePage() {
               className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold tabular text-trust-600">{step.n}</span>
+                <span className="tabular text-sm font-bold text-trust-600">{step.n}</span>
                 <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
                   {step.who}
                 </span>

@@ -30,3 +30,23 @@ body {
 :where(.tabular) {
   font-variant-numeric: tabular-nums;
 }
+
+/* ── 앱 스크롤 배너 애니메이션 ───────────────────────────── */
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+.marquee-left {
+  animation: marquee-left 70s linear infinite;
+}
+.marquee-right {
+  animation: marquee-right 70s linear infinite;
+}
+.marquee-left:hover,
+.marquee-right:hover {
+  animation-play-state: paused;
+}
