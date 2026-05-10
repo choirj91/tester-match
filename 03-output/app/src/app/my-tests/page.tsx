@@ -26,7 +26,7 @@ export default async function MyTestsPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, matched_at, opted_in_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
+      "id, status, matched_at, opted_in_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, google_group_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
     )
     .eq("tester_user_id", user.id)
     .order("opted_in_at", { ascending: false });
@@ -99,7 +99,29 @@ export default async function MyTestsPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {/* Google 그룹 — 초대 링크보다 먼저 표시 */}
+                    {app.google_group_url && isActive && (
+                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                        <span className="shrink-0 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          1단계
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-amber-800">
+                            초대 링크 전에 Google 그룹 가입이 필요합니다.
+                          </p>
+                          <a
+                            href={app.google_group_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-block text-xs font-semibold text-amber-700 underline"
+                          >
+                            그룹 가입하기 →
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
                       {isActive && (
                         <CheckInButton
                           matchId={m.id}
@@ -114,7 +136,7 @@ export default async function MyTestsPage() {
                           rel="noopener noreferrer"
                           className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
                         >
-                          안드로이드 ↗
+                          {app.google_group_url ? "안드로이드 (2단계) ↗" : "안드로이드 ↗"}
                         </a>
                       )}
                       {app.web_invite_url && (
@@ -124,7 +146,7 @@ export default async function MyTestsPage() {
                           rel="noopener noreferrer"
                           className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
                         >
-                          웹 ↗
+                          {app.google_group_url ? "웹 (2단계) ↗" : "웹 ↗"}
                         </a>
                       )}
                       <Link

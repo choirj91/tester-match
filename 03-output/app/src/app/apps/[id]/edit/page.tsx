@@ -24,7 +24,7 @@ export default async function EditAppPage({ params }: Props) {
   const { data: app } = await supabase
     .from("apps")
     .select(
-      "id, name, short_description, store_invite_url, web_invite_url, required_testers, status",
+      "id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status",
     )
     .eq("id", appId)
     .eq("owner_user_id", user.id)
@@ -56,6 +56,7 @@ export default async function EditAppPage({ params }: Props) {
               short_description: app.short_description,
               store_invite_url: app.store_invite_url,
               web_invite_url: app.web_invite_url ?? "",
+              google_group_url: app.google_group_url ?? null,
               required_testers: app.required_testers,
               status: app.status as "matching" | "reviewing" | "launched" | "paused",
             }}

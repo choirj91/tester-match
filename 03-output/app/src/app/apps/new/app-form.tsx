@@ -27,6 +27,7 @@ export function AppForm({ initialNickname, email }: Props) {
       name: String(fd.get("name") ?? "").trim(),
       store_invite_url: String(fd.get("store_invite_url") ?? "").trim(),
       web_invite_url: String(fd.get("web_invite_url") ?? "").trim(),
+      google_group_url: String(fd.get("google_group_url") ?? "").trim() || undefined,
       required_testers: Number(fd.get("required_testers") ?? 0),
       short_description: String(fd.get("short_description") ?? "").trim(),
     };
@@ -101,6 +102,18 @@ export function AppForm({ initialNickname, email }: Props) {
           type="url"
           required
           placeholder="https://play.google.com/apps/testing/..."
+          className={inputClass}
+        />
+      </Field>
+
+      <Field
+        label="Google 그룹 URL (선택)"
+        hint="Google Play Closed Testing은 Google 그룹에 먼저 가입해야 초대 링크를 사용할 수 있습니다. 그룹 URL을 입력하면 테스터에게 가입 안내가 먼저 표시됩니다."
+      >
+        <input
+          name="google_group_url"
+          type="url"
+          placeholder="https://groups.google.com/g/your-group-name"
           className={inputClass}
         />
       </Field>

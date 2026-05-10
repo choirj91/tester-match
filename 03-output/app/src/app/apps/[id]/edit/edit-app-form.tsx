@@ -10,6 +10,7 @@ type Initial = {
   short_description: string;
   store_invite_url: string;
   web_invite_url: string;
+  google_group_url: string | null;
   required_testers: number;
   status: "matching" | "reviewing" | "launched" | "paused";
 };
@@ -34,6 +35,7 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
       short_description: String(fd.get("short_description") ?? "").trim(),
       store_invite_url: String(fd.get("store_invite_url") ?? "").trim(),
       web_invite_url: String(fd.get("web_invite_url") ?? "").trim(),
+      google_group_url: String(fd.get("google_group_url") ?? "").trim() || undefined,
       required_testers: Number(fd.get("required_testers") ?? 0),
       status: String(fd.get("status") ?? "matching") as Initial["status"],
     };
@@ -97,6 +99,19 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         />
       </Field>
 
+      <Field
+        label="Google 그룹 URL (선택)"
+        hint="테스터가 초대 링크 전에 먼저 가입해야 하는 Google 그룹 URL."
+      >
+        <input
+          name="google_group_url"
+          type="url"
+          defaultValue={initial.google_group_url ?? ""}
+          placeholder="https://groups.google.com/g/your-group-name"
+          className={inputClass}
+        />
+      </Field>
+
       <Field label="목표 테스터 수">
         <input
           name="required_testers"
@@ -148,10 +163,19 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="text-sm font-semibold text-neutral-900">{label}</span>
+      {hint && <span className="mt-0.5 block text-xs text-neutral-500">{hint}</span>}
       <div className="mt-2">{children}</div>
     </label>
   );

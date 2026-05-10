@@ -52,6 +52,7 @@ export async function POST(req: Request) {
       name: payload.name,
       store_invite_url: payload.store_invite_url,
       web_invite_url: payload.web_invite_url,
+      google_group_url: payload.google_group_url ?? null,
       required_testers: payload.required_testers,
       short_description: payload.short_description,
       // MVP: 등록 즉시 매칭 큐 진입 (draft 단계 생략)
