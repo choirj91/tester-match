@@ -3,6 +3,8 @@ import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { ImportForm } from "./import-form";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "앱 일괄 등록" };
 
 export default async function AdminAppImportPage() {

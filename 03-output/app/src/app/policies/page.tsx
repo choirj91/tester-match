@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "정책 안내" };
 
 const ITEMS = [

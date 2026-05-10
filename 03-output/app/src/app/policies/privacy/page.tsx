@@ -1,6 +1,8 @@
 import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "개인정보처리방침" };
 
 export default async function PrivacyPage() {

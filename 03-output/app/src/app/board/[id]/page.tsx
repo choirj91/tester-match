@@ -6,6 +6,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
 
+export const runtime = 'edge';
+
 type Props = { params: Promise<{ id: string }> };
 
 export default async function PostDetailPage({ params }: Props) {

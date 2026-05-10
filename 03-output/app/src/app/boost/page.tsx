@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "급구 (준비중)" };
 
 export default async function BoostPage() {

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "관리자" };
 
 const TILES = [

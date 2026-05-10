@@ -6,6 +6,8 @@ import { ProfileForm } from "./profile-form";
 import { WithdrawButton } from "./withdraw-button";
 import { formatKrw } from "@/lib/credits";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "프로필" };
 
 export default async function ProfilePage() {

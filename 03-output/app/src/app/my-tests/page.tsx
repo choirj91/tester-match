@@ -7,6 +7,8 @@ import { currentDayN } from "@/lib/checkin";
 import { OptOutButton } from "./opt-out-button";
 import { CheckInButton } from "./check-in-button";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "내 테스트" };
 
 const STATUS_LABEL: Record<string, { text: string; tone: string }> = {

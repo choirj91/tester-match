@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CREDIT_TYPE_LABEL, formatKrw } from "@/lib/credits";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "크레딧" };
 
 export default async function CreditsPage() {

@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { PostForm } from "./post-form";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "글 쓰기" };
 
 export default async function NewPostPage() {

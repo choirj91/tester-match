@@ -7,6 +7,8 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
 
+export const runtime = 'edge';
+
 type Props = { params: Promise<{ id: string }> };
 
 export default async function BrowseDetailPage({ params }: Props) {

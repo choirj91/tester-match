@@ -5,6 +5,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SiteHeader } from "@/components/site-header";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "내 앱" };
 
 export default async function AppsPage() {

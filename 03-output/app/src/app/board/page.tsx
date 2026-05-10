@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { POST_CATEGORIES } from "@/lib/validators/post";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "게시판" };
 
 type Props = { searchParams: Promise<{ category?: string }> };

@@ -6,6 +6,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 
+export const runtime = 'edge';
+
 type Props = { params: Promise<{ id: string }> };
 
 const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {

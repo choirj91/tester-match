@@ -1,6 +1,8 @@
 import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "크레딧 운영 정책" };
 
 export default async function CreditsPolicyPage() {

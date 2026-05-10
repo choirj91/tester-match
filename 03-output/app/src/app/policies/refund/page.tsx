@@ -1,6 +1,8 @@
 import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 export const metadata = { title: "환불 정책" };
 
 export default async function RefundPage() {

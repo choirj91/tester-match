@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { AppScrollBanner } from "@/components/app-scroll-banner";
 import { getCurrentUser } from "@/lib/auth";
 
+export const runtime = 'edge';
+
 // ── 문제 카드 ────────────────────────────────────────────────────────
 const PAINS = [
   {
