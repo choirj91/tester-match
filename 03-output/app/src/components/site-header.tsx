@@ -9,6 +9,7 @@ const NAV: readonly NavItem[] = [
   { href: "/boost", label: "급구", soon: true },
   { href: "/board", label: "게시판" },
   { href: "/my-tests", label: "내 테스트" },
+  { href: "/my-reviews", label: "맞리뷰" },
   { href: "/apps", label: "내 앱" },
   { href: "/credits", label: "크레딧" },
 ];
@@ -41,6 +42,15 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         <div className="flex shrink-0 items-center gap-4">
           {user ? (
             <>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="hidden rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600 hover:bg-spark-50/80 sm:inline-flex"
+                  title="관리자"
+                >
+                  관리자
+                </Link>
+              )}
               <Link
                 href="/credits"
                 className="hidden rounded-full bg-trust-50 px-3 py-1 text-xs font-semibold text-trust-700 hover:bg-trust-50/80 sm:inline-flex tabular"
@@ -50,9 +60,14 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
               </Link>
               <Link
                 href="/profile"
-                className="hidden text-sm text-neutral-500 hover:text-neutral-900 sm:inline"
+                className="hidden items-baseline gap-1.5 sm:inline-flex"
               >
-                {user.nickname}
+                <span className="text-sm text-neutral-500 hover:text-neutral-900">
+                  {user.nickname}
+                </span>
+                <span className="text-[11px] font-semibold text-spark-500">
+                  ★{user.trustScore}
+                </span>
               </Link>
               <form action="/auth/signout" method="post">
                 <button

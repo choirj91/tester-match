@@ -101,8 +101,8 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         <input
           name="required_testers"
           type="number"
-          min={1}
-          max={12}
+          min={0}
+          max={100}
           defaultValue={initial.required_testers}
           required
           className={`${inputClass} tabular`}
@@ -113,7 +113,6 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         <textarea
           name="short_description"
           rows={3}
-          maxLength={140}
           defaultValue={initial.short_description}
           required
           className={`${inputClass} resize-y`}

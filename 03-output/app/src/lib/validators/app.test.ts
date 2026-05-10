@@ -27,13 +27,18 @@ describe("AppCreateSchema", () => {
     }
   });
 
-  it("rejects required_testers > 12", () => {
-    const r = AppCreateSchema.safeParse({ ...valid, required_testers: 13 });
+  it("rejects required_testers > 100", () => {
+    const r = AppCreateSchema.safeParse({ ...valid, required_testers: 101 });
     expect(r.success).toBe(false);
   });
 
-  it("rejects required_testers < 1", () => {
+  it("accepts required_testers 0", () => {
     const r = AppCreateSchema.safeParse({ ...valid, required_testers: 0 });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects required_testers < 0", () => {
+    const r = AppCreateSchema.safeParse({ ...valid, required_testers: -1 });
     expect(r.success).toBe(false);
   });
 
@@ -47,9 +52,9 @@ describe("AppCreateSchema", () => {
     expect(r.name).toBe("hello");
   });
 
-  it("rejects short_description over 140 chars", () => {
-    const r = AppCreateSchema.safeParse({ ...valid, short_description: "x".repeat(141) });
-    expect(r.success).toBe(false);
+  it("accepts long short_description", () => {
+    const r = AppCreateSchema.safeParse({ ...valid, short_description: "x".repeat(500) });
+    expect(r.success).toBe(true);
   });
 
   it("coerces numeric strings for required_testers", () => {

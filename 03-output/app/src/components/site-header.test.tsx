@@ -41,4 +41,14 @@ describe("SiteHeader", () => {
     render(<SiteHeader user={null} />);
     expect(screen.getByRole("link", { name: "로그인" })).toBeInTheDocument();
   });
+
+  it("renders trust score next to nickname", () => {
+    render(<SiteHeader user={user} />);
+    expect(screen.getByText("★50")).toBeInTheDocument();
+  });
+
+  it("renders 맞리뷰 nav item", () => {
+    render(<SiteHeader user={user} />);
+    expect(screen.getAllByText("맞리뷰").length).toBeGreaterThanOrEqual(1);
+  });
 });
