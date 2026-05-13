@@ -63,7 +63,7 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull }: Props) {
       setBusy(false);
       return;
     }
-    router.push("/my-tests");
+    router.push(`/browse/${appId}`);
     router.refresh();
   }
 

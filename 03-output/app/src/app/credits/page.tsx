@@ -27,7 +27,7 @@ export default async function CreditsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">크레딧</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            1원 = 1 크레딧. 14일 완주 시 800 크레딧 자동 적립.
+            크레딧 적립·사용 제도는 정식 출시 후 안내 예정입니다.
           </p>
         </header>
 
@@ -92,7 +92,7 @@ export default async function CreditsPage() {
                   아직 적립·사용 내역이 없습니다.
                 </p>
                 <p className="mt-2 text-xs text-neutral-500">
-                  매칭 가능 앱에 참여하고 14일 완주하면 800 크레딧이 적립됩니다.
+                  크레딧 적립 방법은 정식 출시 후 안내 예정입니다.
                 </p>
               </div>
             )}

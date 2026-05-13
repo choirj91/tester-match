@@ -134,66 +134,69 @@ export default async function BrowseDetailPage({ params }: Props) {
           <Stat label="등록일" value={new Date(app.created_at).toLocaleDateString("ko-KR")} />
         </dl>
 
-        {/* Google 그룹 가입 안내 — 링크 공개 전후 모두 표시 */}
-        {app.google_group_url && (
-          <section className="mt-10 rounded-2xl border border-amber-200 bg-amber-50 p-6">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                1단계
-              </span>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-base font-semibold text-amber-900">
-                  Google 그룹에 먼저 가입하세요
-                </h2>
-                <p className="mt-1 text-sm leading-relaxed text-amber-800">
-                  Google Play Closed Testing은 지정된 Google 그룹 구성원만 초대 링크를 사용할 수
-                  있습니다. 아래 링크로 그룹에 가입한 후 테스트 참여 버튼을 눌러주세요.
-                </p>
-                <a
-                  href={app.google_group_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
-                >
-                  Google 그룹 가입하기 →
-                </a>
+        <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
+
+          {/* ── Google 그룹 가입 (필수 1단계) ── */}
+          {app.google_group_url && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  1단계 필수
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-amber-900">Google 그룹에 먼저 가입하세요</p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                    Google Play Closed Testing은 지정된 Google 그룹 구성원만 초대 링크를 사용할
+                    수 있습니다. 그룹 가입 없이 초대 링크를 열면 오류가 발생합니다.
+                  </p>
+                  <a
+                    href={app.google_group_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
+                  >
+                    Google 그룹 가입하기 →
+                  </a>
+                </div>
               </div>
             </div>
-          </section>
-        )}
+          )}
 
-        <section className={`rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm ${app.google_group_url ? "mt-4" : "mt-10"}`}>
-          <div className="flex items-center gap-2">
-            {app.google_group_url && (
-              <span className="shrink-0 rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                2단계
-              </span>
-            )}
-            <h2 className="text-lg font-semibold text-neutral-900">
-              {app.google_group_url ? "테스트 참여 신청" : "참여하기"}
-            </h2>
-          </div>
-
+          {/* ── 초대 링크 (그룹 가입 후 2단계 / 그룹 없으면 바로) ── */}
           {linksRevealed ? (
-            <>
-              <p className="mt-1 text-sm text-neutral-600">
-                {isOwn
-                  ? "본인 앱입니다. 등록한 링크를 확인합니다."
-                  : "본인 디바이스에서 아래 링크로 Closed Testing에 가입하세요. 14일 카운트가 시작됩니다."}
-              </p>
-              <div className="mt-5 space-y-3">
+            <div className="mt-4">
+              {app.google_group_url && (
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                    2단계
+                  </span>
+                  <p className="text-xs text-neutral-500">
+                    그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요.
+                  </p>
+                </div>
+              )}
+              {!app.google_group_url && !isOwn && (
+                <p className="mb-3 text-sm text-neutral-600">
+                  본인 디바이스에서 아래 링크로 Closed Testing에 가입하세요.
+                </p>
+              )}
+              {isOwn && (
+                <p className="mb-3 text-sm text-neutral-600">본인 앱입니다. 등록한 링크를 확인합니다.</p>
+              )}
+              <div className="space-y-3">
                 <LinkRow label="안드로이드" url={app.store_invite_url} />
                 <LinkRow label="웹 (브라우저)" url={app.web_invite_url} />
               </div>
-            </>
+            </div>
           ) : (
-            <div className="mt-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-center">
+            <div className="mt-4 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-5 text-center">
               <p className="text-sm font-medium text-neutral-700">
-                안드로이드 / 웹 초대 링크는 참여 후 공개됩니다.
+                {app.google_group_url
+                  ? "그룹 가입 후 참여 신청하면 초대 링크가 공개됩니다."
+                  : "초대 링크는 참여 신청 후 공개됩니다."}
               </p>
-              <p className="mt-1 text-xs text-neutral-500">
-                참여하면 14일 카운트가 시작되고, 매칭 완주 시 800 크레딧이 적립됩니다.
-              </p>
+              <p className="mt-1 text-xs text-neutral-500">정식 출시 후 보상 안내 예정입니다.</p>
             </div>
           )}
 

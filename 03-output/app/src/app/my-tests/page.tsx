@@ -38,7 +38,7 @@ export default async function MyTestsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">내 테스트</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 완주 시 800 크레딧 자동 적립.
+            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 보상 제도는 정식 출시 후 안내 예정입니다.
           </p>
         </header>
 

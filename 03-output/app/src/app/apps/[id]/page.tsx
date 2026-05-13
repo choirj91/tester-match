@@ -33,7 +33,7 @@ export default async function AppDetailPage({ params }: Props) {
   const { data: app } = await supabase
     .from("apps")
     .select(
-      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, required_testers, status, created_at, updated_at",
+      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status, created_at, updated_at",
     )
     .eq("id", appId)
     .eq("owner_user_id", user.id)
@@ -93,7 +93,19 @@ export default async function AppDetailPage({ params }: Props) {
 
         <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
+          {app.google_group_url && (
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-semibold text-amber-800">Google 그룹 (1단계 필수)</p>
+              <p className="mt-0.5 text-xs text-amber-700">
+                테스터가 초대 링크를 사용하기 전 이 그룹에 먼저 가입해야 합니다.
+              </p>
+              <Row label="Google 그룹" url={app.google_group_url} amber />
+            </div>
+          )}
           <div className="mt-4 space-y-3 text-sm">
+            {app.google_group_url && (
+              <p className="text-xs font-semibold text-neutral-500">초대 링크 (2단계)</p>
+            )}
             <Row label="안드로이드" url={app.store_invite_url} />
             <Row label="웹 참여" url={app.web_invite_url} />
           </div>
@@ -166,7 +178,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Row({ label, url }: { label: string; url: string | null }) {
+function Row({ label, url, amber }: { label: string; url: string | null; amber?: boolean }) {
   if (!url) {
     return (
       <p className="text-neutral-400">
@@ -176,12 +188,12 @@ function Row({ label, url }: { label: string; url: string | null }) {
   }
   return (
     <p className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-      <strong className="shrink-0 font-semibold text-neutral-700">{label}</strong>
+      <strong className={`shrink-0 font-semibold ${amber ? "text-amber-800" : "text-neutral-700"}`}>{label}</strong>
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="break-all text-trust-600 underline hover:text-trust-700"
+        className={`break-all underline text-sm ${amber ? "text-amber-700 hover:text-amber-900" : "text-trust-600 hover:text-trust-700"}`}
       >
         {url}
       </a>
