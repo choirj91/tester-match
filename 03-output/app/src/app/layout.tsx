@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { KakaoFloatButton } from "@/components/kakao-float-button";
+import { FloatButtons } from "@/components/kakao-float-button";
 
 export const metadata: Metadata = {
   title: {
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-white text-neutral-900 antialiased">
         {children}
-        <KakaoFloatButton />
+        <FloatButtons />
       </body>
     </html>
   );
