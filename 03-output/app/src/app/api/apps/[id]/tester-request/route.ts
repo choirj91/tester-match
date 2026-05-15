@@ -68,7 +68,6 @@ export async function GET(req: Request, { params }: Params) {
     .from("users")
     .select("id, nickname, trust_score, created_at")
     .eq("status", "active")
-    .not("auth_user_id", "is", null) // placeholder 제외
     .order("created_at", { ascending: false })
     .limit(200);
 
@@ -146,8 +145,7 @@ export async function POST(req: Request, { params }: Params) {
     .from("users")
     .select("id, nickname, email")
     .in("id", body.recipient_ids)
-    .eq("status", "active")
-    .not("auth_user_id", "is", null);
+    .eq("status", "active");
 
   const recipientMap = new Map((recipients ?? []).map((r) => [r.id, r]));
 

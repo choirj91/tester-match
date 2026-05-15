@@ -73,7 +73,6 @@ export default async function RequestTestersPage({ params }: Props) {
     .from("users")
     .select("id, nickname, trust_score, created_at")
     .eq("status", "active")
-    .not("auth_user_id", "is", null)
     .order("created_at", { ascending: false })
     .limit(200);
 
