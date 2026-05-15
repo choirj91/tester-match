@@ -7,7 +7,9 @@ export function FloatButtons() {
           이메일 문의
         </span>
         <a
-          href="mailto:choirj91@gmail.com"
+          href="https://mail.google.com/mail/?view=cm&fs=1&to=choirj91@gmail.com&su=Tester%20Match%20%EB%AC%B8%EC%9D%98"
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label="이메일 문의하기"
           className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-neutral-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-95"
         >
