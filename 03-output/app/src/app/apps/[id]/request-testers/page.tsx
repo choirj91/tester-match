@@ -36,26 +36,7 @@ export default async function RequestTestersPage({ params }: Props) {
     .maybeSingle();
   if (!app) notFound();
 
-  // 오늘(24h 롤링) 발송 건수
-  const DAILY_LIMIT = 30;
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { count: todayCount } = await supabase
-    .from("tester_request_sends")
-    .select("id", { count: "exact", head: true })
-    .eq("sender_user_id", user.id)
-    .gte("sent_at", since);
-
-  const remaining = Math.max(0, DAILY_LIMIT - (todayCount ?? 0));
-
-  // 이미 이 앱으로 요청 보낸 수신자 ID
-  const { data: alreadySent } = await supabase
-    .from("tester_request_sends")
-    .select("recipient_user_id")
-    .eq("sender_user_id", user.id)
-    .eq("app_id", appId);
-  const alreadySentIds = (alreadySent ?? []).map((r) => r.recipient_user_id);
-
-  // 이미 매칭된 테스터 ID
+  // 이미 매칭된 테스터 ID (제외 대상)
   const { data: matched } = await supabase
     .from("matches")
     .select("tester_user_id")
@@ -63,15 +44,21 @@ export default async function RequestTestersPage({ params }: Props) {
     .in("status", ["pending", "active", "completed"]);
   const matchedIds = (matched ?? []).map((m) => m.tester_user_id);
 
-  // 제외 ID 목록
-  const excludeIds = Array.from(new Set([user.id, ...alreadySentIds, ...matchedIds]));
+  // 제외 ID (본인 + 이미 매칭)
+  const excludeIds = Array.from(new Set([user.id, ...matchedIds]));
 
-  // 후보자 조회 (최근 가입 순)
-  type CandidateRow = { id: number; nickname: string; trust_score: number; created_at: string };
+  // 후보자 조회 (최근 가입 순, 이메일 포함)
+  type CandidateRow = {
+    id: number;
+    nickname: string;
+    trust_score: number;
+    email: string;
+    created_at: string;
+  };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = supabase
     .from("users")
-    .select("id, nickname, trust_score, created_at")
+    .select("id, nickname, trust_score, email, created_at")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(200);
@@ -91,9 +78,9 @@ export default async function RequestTestersPage({ params }: Props) {
         </Link>
 
         <div className="mt-4">
-          <h1 className="text-2xl font-bold text-neutral-900">테스터 요청 보내기</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">테스터 요청하기</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            <span className="font-medium">{app.name}</span> · Tester Match 회원들에게 직접 이메일로 테스트 참여를 요청합니다.
+            <span className="font-medium">{app.name}</span> · 이메일 주소를 복사하거나 Gmail로 바로 열어 테스트 참여 요청을 보낼 수 있습니다.
           </p>
         </div>
 
@@ -107,11 +94,8 @@ export default async function RequestTestersPage({ params }: Props) {
               id: c.id,
               nickname: c.nickname,
               trust_score: c.trust_score,
-              created_at: c.created_at,
+              email: c.email,
             }))}
-            todayCount={todayCount ?? 0}
-            dailyLimit={DAILY_LIMIT}
-            remaining={remaining}
           />
         </div>
       </main>
