@@ -79,6 +79,40 @@ export function dailyCheckinReminderEmail(args: {
   return { subject, html, text };
 }
 
+/** 테스터 요청 이메일 — 앱 소유자가 다른 사용자에게 직접 발송 */
+export function testerRequestEmail(args: {
+  senderNickname: string;
+  recipientNickname: string;
+  appName: string;
+  appId: number;
+  subject: string;
+  message: string;
+}): Email {
+  const lines = args.message
+    .split("\n")
+    .map((l) => `<p style="margin:0 0 10px;">${l === "" ? "&nbsp;" : escapeHtml(l)}</p>`)
+    .join("");
+  const html = layoutHtml(
+    `
+    <p style="margin:0 0 16px;"><strong>${args.recipientNickname}</strong> 님,</p>
+    ${lines}
+    <p style="margin:28px 0 0;">
+      <a href="${APP_URL}/browse/${args.appId}"
+         style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+        테스트 참여하기 →
+      </a>
+    </p>
+    `,
+    `이 메일은 Tester Match 회원 <strong>${args.senderNickname}</strong>님의 테스터 요청입니다. 원치 않으시면 무시하셔도 됩니다.`,
+  );
+  const text = `${args.recipientNickname} 님,\n\n${args.message}\n\n테스트 참여: ${APP_URL}/browse/${args.appId}`;
+  return { subject: args.subject, html, text };
+}
+
+function escapeHtml(s: string) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 export function matchCompletedEmail(args: {
   testerNickname: string;
   appName: string;

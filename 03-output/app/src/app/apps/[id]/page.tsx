@@ -72,6 +72,12 @@ export default async function AppDetailPage({ params }: Props) {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Link
+              href={`/apps/${app.id}/request-testers`}
+              className="rounded-lg border border-trust-300 bg-trust-50 px-3 py-2 text-sm font-semibold text-trust-700 hover:bg-trust-100"
+            >
+              테스터 요청
+            </Link>
+            <Link
               href={`/apps/${app.id}/edit`}
               className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
             >
