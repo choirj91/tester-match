@@ -12,6 +12,11 @@ const TILES = [
     title: "앱 일괄 등록",
     desc: "이메일 + 앱 정보 JSON 으로 한 번에 여러 건 등록. 미가입 사용자는 placeholder 로 생성되고, 이후 같은 이메일로 Google 로그인 시 자동 매칭됩니다.",
   },
+  {
+    href: "/admin/stats" as const,
+    title: "사용자 통계",
+    desc: "앱 등록 순위, 테스트 참여 순위, 완주 순위 등 사용자별 활동 통계와 전체 현황을 확인합니다.",
+  },
 ];
 
 export default async function AdminHomePage() {
