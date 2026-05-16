@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email";
 import { dailyCheckinReminderEmail } from "@/lib/email-templates";
 import { currentDayN } from "@/lib/checkin";
 import { verifyCronAuth } from "@/lib/cron-auth";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
   }
 
   type Pending = { name: string; appId: number; dayN: number };
-  type Entry = { email: string; nickname: string; pending: Pending[] };
+  type Entry = { email: string; nickname: string; pending: Pending[]; userId: number };
   const byTester = new Map<number, Entry>();
 
   for (const m of matches ?? []) {
@@ -65,6 +66,7 @@ export async function GET(request: Request) {
       email: tester.email,
       nickname: tester.nickname,
       pending: [],
+      userId: m.tester_user_id,
     };
     entry.pending.push({ name: app.name, appId: app.id, dayN });
     byTester.set(m.tester_user_id, entry);
@@ -85,6 +87,18 @@ export async function GET(request: Request) {
     });
     if (r.ok) sent++;
     else failed++;
+
+    // 인앱 알림 — 앱별로 D-day 리마인더
+    for (const p of entry.pending) {
+      const remaining = 14 - p.dayN + 1;
+      void createNotification({
+        userId: entry.userId,
+        type: "match_reminder",
+        title: "오늘 체크인을 완료해주세요",
+        body: `"${p.name}" D-${remaining} — 오늘(${p.dayN}일차) 체크인이 아직 완료되지 않았습니다.`,
+        link: "/my-tests",
+      });
+    }
   }
 
   return NextResponse.json({

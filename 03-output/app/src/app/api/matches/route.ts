@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { matchOptInEmail } from "@/lib/email-templates";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -133,6 +134,14 @@ async function notifyOwner(args: {
       subject: tmpl.subject,
       html: tmpl.html,
       text: tmpl.text,
+    });
+    // 인앱 알림
+    await createNotification({
+      userId: args.ownerUserId,
+      type: "match_new",
+      title: "새 테스터가 참여했습니다",
+      body: `${args.testerNickname}님이 "${args.appName}"에 참여했습니다. 남은 정원 ${args.remainingCount}명.`,
+      link: `/apps/${args.appId}`,
     });
   } catch (err) {
     console.error("[matches/POST] notifyOwner failed", err);

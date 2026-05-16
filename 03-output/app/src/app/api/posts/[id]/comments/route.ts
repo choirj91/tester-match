@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { CommentCreateSchema } from "@/lib/validators/comment";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -71,5 +72,22 @@ export async function POST(req: Request, { params }: Ctx) {
     console.error("[comments/POST]", error);
     return NextResponse.json({ ok: false, message: "작성 실패" }, { status: 500 });
   }
+
+  // 게시글 작성자에게 알림 (본인 댓글 제외)
+  const { data: post } = await supabase
+    .from("posts")
+    .select("author_user_id, title")
+    .eq("id", postId)
+    .maybeSingle();
+  if (post && post.author_user_id !== user.id) {
+    void createNotification({
+      userId: post.author_user_id,
+      type: "post_comment",
+      title: "게시글에 댓글이 달렸습니다",
+      body: `${user.nickname}님: ${payload.body.slice(0, 80)}`,
+      link: `/board/${postId}`,
+    });
+  }
+
   return NextResponse.json({ ok: true, id: data.id });
 }

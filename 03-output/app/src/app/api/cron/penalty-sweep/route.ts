@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { PENALTY_TRUST_DELTA, shouldPenalize } from "@/lib/penalty";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -104,7 +105,7 @@ async function applyPenalty(
   // 3) 정원 복구 (required_testers +1)
   const { data: app } = await supabase
     .from("apps")
-    .select("required_testers")
+    .select("required_testers, name")
     .eq("id", args.appId)
     .maybeSingle();
   if (app) {
@@ -113,6 +114,15 @@ async function applyPenalty(
       .update({ required_testers: app.required_testers + 1 })
       .eq("id", args.appId);
   }
+
+  // 4) 페널티 인앱 알림
+  void createNotification({
+    userId: args.testerUserId,
+    type: "match_penalized",
+    title: "체크인 미완료로 페널티가 적용되었습니다",
+    body: `"${app?.name ?? "앱"}" 테스트 체크인 미완료로 신뢰점수가 ${Math.abs(PENALTY_TRUST_DELTA)}점 차감되었습니다.`,
+    link: "/my-tests",
+  });
 
   return true;
 }

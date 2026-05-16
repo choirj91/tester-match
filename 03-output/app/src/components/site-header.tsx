@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AppUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
+import { NotificationBell } from "@/components/notification-bell";
 
 type NavItem = { href: string; label: string; soon?: boolean };
 
@@ -42,6 +43,7 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         <div className="flex shrink-0 items-center gap-4">
           {user ? (
             <>
+              <NotificationBell />
               {user.role === "admin" && (
                 <Link
                   href="/admin"

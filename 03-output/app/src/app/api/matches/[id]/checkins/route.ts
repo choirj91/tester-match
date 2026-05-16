@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { currentDayN } from "@/lib/checkin";
 import { sendEmail } from "@/lib/email";
 import { matchCompletedEmail } from "@/lib/email-templates";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -124,6 +125,14 @@ export async function POST(_req: Request, { params }: Ctx) {
           subject: tmpl.subject,
           html: tmpl.html,
           text: tmpl.text,
+        });
+        // 인앱 알림
+        await createNotification({
+          userId: user.id,
+          type: "match_completed",
+          title: "14일 완주를 달성했습니다!",
+          body: `"${appName}" 테스트 14일 완주 완료. 정식 출시 후 보상 안내 예정입니다.`,
+          link: "/my-tests",
         });
       } catch (err) {
         console.error("[checkins/POST] completion email failed", err);

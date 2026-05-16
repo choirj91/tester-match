@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AppCommentCreateSchema } from "@/lib/validators/app-comment";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { createNotification } from "@/lib/notifications";
 
 export const runtime = "edge";
 
@@ -97,5 +98,22 @@ export async function POST(req: Request, { params }: Ctx) {
     console.error("[app-comments/POST]", error);
     return NextResponse.json({ ok: false, message: "작성 실패" }, { status: 500 });
   }
+
+  // 앱 소유자에게 알림 (본인 댓글 제외)
+  const { data: app } = await supabase
+    .from("apps")
+    .select("owner_user_id, name")
+    .eq("id", appId)
+    .maybeSingle();
+  if (app && app.owner_user_id !== user.id) {
+    void createNotification({
+      userId: app.owner_user_id,
+      type: "comment_new",
+      title: "앱에 새 댓글이 달렸습니다",
+      body: `${user.nickname}님: ${payload.body.slice(0, 80)}`,
+      link: `/browse/${appId}`,
+    });
+  }
+
   return NextResponse.json({ ok: true, id: data.id });
 }
