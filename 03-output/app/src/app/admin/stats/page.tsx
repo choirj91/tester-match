@@ -27,6 +27,13 @@ export default async function AdminStatsPage() {
   const user = await requireAdminUser("/admin/stats");
   const supabase = createSupabaseAdminClient();
 
+  // ── 날짜 계산 (KST 기준 오늘 = UTC+9) ────────────────────────────────
+  const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const todayStr = nowKst.toISOString().slice(0, 10); // YYYY-MM-DD
+  const sevenDaysAgo = new Date(nowKst);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  const fromDateStr = sevenDaysAgo.toISOString().slice(0, 10);
+
   // ── 전체 수치 ─────────────────────────────────────────────────────────
   const [
     { count: totalUsers },
@@ -35,6 +42,7 @@ export default async function AdminStatsPage() {
     { count: activeMatches },
     { count: completedMatches },
     { count: totalRequests },
+    { data: pageViewRows },
   ] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }).is("deleted_at", null),
     supabase.from("apps").select("id", { count: "exact", head: true }).is("deleted_at", null),
@@ -42,7 +50,36 @@ export default async function AdminStatsPage() {
     supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "completed"),
     supabase.from("tester_request_sends").select("id", { count: "exact", head: true }),
+    supabase.from("page_views").select("visit_date").gte("visit_date", fromDateStr).lte("visit_date", todayStr),
   ]);
+
+  // ── 방문자 집계 ────────────────────────────────────────────────────────
+  const viewsByDate = new Map<string, number>();
+  for (const row of pageViewRows ?? []) {
+    const d = row.visit_date as string;
+    viewsByDate.set(d, (viewsByDate.get(d) ?? 0) + 1);
+  }
+
+  // 최근 7일 배열 (인덱스 0 = 6일 전, 6 = 오늘)
+  const weeklyData = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(nowKst);
+    d.setDate(d.getDate() - (6 - i));
+    const dateStr = d.toISOString().slice(0, 10);
+    const mm = d.getUTCMonth() + 1;
+    const dd = d.getUTCDate();
+    const dow = ["일", "월", "화", "수", "목", "금", "토"][d.getUTCDay()];
+    return {
+      date: dateStr,
+      visitors: viewsByDate.get(dateStr) ?? 0,
+      label: `${mm}/${dd}`,
+      sub: dow,
+      isToday: dateStr === todayStr,
+    };
+  });
+
+  const todayVisitors = viewsByDate.get(todayStr) ?? 0;
+  const weekVisitors = weeklyData.reduce((s, d) => s + d.visitors, 0);
+  const maxVisitors = Math.max(...weeklyData.map((d) => d.visitors), 1);
 
   // ── 사용자 목록 ────────────────────────────────────────────────────────
   const { data: users } = await supabase
@@ -117,6 +154,60 @@ export default async function AdminStatsPage() {
           <StatCard label="활성 매칭" value={activeMatches ?? 0} />
           <StatCard label="완주 매칭" value={completedMatches ?? 0} />
           <StatCard label="테스터 요청" value={totalRequests ?? 0} />
+        </section>
+
+        {/* 방문자 현황 */}
+        <section className="mt-10">
+          <h2 className="text-lg font-bold text-neutral-900">방문자 현황</h2>
+          <p className="mt-0.5 text-xs text-neutral-500">localStorage 세션 기준 · 기기별 일 1회 집계 (KST)</p>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <StatCard label="오늘 방문자" value={todayVisitors} sub="고유 기기 수" />
+            <StatCard label="7일 방문자" value={weekVisitors} sub="최근 1주 누계" />
+          </div>
+
+          {/* 7일 바 차트 */}
+          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <p className="mb-5 text-sm font-semibold text-neutral-700">일별 방문자 추이</p>
+            {/* 바 영역 */}
+            <div className="flex items-end gap-1.5" style={{ height: "96px" }}>
+              {weeklyData.map(({ date, visitors, isToday }) => {
+                const barH = Math.max(Math.round((visitors / maxVisitors) * 80), visitors > 0 ? 6 : 2);
+                return (
+                  <div key={date} className="flex flex-1 flex-col items-center gap-1">
+                    <span className="text-[11px] font-semibold text-neutral-500">{visitors}</span>
+                    <div
+                      className={`w-full rounded-t-sm transition-all ${
+                        isToday ? "bg-trust-500" : "bg-trust-200"
+                      }`}
+                      style={{ height: `${barH}px` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {/* 날짜 레이블 */}
+            <div className="mt-2 flex gap-1.5">
+              {weeklyData.map(({ date, label, sub, isToday }) => (
+                <div key={date} className="flex flex-1 flex-col items-center">
+                  <span
+                    className={`text-[10px] leading-tight ${
+                      isToday ? "font-bold text-trust-600" : "text-neutral-400"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                  <span
+                    className={`text-[9px] leading-tight ${
+                      isToday ? "font-semibold text-trust-400" : "text-neutral-300"
+                    }`}
+                  >
+                    {sub}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-3">

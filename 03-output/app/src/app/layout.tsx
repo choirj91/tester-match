@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { FloatButtons } from "@/components/kakao-float-button";
+import { PageTracker } from "@/components/page-tracker";
 
 export const metadata: Metadata = {
   title: {
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-white text-neutral-900 antialiased">
         {children}
         <FloatButtons />
+        <PageTracker />
       </body>
     </html>
   );
