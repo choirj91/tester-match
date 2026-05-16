@@ -35,15 +35,16 @@ export function BrowseControls({
   );
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-neutral-500">앱 {count}개</p>
 
-      <div className="flex items-center gap-3">
-        {/* 정렬 */}
+      {/* 모바일: 정렬 + 뷰 토글을 한 줄에 나란히 */}
+      <div className="flex items-center gap-2">
+        {/* 정렬 — 모바일에서 flex-1로 늘어남 */}
         <select
           value={sort}
           onChange={(e) => setParam("sort", e.target.value)}
-          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-700 shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20"
+          className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-700 shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 sm:flex-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -52,8 +53,8 @@ export function BrowseControls({
           ))}
         </select>
 
-        {/* 뷰 토글 */}
-        <div className="flex overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        {/* 뷰 토글 — shrink-0으로 고정 */}
+        <div className="flex shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <button
             type="button"
             onClick={() => setParam("view", "card")}
@@ -64,7 +65,7 @@ export function BrowseControls({
                 : "text-neutral-500 hover:bg-neutral-50"
             }`}
           >
-            ⊞ 카드
+            ⊞
           </button>
           <button
             type="button"
@@ -76,7 +77,7 @@ export function BrowseControls({
                 : "text-neutral-500 hover:bg-neutral-50"
             }`}
           >
-            ≡ 리스트
+            ≡
           </button>
         </div>
       </div>

@@ -66,7 +66,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function CardGrid({ apps }: { apps: BrowseApp[] }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {apps.map((app) => {
         const owner = getOwner(app);
         return (
@@ -191,7 +191,7 @@ export default async function BrowsePage({
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-6xl px-6 py-12">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <header className="mb-8">
           <h1 className="text-2xl font-bold text-neutral-900">매칭 가능 앱</h1>
           <p className="mt-1 text-sm text-neutral-600">
