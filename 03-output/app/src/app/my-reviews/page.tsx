@@ -165,29 +165,21 @@ export default async function MyReviewsPage() {
                       {row.tester && <TrustBadge score={row.tester.trust_score} />}
                     </div>
                     <p className="mt-1 text-xs text-neutral-500">
-                      {row.myApp ? (
-                        <Link
-                          href={`/apps/${row.myApp.id}`}
-                          className="font-medium text-neutral-700 underline-offset-2 hover:text-trust-600 hover:underline"
-                        >
-                          {row.myApp.name}
-                        </Link>
-                      ) : (
-                        <span className="font-medium text-neutral-700">내 앱</span>
-                      )}{" "}
+                      <span className="font-medium text-neutral-700">
+                        {row.myApp?.name ?? "내 앱"}
+                      </span>{" "}
                       테스트 참여 ·{" "}
                       {formatDate(row.latestMatch.opted_in_at ?? row.latestMatch.matched_at)}
                     </p>
                     {row.mutualTarget && (
-                      <p className="mt-0.5 text-xs text-neutral-400">
-                        상대방 앱:{" "}
-                        <Link
-                          href={`/browse/${row.mutualTarget.id}`}
-                          className="font-medium text-neutral-500 underline-offset-2 hover:text-trust-600 hover:underline"
-                        >
-                          {row.mutualTarget.name}
-                        </Link>
-                      </p>
+                      <Link
+                        href={`/browse/${row.mutualTarget.id}`}
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-600 transition hover:border-trust-500 hover:bg-trust-50 hover:text-trust-700"
+                      >
+                        <span className="text-neutral-400">상대방 앱</span>
+                        <span className="font-semibold">{row.mutualTarget.name}</span>
+                        <span className="text-neutral-400">›</span>
+                      </Link>
                     )}
                   </div>
 
