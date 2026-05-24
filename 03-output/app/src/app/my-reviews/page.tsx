@@ -115,9 +115,10 @@ export default async function MyReviewsPage() {
     const myApp = myAppById.get(latestMatch.app_id);
     const tester = testerById.get(tid);
     const theirApps = appsByTester.get(tid) ?? [];
-    const mutualDone = theirApps.some((a) => myMatchedAppIds.has(a.id));
+    const mutualMatchedApp = theirApps.find((a) => myMatchedAppIds.has(a.id));
+    const mutualDone = !!mutualMatchedApp;
     const mutualTarget = theirApps.find((a) => !myMatchedAppIds.has(a.id));
-    return { tid, latestMatch, myApp, tester, mutualDone, mutualTarget, theirApps };
+    return { tid, latestMatch, myApp, tester, mutualDone, mutualMatchedApp, mutualTarget, theirApps };
   });
 
   const totalTesters = rows.length;
@@ -151,59 +152,89 @@ export default async function MyReviewsPage() {
             <EmptyState hasApps={myAppIds.length > 0} />
           ) : (
             <ul className="space-y-3">
-              {rows.map((row) => (
-                <li
-                  key={row.tid}
-                  className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                >
-                  {/* 테스터 정보 */}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-neutral-900">
-                        {row.tester?.nickname ?? `사용자 #${row.tid}`}
-                      </span>
-                      {row.tester && <TrustBadge score={row.tester.trust_score} />}
-                    </div>
-                    <p className="mt-1 text-xs text-neutral-500">
-                      <span className="font-medium text-neutral-700">
-                        {row.myApp?.name ?? "내 앱"}
-                      </span>{" "}
-                      테스트 참여 ·{" "}
-                      {formatDate(row.latestMatch.opted_in_at ?? row.latestMatch.matched_at)}
-                    </p>
-                    {row.mutualTarget && (
-                      <Link
-                        href={`/browse/${row.mutualTarget.id}`}
-                        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-600 transition hover:border-trust-500 hover:bg-trust-50 hover:text-trust-700"
-                      >
-                        <span className="text-neutral-400">상대방 앱</span>
-                        <span className="font-semibold">{row.mutualTarget.name}</span>
-                        <span className="text-neutral-400">›</span>
-                      </Link>
-                    )}
-                  </div>
+              {rows.map((row) => {
+                const cardBase =
+                  "flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between";
 
-                  {/* 맞리뷰 버튼 */}
-                  <div className="shrink-0">
-                    {row.mutualDone ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500">
-                        맞리뷰 완료 ✓
-                      </span>
-                    ) : row.mutualTarget ? (
+                const innerContent = (
+                  <>
+                    {/* 테스터 정보 */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-neutral-900">
+                          {row.tester?.nickname ?? `사용자 #${row.tid}`}
+                        </span>
+                        {row.tester && <TrustBadge score={row.tester.trust_score} />}
+                      </div>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        <span className="font-medium text-neutral-700">
+                          {row.myApp?.name ?? "내 앱"}
+                        </span>{" "}
+                        테스트 참여 ·{" "}
+                        {formatDate(row.latestMatch.opted_in_at ?? row.latestMatch.matched_at)}
+                      </p>
+                      {row.mutualDone && row.mutualMatchedApp && (
+                        <p className="mt-0.5 text-xs text-neutral-400">
+                          맞리뷰 앱:{" "}
+                          <span className="font-medium text-neutral-500">
+                            {row.mutualMatchedApp.name}
+                          </span>
+                        </p>
+                      )}
+                      {!row.mutualDone && row.mutualTarget && (
+                        <Link
+                          href={`/browse/${row.mutualTarget.id}`}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-600 transition hover:border-trust-500 hover:bg-trust-50 hover:text-trust-700"
+                        >
+                          <span className="text-neutral-400">상대방 앱</span>
+                          <span className="font-semibold">{row.mutualTarget.name}</span>
+                          <span className="text-neutral-400">›</span>
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* 맞리뷰 버튼/배지 */}
+                    <div className="shrink-0">
+                      {row.mutualDone ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500">
+                          맞리뷰 완료 ✓
+                        </span>
+                      ) : row.mutualTarget ? (
+                        <Link
+                          href={`/browse/${row.mutualTarget.id}`}
+                          className="inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                        >
+                          맞리뷰 하기 →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-neutral-400">
+                          {row.theirApps.length === 0 ? "상대방 앱 없음" : "모집 완료"}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                );
+
+                // 맞리뷰 완료 — 카드 전체가 상대방 앱으로 이동하는 링크
+                if (row.mutualDone && row.mutualMatchedApp) {
+                  return (
+                    <li key={row.tid}>
                       <Link
-                        href={`/browse/${row.mutualTarget.id}`}
-                        className="inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                        href={`/browse/${row.mutualMatchedApp.id}`}
+                        className={`${cardBase} transition hover:border-trust-500 hover:shadow-md`}
                       >
-                        맞리뷰 하기 →
+                        {innerContent}
                       </Link>
-                    ) : (
-                      <span className="text-xs text-neutral-400">
-                        {row.theirApps.length === 0 ? "상대방 앱 없음" : "모집 완료"}
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
+                    </li>
+                  );
+                }
+
+                return (
+                  <li key={row.tid} className={cardBase}>
+                    {innerContent}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
