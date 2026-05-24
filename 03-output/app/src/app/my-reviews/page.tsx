@@ -165,15 +165,28 @@ export default async function MyReviewsPage() {
                       {row.tester && <TrustBadge score={row.tester.trust_score} />}
                     </div>
                     <p className="mt-1 text-xs text-neutral-500">
-                      <span className="font-medium text-neutral-700">
-                        {row.myApp?.name ?? "내 앱"}
-                      </span>{" "}
+                      {row.myApp ? (
+                        <Link
+                          href={`/apps/${row.myApp.id}`}
+                          className="font-medium text-neutral-700 underline-offset-2 hover:text-trust-600 hover:underline"
+                        >
+                          {row.myApp.name}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-neutral-700">내 앱</span>
+                      )}{" "}
                       테스트 참여 ·{" "}
                       {formatDate(row.latestMatch.opted_in_at ?? row.latestMatch.matched_at)}
                     </p>
                     {row.mutualTarget && (
                       <p className="mt-0.5 text-xs text-neutral-400">
-                        상대방 앱: {row.mutualTarget.name}
+                        상대방 앱:{" "}
+                        <Link
+                          href={`/browse/${row.mutualTarget.id}`}
+                          className="font-medium text-neutral-500 underline-offset-2 hover:text-trust-600 hover:underline"
+                        >
+                          {row.mutualTarget.name}
+                        </Link>
                       </p>
                     )}
                   </div>
