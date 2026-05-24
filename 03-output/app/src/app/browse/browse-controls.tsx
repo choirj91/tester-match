@@ -15,11 +15,15 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 export function BrowseControls({
   sort,
   view,
-  count,
+  total,
+  page,
+  totalPages,
 }: {
   sort: SortKey;
   view: "card" | "list";
-  count: number;
+  total: number;
+  page: number;
+  totalPages: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -29,18 +33,30 @@ export function BrowseControls({
     (key: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set(key, value);
+      // sort / view 변경 시 페이지를 1로 리셋
+      if (key !== "page") params.delete("page");
       router.push(`${pathname}?${params.toString()}`);
     },
     [router, pathname, searchParams],
   );
 
+  const startItem = total === 0 ? 0 : (page - 1) * 20 + 1;
+  const endItem = Math.min(page * 20, total);
+
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-neutral-500">앱 {count}개</p>
+      {/* 건수 */}
+      <p className="text-sm text-neutral-500">
+        총 <strong className="text-neutral-700">{total}</strong>개
+        {totalPages > 1 && (
+          <span className="ml-1 text-neutral-400">
+            · {startItem}–{endItem} 표시
+          </span>
+        )}
+      </p>
 
-      {/* 모바일: 정렬 + 뷰 토글을 한 줄에 나란히 */}
+      {/* 정렬 + 뷰 토글 */}
       <div className="flex items-center gap-2">
-        {/* 정렬 — 모바일에서 flex-1로 늘어남 */}
         <select
           value={sort}
           onChange={(e) => setParam("sort", e.target.value)}
@@ -53,16 +69,13 @@ export function BrowseControls({
           ))}
         </select>
 
-        {/* 뷰 토글 — shrink-0으로 고정 */}
         <div className="flex shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <button
             type="button"
             onClick={() => setParam("view", "card")}
             aria-label="카드 보기"
             className={`px-3 py-1.5 text-sm font-medium transition ${
-              view === "card"
-                ? "bg-trust-600 text-white"
-                : "text-neutral-500 hover:bg-neutral-50"
+              view === "card" ? "bg-trust-600 text-white" : "text-neutral-500 hover:bg-neutral-50"
             }`}
           >
             ⊞
@@ -72,9 +85,7 @@ export function BrowseControls({
             onClick={() => setParam("view", "list")}
             aria-label="리스트 보기"
             className={`border-l border-neutral-200 px-3 py-1.5 text-sm font-medium transition ${
-              view === "list"
-                ? "bg-trust-600 text-white"
-                : "text-neutral-500 hover:bg-neutral-50"
+              view === "list" ? "bg-trust-600 text-white" : "text-neutral-500 hover:bg-neutral-50"
             }`}
           >
             ≡

@@ -11,6 +11,8 @@ import type { SortKey } from "./browse-controls";
 export const runtime = "edge";
 export const metadata = { title: "매칭 가능 앱" };
 
+const PAGE_SIZE = 20;
+
 type BrowseApp = {
   id: number;
   name: string;
@@ -30,23 +32,24 @@ function getOwner(app: BrowseApp) {
     : app.users_public_profile;
 }
 
-function sortApps(apps: BrowseApp[], sort: SortKey): BrowseApp[] {
-  const sorted = [...apps].sort((a, b) => {
-    // Boost 항상 최상단
+/** status 정렬만 JS에서 처리 (APP_STATUS_ORDER 커스텀 매핑) */
+function sortByStatus(apps: BrowseApp[]): BrowseApp[] {
+  return [...apps].sort((a, b) => {
     if (a.is_boost !== b.is_boost) return a.is_boost ? -1 : 1;
-
-    switch (sort) {
-      case "oldest":
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      case "testers":
-        return b.required_testers - a.required_testers;
-      case "status":
-        return (APP_STATUS_ORDER[a.status] ?? 9) - (APP_STATUS_ORDER[b.status] ?? 9);
-      default: // newest
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
+    return (APP_STATUS_ORDER[a.status] ?? 9) - (APP_STATUS_ORDER[b.status] ?? 9);
   });
-  return sorted;
+}
+
+function getPageNumbers(current: number, total: number): (number | "...")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const nums: (number | "...")[] = [1];
+  if (current > 3) nums.push("...");
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  for (let i = start; i <= end; i++) nums.push(i);
+  if (current < total - 2) nums.push("...");
+  nums.push(total);
+  return nums;
 }
 
 function krDate(iso: string) {
@@ -54,7 +57,10 @@ function krDate(iso: string) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const label = APP_STATUS_LABEL[status as AppStatus] ?? { text: status, tone: "bg-neutral-100 text-neutral-500" };
+  const label = APP_STATUS_LABEL[status as AppStatus] ?? {
+    text: status,
+    tone: "bg-neutral-100 text-neutral-500",
+  };
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${label.tone}`}>
       {label.text}
@@ -96,9 +102,7 @@ function CardGrid({ apps }: { apps: BrowseApp[] }) {
                   테스터 <strong className="text-trust-600">{app.required_testers}</strong>명
                 </span>
                 <span>·</span>
-                <span>
-                  {owner?.nickname ?? "—"}
-                </span>
+                <span>{owner?.nickname ?? "—"}</span>
                 <span>·</span>
                 <span className="tabular">{krDate(app.created_at)} 등록</span>
               </div>
@@ -123,12 +127,10 @@ function ListView({ apps }: { apps: BrowseApp[] }) {
               href={`/browse/${app.id}`}
               className="flex items-center gap-4 px-5 py-4 transition hover:bg-neutral-50"
             >
-              {/* 상태 */}
               <div className="w-16 shrink-0">
                 <StatusBadge status={app.status} />
               </div>
 
-              {/* 앱 이름 + 설명 */}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-semibold text-neutral-900">{app.name}</span>
@@ -141,7 +143,6 @@ function ListView({ apps }: { apps: BrowseApp[] }) {
                 <p className="mt-0.5 truncate text-xs text-neutral-500">{app.short_description}</p>
               </div>
 
-              {/* 메타 */}
               <div className="hidden shrink-0 items-center gap-4 text-xs text-neutral-500 sm:flex">
                 <span className="tabular">
                   <strong className="text-trust-600">{app.required_testers}</strong>명
@@ -159,6 +160,85 @@ function ListView({ apps }: { apps: BrowseApp[] }) {
   );
 }
 
+// ── 페이지네이션 ──────────────────────────────────────────────────────
+
+function Pagination({
+  page,
+  totalPages,
+  sort,
+  view,
+}: {
+  page: number;
+  totalPages: number;
+  sort: SortKey;
+  view: string;
+}) {
+  if (totalPages <= 1) return null;
+
+  function href(p: number) {
+    const params = new URLSearchParams({ sort, view, page: String(p) });
+    return `/browse?${params.toString()}`;
+  }
+
+  const pageNums = getPageNumbers(page, totalPages);
+
+  return (
+    <nav className="mt-10 flex items-center justify-center gap-1" aria-label="페이지 이동">
+      {/* 이전 */}
+      {page > 1 ? (
+        <Link
+          href={href(page - 1)}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm text-neutral-600 hover:bg-neutral-50"
+        >
+          ‹
+        </Link>
+      ) : (
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-100 text-sm text-neutral-300">
+          ‹
+        </span>
+      )}
+
+      {/* 페이지 번호 */}
+      {pageNums.map((p, i) =>
+        p === "..." ? (
+          <span
+            key={`dot-${i}`}
+            className="flex h-9 w-9 items-center justify-center text-sm text-neutral-400"
+          >
+            …
+          </span>
+        ) : (
+          <Link
+            key={p}
+            href={href(p)}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition ${
+              p === page
+                ? "border-trust-600 bg-trust-600 text-white"
+                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
+            }`}
+          >
+            {p}
+          </Link>
+        ),
+      )}
+
+      {/* 다음 */}
+      {page < totalPages ? (
+        <Link
+          href={href(page + 1)}
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm text-neutral-600 hover:bg-neutral-50"
+        >
+          ›
+        </Link>
+      ) : (
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-100 text-sm text-neutral-300">
+          ›
+        </span>
+      )}
+    </nav>
+  );
+}
+
 // ── 메인 페이지 ───────────────────────────────────────────────────────
 
 const VALID_SORTS: SortKey[] = ["newest", "oldest", "testers", "status"];
@@ -166,27 +246,62 @@ const VALID_SORTS: SortKey[] = ["newest", "oldest", "testers", "status"];
 export default async function BrowsePage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; view?: string }>;
+  searchParams: Promise<{ sort?: string; view?: string; page?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/browse");
 
-  const { sort: sortParam = "newest", view: viewParam = "card" } = await searchParams;
+  const { sort: sortParam = "newest", view: viewParam = "card", page: pageParam } =
+    await searchParams;
+
   const sort: SortKey = VALID_SORTS.includes(sortParam as SortKey)
     ? (sortParam as SortKey)
     : "newest";
   const view = viewParam === "list" ? "list" : "card";
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
 
   const supabase = createSupabaseAdminClient();
-  const { data: rawApps } = await supabase
-    .from("apps")
-    .select(
-      "id, name, short_description, required_testers, is_boost, created_at, status, owner_user_id, users_public_profile!inner(nickname)",
-    )
-    .in("status", BROWSE_STATUSES)
-    .limit(100);
 
-  const apps = sortApps((rawApps as BrowseApp[] | null) ?? [], sort);
+  const SELECT_COLS =
+    "id, name, short_description, required_testers, is_boost, created_at, status, owner_user_id, users_public_profile!inner(nickname)";
+
+  let apps: BrowseApp[];
+  let total: number;
+
+  if (sort === "status") {
+    // JS 정렬이 필요하므로 전체 조회 후 슬라이싱
+    const { data, count } = await supabase
+      .from("apps")
+      .select(SELECT_COLS, { count: "exact" })
+      .in("status", BROWSE_STATUSES)
+      .order("created_at", { ascending: false });
+
+    const sorted = sortByStatus((data as BrowseApp[] | null) ?? []);
+    total = count ?? sorted.length;
+    apps = sorted.slice(offset, offset + PAGE_SIZE);
+  } else {
+    // DB 정렬 + 범위 페이지네이션
+    const ascending = sort === "oldest";
+    const column = sort === "testers" ? "required_testers" : "created_at";
+
+    const { data, count } = await supabase
+      .from("apps")
+      .select(SELECT_COLS, { count: "exact" })
+      .in("status", BROWSE_STATUSES)
+      .order("is_boost", { ascending: false })
+      .order(column, { ascending })
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    total = count ?? 0;
+    apps = (data as BrowseApp[] | null) ?? [];
+  }
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  // page 범위 초과 시 1페이지로 리다이렉트
+  if (page > totalPages && totalPages > 0) {
+    redirect(`/browse?sort=${sort}&view=${view}`);
+  }
 
   return (
     <>
@@ -199,10 +314,11 @@ export default async function BrowsePage({
           </p>
         </header>
 
-        {apps.length > 0 ? (
+        {total > 0 ? (
           <>
-            <BrowseControls sort={sort} view={view} count={apps.length} />
+            <BrowseControls sort={sort} view={view} total={total} page={page} totalPages={totalPages} />
             {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
+            <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
