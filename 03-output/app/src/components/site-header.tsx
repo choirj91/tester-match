@@ -7,7 +7,7 @@ type NavItem = { href: string; label: string; soon?: boolean };
 
 const NAV: readonly NavItem[] = [
   { href: "/browse", label: "매칭 가능" },
-  { href: "/boost", label: "급구", soon: true },
+  { href: "/boost", label: "급구" },
   { href: "/board", label: "게시판" },
   { href: "/my-tests", label: "내 테스트" },
   { href: "/my-reviews", label: "맞리뷰" },

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
+import { BoostToggle } from "./boost-toggle";
 
 export const runtime = 'edge';
 
@@ -33,7 +34,7 @@ export default async function AppDetailPage({ params }: Props) {
   const { data: app } = await supabase
     .from("apps")
     .select(
-      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status, created_at, updated_at",
+      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status, is_boost, created_at, updated_at",
     )
     .eq("id", appId)
     .eq("owner_user_id", user.id)
@@ -64,11 +65,18 @@ export default async function AppDetailPage({ params }: Props) {
         <div className="mt-4 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900">{app.name}</h1>
-            <span
-              className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusLabel.tone}`}
-            >
-              {statusLabel.text}
-            </span>
+            <div className="mt-2 flex items-center gap-1.5">
+              <span
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusLabel.tone}`}
+              >
+                {statusLabel.text}
+              </span>
+              {app.is_boost && (
+                <span className="inline-flex rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                  BOOST
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Link
@@ -116,6 +124,8 @@ export default async function AppDetailPage({ params }: Props) {
             <Row label="웹 참여" url={app.web_invite_url} />
           </div>
         </section>
+
+        <BoostToggle id={app.id} isBoost={app.is_boost ?? false} />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">
