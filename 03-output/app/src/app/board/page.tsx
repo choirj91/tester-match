@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -13,7 +12,6 @@ type Props = { searchParams: Promise<{ category?: string }> };
 
 export default async function BoardPage({ searchParams }: Props) {
   const user = await getCurrentUser();
-  if (!user) redirect("/auth/login?next=/board");
 
   const { category } = await searchParams;
   const activeCategory =

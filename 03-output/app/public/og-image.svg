@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="200" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" font-size="72" font-weight="800">Tester Match</text>
+  <text x="80" y="280" fill="#DBEAFE" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" font-size="42" font-weight="600">Google Play 비공개 테스터 12명을</text>
+  <text x="80" y="340" fill="#DBEAFE" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" font-size="42" font-weight="600">7일 안에 · 무료 · 품앗이 매칭</text>
+  <text x="80" y="500" fill="#93C5FD" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" font-size="32" font-weight="500">tester-match.pages.dev</text>
+  <rect x="80" y="540" width="120" height="6" fill="#FDE68A"/>
+</svg>

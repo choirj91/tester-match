@@ -259,7 +259,6 @@ export default async function BrowsePage({
   searchParams: Promise<{ sort?: string; view?: string; page?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/auth/login?next=/browse");
 
   const { sort: sortParam = "newest", view: viewParam = "card", page: pageParam } =
     await searchParams;

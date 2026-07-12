@@ -1,5 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -11,18 +12,38 @@ export const runtime = 'edge';
 
 type Props = { params: Promise<{ id: string }> };
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const appId = Number(id);
+  if (!Number.isInteger(appId)) return {};
+  const supabase = createSupabaseAdminClient();
+  const { data: app } = await supabase
+    .from("apps")
+    .select("id, name, short_description, status")
+    .eq("id", appId)
+    .maybeSingle();
+  if (!app || app.status === "deleted" || app.status === "draft") return {};
+  const title = `${app.name} — 안드로이드 비공개 테스터 모집`;
+  const description = (app.short_description ?? "").slice(0, 155) || `${app.name} 앱의 Google Play 비공개 테스터를 모집 중입니다.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/browse/${appId}` },
+    openGraph: { title, description, url: `https://tester-match.pages.dev/browse/${appId}`, type: "article" },
+    twitter: { card: "summary", title, description },
+  };
+}
+
 export default async function BrowseDetailPage({ params }: Props) {
   const user = await getCurrentUser();
-  if (!user) {
-    const { id } = await params;
-    redirect(`/auth/login?next=/browse/${id}`);
-  }
 
   const { id } = await params;
   const appId = Number(id);
   if (!Number.isInteger(appId)) notFound();
 
   const supabase = createSupabaseAdminClient();
+
+  const userId = user?.id ?? -1; // 로그인 안 되어 있을 때 무의미 값으로 필터링
 
   const [{ data: app }, { data: existingMatch }, { count: activeCount }, { data: comments }, { data: ownAppsForPromote }] =
     await Promise.all([
@@ -33,13 +54,15 @@ export default async function BrowseDetailPage({ params }: Props) {
         )
         .eq("id", appId)
         .maybeSingle(),
-      supabase
-        .from("matches")
-        .select("id")
-        .eq("app_id", appId)
-        .eq("tester_user_id", user.id)
-        .in("status", ["pending", "active"])
-        .maybeSingle(),
+      user
+        ? supabase
+            .from("matches")
+            .select("id")
+            .eq("app_id", appId)
+            .eq("tester_user_id", userId)
+            .in("status", ["pending", "active"])
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
       supabase
         .from("matches")
         .select("id", { count: "exact", head: true })
@@ -53,21 +76,23 @@ export default async function BrowseDetailPage({ params }: Props) {
         .eq("app_id", appId)
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
-      supabase
-        .from("apps")
-        .select("id, name, status")
-        .eq("owner_user_id", user.id)
-        .in("status", ["matching", "reviewing", "launched"])
-        .neq("id", appId)
-        .order("created_at", { ascending: false }),
+      user
+        ? supabase
+            .from("apps")
+            .select("id, name, status")
+            .eq("owner_user_id", userId)
+            .in("status", ["matching", "reviewing", "launched"])
+            .neq("id", appId)
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [] as Array<{ id: number; name: string; status: string }> }),
     ]);
 
-  if (!app) notFound();
+  if (!app || app.status === "deleted") notFound();
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
     : app.users_public_profile;
-  const isOwn = app.owner_user_id === user.id;
+  const isOwn = !!user && app.owner_user_id === user.id;
   const joined = !!existingMatch;
   const linksRevealed = joined || isOwn;
   const statusLabel = APP_STATUS_LABEL[(app.status as AppStatus) ?? "matching"];
@@ -102,8 +127,28 @@ export default async function BrowseDetailPage({ params }: Props) {
     };
   });
 
+  const appJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: app.name,
+    description: app.short_description,
+    applicationCategory: "MobileApplication",
+    operatingSystem: "ANDROID",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "KRW",
+    },
+    author: { "@type": "Person", name: owner?.nickname ?? "Tester Match 사용자" },
+    datePublished: app.created_at,
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+      />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <Link href="/browse" className="text-sm text-neutral-500 hover:text-neutral-900">
@@ -200,7 +245,7 @@ export default async function BrowseDetailPage({ params }: Props) {
             </div>
           )}
 
-          {!isOwn && (
+          {!isOwn && user && (
             <div className="mt-6">
               <OptInButton
                 appId={app.id}
@@ -210,17 +255,48 @@ export default async function BrowseDetailPage({ params }: Props) {
               />
             </div>
           )}
+          {!user && (
+            <div className="mt-6">
+              <Link
+                href={`/auth/login?next=/browse/${app.id}`}
+                className="inline-flex rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+              >
+                로그인하고 참여하기 →
+              </Link>
+            </div>
+          )}
         </section>
 
-        <AppCommentsSection
-          appId={app.id}
-          currentUserId={user.id}
-          initialComments={enrichedComments}
-          ownPromotableApps={(ownAppsForPromote ?? []).map((a) => ({
-            id: a.id,
-            name: a.name,
-          }))}
-        />
+        {user ? (
+          <AppCommentsSection
+            appId={app.id}
+            currentUserId={user.id}
+            initialComments={enrichedComments}
+            ownPromotableApps={(ownAppsForPromote ?? []).map((a) => ({
+              id: a.id,
+              name: a.name,
+            }))}
+          />
+        ) : (
+          <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-900">
+              댓글 <span className="tabular text-neutral-500">{enrichedComments.length}</span>
+            </h2>
+            <p className="mt-2 text-sm text-neutral-500">
+              댓글을 작성하려면 로그인이 필요합니다.
+            </p>
+            {enrichedComments.length > 0 && (
+              <ul className="mt-4 divide-y divide-neutral-100">
+                {enrichedComments.slice(0, 10).map((c) => (
+                  <li key={c.id} className="py-3">
+                    <p className="text-xs font-semibold text-neutral-700">{c.author_nickname}</p>
+                    <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap">{c.body}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </main>
     </>
   );
