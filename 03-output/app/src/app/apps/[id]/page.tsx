@@ -126,6 +126,9 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
                 shortDescription: app.short_description,
                 remaining: app.required_testers,
                 appId: app.id,
+                googleGroupUrl: app.google_group_url,
+                webInviteUrl: app.web_invite_url,
+                storeInviteUrl: app.store_invite_url,
               })}
             />
           </div>
@@ -233,16 +236,44 @@ function buildShareText(args: {
   shortDescription: string;
   remaining: number;
   appId: number;
+  googleGroupUrl: string | null;
+  webInviteUrl: string | null;
+  storeInviteUrl: string | null;
 }): string {
-  const url = `${SITE_URL}/browse/${args.appId}`;
-  return [
-    `[Tester Match] "${args.appName}" 테스터 ${args.remaining}명 모집 중입니다.`,
-    "",
-    args.shortDescription,
-    "",
-    "Google Play 비공개 테스트 14일 완주 요건, 서로 도와요.",
-    `👉 ${url}`,
-  ].join("\n");
+  const lines: string[] = [];
+  lines.push(`📱 [Tester Match] "${args.appName}" 안드로이드 비공개 테스터 모집 (${args.remaining}명)`);
+  lines.push("");
+  lines.push(args.shortDescription);
+  lines.push("");
+  lines.push("참여 방법 (5분)");
+
+  let stepIdx = 1;
+  const stepMarks = ["①", "②", "③", "④"];
+
+  if (args.googleGroupUrl) {
+    lines.push(`${stepMarks[stepIdx - 1]} 아래 그룹 가입 (버튼만 누르면 바로 승인)`);
+    lines.push(`→ ${args.googleGroupUrl}`);
+    stepIdx++;
+  }
+  if (args.webInviteUrl) {
+    lines.push(`${stepMarks[stepIdx - 1]} 테스터 참여하기`);
+    lines.push(`→ ${args.webInviteUrl}`);
+    stepIdx++;
+  }
+  if (args.storeInviteUrl) {
+    lines.push(`${stepMarks[stepIdx - 1]} 플레이스토어에서 설치`);
+    lines.push(`→ ${args.storeInviteUrl}`);
+    stepIdx++;
+  }
+
+  lines.push("");
+  lines.push("⚠️ 꼭 지켜주세요");
+  lines.push("- 설치 후 삭제하지 말고 14일 유지해주세요");
+  lines.push("- 품앗이 상대 앱도 알려주시면 저도 똑같이 테스터로 참여하겠습니다 🙌");
+  lines.push("");
+  lines.push(`👉 상세: ${SITE_URL}/browse/${args.appId}`);
+
+  return lines.join("\n");
 }
 
 function Row({ label, url, amber }: { label: string; url: string | null; amber?: boolean }) {
