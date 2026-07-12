@@ -25,7 +25,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .from("apps")
         .select("id, updated_at")
         .in("status", ["matching", "reviewing", "launched"])
-        .is("deleted_at", null)
         .order("updated_at", { ascending: false })
         .limit(1000),
       supabase
