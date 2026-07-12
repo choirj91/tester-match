@@ -97,3 +97,5 @@ async function head(
     return { ok: false, reason: "exception" };
   }
 }
+
+export const POST = GET;

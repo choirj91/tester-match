@@ -126,3 +126,5 @@ async function applyPenalty(
 
   return true;
 }
+
+export const POST = GET;

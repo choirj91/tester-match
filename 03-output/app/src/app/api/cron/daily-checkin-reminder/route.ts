@@ -108,3 +108,5 @@ export async function GET(request: Request) {
     failed,
   });
 }
+
+export const POST = GET;
