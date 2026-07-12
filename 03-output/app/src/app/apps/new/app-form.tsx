@@ -44,7 +44,7 @@ export function AppForm({ initialNickname, email }: Props) {
         setSubmitting(false);
         return;
       }
-      router.push("/apps");
+      router.push(data.id ? `/apps/${data.id}?welcome=1` : "/apps");
       router.refresh();
     } catch {
       setError("네트워크 오류. 잠시 후 다시 시도해주세요.");

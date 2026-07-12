@@ -6,10 +6,14 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 import { BoostToggle } from "./boost-toggle";
+import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
 
 export const runtime = 'edge';
 
-type Props = { params: Promise<{ id: string }> };
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ welcome?: string }>;
+};
 
 const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
   active: { text: "진행중", tone: "bg-trust-50 text-trust-700" },
@@ -19,7 +23,7 @@ const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
   pending: { text: "대기", tone: "bg-neutral-100 text-neutral-700" },
 };
 
-export default async function AppDetailPage({ params }: Props) {
+export default async function AppDetailPage({ params, searchParams }: Props) {
   const user = await getCurrentUser();
   if (!user) {
     const { id } = await params;
@@ -27,6 +31,8 @@ export default async function AppDetailPage({ params }: Props) {
   }
 
   const { id } = await params;
+  const { welcome } = await searchParams;
+  const isWelcome = welcome === "1";
   const appId = Number(id);
   if (!Number.isInteger(appId)) notFound();
 
@@ -98,6 +104,32 @@ export default async function AppDetailPage({ params }: Props) {
         <p className="mt-6 text-base leading-relaxed text-neutral-700">
           {app.short_description}
         </p>
+
+        <section
+          className={`mt-6 rounded-2xl border p-5 ${
+            isWelcome ? "border-trust-500/40 bg-trust-50" : "border-neutral-200 bg-neutral-50"
+          }`}
+        >
+          {isWelcome && (
+            <p className="mb-2 text-sm font-bold text-trust-700">
+              🎉 앱 등록 완료! 지금 카톡 오픈채팅에 공유해 테스터를 모아보세요.
+            </p>
+          )}
+          <h2 className="text-sm font-semibold text-neutral-900">테스터 모집 공유</h2>
+          <p className="mt-1 text-xs text-neutral-500">
+            버튼 클릭 시 문구가 클립보드에 복사되고 카톡 오픈채팅방이 새 창으로 열립니다. 채팅방에서 붙여넣기(Ctrl/⌘+V) 하면 끝.
+          </p>
+          <div className="mt-3">
+            <KakaoOpenchatShareButton
+              text={buildShareText({
+                appName: app.name,
+                shortDescription: app.short_description,
+                remaining: app.required_testers,
+                appId: app.id,
+              })}
+            />
+          </div>
+        </section>
 
         <dl className="mt-8 grid gap-3 sm:grid-cols-3">
           <Stat label="참여중" value={`${activeCount}명`} />
@@ -192,6 +224,25 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 text-base font-semibold text-neutral-900 tabular">{value}</dd>
     </div>
   );
+}
+
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://tester-match.pages.dev";
+
+function buildShareText(args: {
+  appName: string;
+  shortDescription: string;
+  remaining: number;
+  appId: number;
+}): string {
+  const url = `${SITE_URL}/browse/${args.appId}`;
+  return [
+    `[Tester Match] "${args.appName}" 테스터 ${args.remaining}명 모집 중입니다.`,
+    "",
+    args.shortDescription,
+    "",
+    "Google Play 비공개 테스트 14일 완주 요건, 서로 도와요.",
+    `👉 ${url}`,
+  ].join("\n");
 }
 
 function Row({ label, url, amber }: { label: string; url: string | null; amber?: boolean }) {
