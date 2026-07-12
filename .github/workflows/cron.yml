@@ -9,6 +9,8 @@ on:
     - cron: "0 12 * * *"
     # 6시간 간격 — 앱 초대 링크 HEAD 검증
     - cron: "0 */6 * * *"
+    # 매일 KST 09:00 (UTC 00:00) — 급구 자동 만료 sweep + D-1 알림
+    - cron: "0 0 * * *"
   # 수동 실행 지원 (Dashboard Actions 탭 → Run workflow)
   workflow_dispatch:
     inputs:
@@ -20,6 +22,7 @@ on:
           - daily-checkin-reminder
           - penalty-sweep
           - validate-app-urls
+          - boost-expiry-sweep
           - all
 
 env:
@@ -56,6 +59,23 @@ jobs:
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST "$APP_URL/api/cron/penalty-sweep" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json")
+          echo "HTTP $STATUS"
+          [ "$STATUS" -eq 200 ] || exit 1
+
+  # ── 급구 자동 만료 sweep (KST 09:00) ────────────────
+  boost-expiry-sweep:
+    name: 급구 만료 Sweep
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (inputs.job == 'boost-expiry-sweep' || inputs.job == 'all') ||
+      github.event_name == 'schedule' && startsWith(github.event.schedule, '0 0 ')
+    steps:
+      - name: Call /api/cron/boost-expiry-sweep
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "$APP_URL/api/cron/boost-expiry-sweep" \
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json")
           echo "HTTP $STATUS"

@@ -19,6 +19,8 @@ const TYPE_ICON: Record<string, string> = {
   match_penalized: "⚠️",
   comment_new: "💬",
   post_comment: "📝",
+  boost_expiring: "⏳",
+  boost_expired: "🔕",
 };
 
 function formatRelative(dateStr: string): string {

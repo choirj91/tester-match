@@ -62,6 +62,17 @@ export async function PATCH(req: Request, { params }: Ctx) {
     await supabase.from("users").update({ nickname }).eq("id", user.id);
   }
 
+  // 급구 자동 만료 — 7일 후 boost_deadline_at 세팅 / 해제 시 null
+  if (Object.prototype.hasOwnProperty.call(appPatch, "is_boost")) {
+    const patch = appPatch as { is_boost?: boolean; boost_deadline_at?: string | null };
+    if (patch.is_boost === true) {
+      const deadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      patch.boost_deadline_at = deadline.toISOString();
+    } else if (patch.is_boost === false) {
+      patch.boost_deadline_at = null;
+    }
+  }
+
   if (Object.keys(appPatch).length > 0) {
     const { error } = await supabase
       .from("apps")

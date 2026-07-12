@@ -11,7 +11,9 @@ export type NotificationType =
   | "match_completed"
   | "match_penalized"
   | "comment_new"
-  | "post_comment";
+  | "post_comment"
+  | "boost_expiring"
+  | "boost_expired";
 
 type Args = {
   userId: number;

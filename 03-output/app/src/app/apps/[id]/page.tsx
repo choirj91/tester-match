@@ -40,7 +40,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
   const { data: app } = await supabase
     .from("apps")
     .select(
-      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status, is_boost, created_at, updated_at",
+      "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, google_group_url, required_testers, status, is_boost, boost_deadline_at, created_at, updated_at",
     )
     .eq("id", appId)
     .eq("owner_user_id", user.id)
@@ -160,7 +160,11 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <BoostToggle id={app.id} isBoost={app.is_boost ?? false} />
+        <BoostToggle
+          id={app.id}
+          isBoost={app.is_boost ?? false}
+          deadlineAt={app.boost_deadline_at ?? null}
+        />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">
