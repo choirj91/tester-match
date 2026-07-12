@@ -226,7 +226,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://tester-match.pages.dev";
+const SITE_URL = "https://tester-match.pages.dev";
 
 function buildShareText(args: {
   appName: string;
