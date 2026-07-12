@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import "./globals.css";
 import { FloatButtons } from "@/components/kakao-float-button";
 import { PageTracker } from "@/components/page-tracker";
@@ -36,18 +35,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
         <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="bg-white text-neutral-900 antialiased">
         {children}
         <FloatButtons />
         <PageTracker />
-        <Script
-          id="adsense-loader"
-          async
-          strategy="afterInteractive"
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   );
