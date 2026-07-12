@@ -40,6 +40,16 @@ function sortByStatus(apps: BrowseApp[]): BrowseApp[] {
   });
 }
 
+// Fisher-Yates 셔플 (요청마다 서버 렌더 → 매 방문 새 순서)
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function getPageNumbers(current: number, total: number): (number | "...")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const nums: (number | "...")[] = [1];
@@ -266,22 +276,30 @@ export default async function BrowsePage({
   const SELECT_COLS =
     "id, name, short_description, required_testers, is_boost, created_at, status, owner_user_id, users_public_profile!inner(nickname)";
 
+  // 급구 리스트 — 별도 조회 후 서버 랜덤 셔플, 페이지네이션과 무관하게 상단 고정
+  const { data: boostRaw } = await supabase
+    .from("apps")
+    .select(SELECT_COLS)
+    .in("status", BROWSE_STATUSES)
+    .eq("is_boost", true);
+  const boostApps = shuffle((boostRaw as BrowseApp[] | null) ?? []);
+
+  // 비-급구 리스트 — 기존 정렬 + 페이지네이션
   let apps: BrowseApp[];
-  let total: number;
+  let nonBoostTotal: number;
 
   if (sort === "status") {
-    // JS 정렬이 필요하므로 전체 조회 후 슬라이싱
     const { data, count } = await supabase
       .from("apps")
       .select(SELECT_COLS, { count: "exact" })
       .in("status", BROWSE_STATUSES)
+      .eq("is_boost", false)
       .order("created_at", { ascending: false });
 
     const sorted = sortByStatus((data as BrowseApp[] | null) ?? []);
-    total = count ?? sorted.length;
+    nonBoostTotal = count ?? sorted.length;
     apps = sorted.slice(offset, offset + PAGE_SIZE);
   } else {
-    // DB 정렬 + 범위 페이지네이션
     const ascending = sort === "oldest";
     const column = sort === "testers" ? "required_testers" : "created_at";
 
@@ -289,17 +307,19 @@ export default async function BrowsePage({
       .from("apps")
       .select(SELECT_COLS, { count: "exact" })
       .in("status", BROWSE_STATUSES)
-      .order("is_boost", { ascending: false })
+      .eq("is_boost", false)
       .order(column, { ascending })
       .range(offset, offset + PAGE_SIZE - 1);
 
-    total = count ?? 0;
+    nonBoostTotal = count ?? 0;
     apps = (data as BrowseApp[] | null) ?? [];
   }
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const total = nonBoostTotal + boostApps.length;
+
+  const totalPages = Math.max(1, Math.ceil(nonBoostTotal / PAGE_SIZE));
   // page 범위 초과 시 1페이지로 리다이렉트
-  if (page > totalPages && totalPages > 0) {
+  if (page > totalPages && nonBoostTotal > 0) {
     redirect(`/browse?sort=${sort}&view=${view}`);
   }
 
@@ -316,7 +336,21 @@ export default async function BrowsePage({
 
         {total > 0 ? (
           <>
-            <BrowseControls sort={sort} view={view} total={total} page={page} totalPages={totalPages} />
+            {boostApps.length > 0 && (
+              <section className="mb-8">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                    🔥 BOOST
+                  </span>
+                  <h2 className="text-sm font-bold text-neutral-900">
+                    급구 · <span className="tabular text-neutral-500">{boostApps.length}</span>
+                  </h2>
+                  <span className="text-[11px] text-neutral-400">매번 랜덤 순서</span>
+                </div>
+                {view === "card" ? <CardGrid apps={boostApps} /> : <ListView apps={boostApps} />}
+              </section>
+            )}
+            <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
             {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
           </>
