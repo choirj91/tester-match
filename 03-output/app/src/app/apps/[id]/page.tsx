@@ -7,6 +7,12 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 import { BoostToggle } from "./boost-toggle";
 import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
+import { KpiSection } from "./kpi-section";
+import {
+  isGroupsAutoJoinEnabled,
+  getTesterGroupEmail,
+  getTesterGroupUrl,
+} from "@/lib/google-groups";
 
 export const runtime = 'edge';
 
@@ -51,7 +57,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, opted_in_at, tester_user_id, users_public_profile!inner(nickname, trust_score), checkins(id, day_n)",
+      "id, status, opted_in_at, day_count, tester_user_id, users_public_profile!inner(nickname, trust_score), checkins(id, day_n)",
     )
     .eq("app_id", appId)
     .order("opted_in_at", { ascending: false });
@@ -140,6 +146,45 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           <Stat label="목표 인원" value={`${app.required_testers}명`} />
         </dl>
 
+        {isGroupsAutoJoinEnabled() && (
+          <section className="mt-8 rounded-2xl border border-mint-500/40 bg-mint-500/5 p-6">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                자동 그룹
+              </span>
+              <h2 className="text-lg font-semibold text-neutral-900">
+                Tester Match 공용 Google 그룹
+              </h2>
+            </div>
+            <p className="mt-1.5 text-sm text-neutral-700">
+              가입한 모든 Tester Match 유저는 아래 그룹에 자동으로 등록됩니다.
+              이 그룹 이메일을 Play Console 클로즈드 트랙의 tester group 으로 지정하면,
+              별도 이메일 등록 없이 전체 커뮤니티가 즉시 테스터로 잡힙니다.
+            </p>
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-neutral-500">
+                <strong className="text-neutral-700">그룹 이메일:</strong>{" "}
+                <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-mint-600">
+                  {getTesterGroupEmail()}
+                </code>
+              </p>
+              {getTesterGroupUrl() && (
+                <p className="text-xs text-neutral-500">
+                  <strong className="text-neutral-700">그룹 페이지:</strong>{" "}
+                  <a
+                    href={getTesterGroupUrl() ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-trust-600 underline hover:text-trust-700"
+                  >
+                    {getTesterGroupUrl()}
+                  </a>
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
         <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
           {app.google_group_url && (
@@ -165,6 +210,8 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           isBoost={app.is_boost ?? false}
           deadlineAt={app.boost_deadline_at ?? null}
         />
+
+        <KpiSection matches={matches ?? []} />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">

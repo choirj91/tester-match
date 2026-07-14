@@ -21,9 +21,9 @@ describe("SiteHeader", () => {
     expect(screen.getAllByText("내 앱").length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows "준비중" badge for boost', () => {
+  it("renders 급구 nav item (badge removed after launch)", () => {
     render(<SiteHeader user={user} />);
-    expect(screen.getAllByText("준비중").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("급구").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders nickname and signout when authenticated", () => {

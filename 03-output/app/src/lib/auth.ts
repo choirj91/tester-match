@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getBalance } from "@/lib/credits";
+import { addUserToTesterGroup, isGroupsAutoJoinEnabled } from "@/lib/google-groups";
 
 export type AppUser = {
   id: number;
@@ -34,11 +35,31 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("users")
-    .select("id, auth_user_id, email, nickname, trust_score, role")
+    .select("id, auth_user_id, email, nickname, trust_score, role, groups_joined_at")
     .eq("auth_user_id", authUser.id)
     .maybeSingle();
 
   if (error || !data) return null;
+
+  // Google 그룹 자동 가입 (1회만) — 백그라운드 fire-and-forget
+  if (
+    isGroupsAutoJoinEnabled() &&
+    data.groups_joined_at == null &&
+    data.email &&
+    !data.email.endsWith("@deleted.local")
+  ) {
+    void (async () => {
+      try {
+        await addUserToTesterGroup(data.email);
+        await admin
+          .from("users")
+          .update({ groups_joined_at: new Date().toISOString() })
+          .eq("id", data.id);
+      } catch (err) {
+        console.error("[auth] group auto-join failed", err);
+      }
+    })();
+  }
 
   const balance = await getBalance(admin, data.id);
 
