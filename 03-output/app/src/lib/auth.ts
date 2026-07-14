@@ -41,14 +41,14 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
   if (error || !data) return null;
 
-  // Google 그룹 자동 가입 (1회만) — 백그라운드 fire-and-forget
+  // Google 그룹 자동 가입 (1회만) — edge runtime waitUntil 로 완료 보장
   if (
     isGroupsAutoJoinEnabled() &&
     data.groups_joined_at == null &&
     data.email &&
     !data.email.endsWith("@deleted.local")
   ) {
-    void (async () => {
+    const joinPromise = (async () => {
       try {
         await addUserToTesterGroup(data.email);
         await admin
@@ -59,6 +59,15 @@ export async function getCurrentUser(): Promise<AppUser | null> {
         console.error("[auth] group auto-join failed", err);
       }
     })();
+
+    // Cloudflare Pages: 응답 반환 후에도 백그라운드 작업 유지.
+    // 로컬 next dev 에선 getRequestContext 가 throw → 그냥 await (첫 로그인 1회라 허용).
+    try {
+      const { getRequestContext } = await import("@cloudflare/next-on-pages");
+      getRequestContext().ctx.waitUntil(joinPromise);
+    } catch {
+      await joinPromise;
+    }
   }
 
   const balance = await getBalance(admin, data.id);

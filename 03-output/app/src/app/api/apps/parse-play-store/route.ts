@@ -53,6 +53,7 @@ export async function POST(req: Request) {
           "Mozilla/5.0 (compatible; TesterMatch/1.0; +https://tester-match.pages.dev)",
         "Accept-Language": "ko-KR,ko;q=0.9",
       },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) {
       if (res.status === 404) {

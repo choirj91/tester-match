@@ -26,31 +26,40 @@ export function KpiSection({ matches }: { matches: Match[] }) {
             100,
         );
 
-  // 최근 7일 신규 매칭 (opted_in_at 기준, KST)
-  const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const buckets: { label: string; sub: string; count: number; isToday: boolean }[] = Array.from(
-    { length: 7 },
-    (_, i) => {
-      const d = new Date(kstNow);
-      d.setUTCDate(d.getUTCDate() - (6 - i));
-      const mm = d.getUTCMonth() + 1;
-      const dd = d.getUTCDate();
-      const dow = ["일", "월", "화", "수", "목", "금", "토"][d.getUTCDay()];
-      return {
-        label: `${mm}/${dd}`,
-        sub: dow,
-        count: 0,
-        isToday: i === 6,
-      };
-    },
-  );
+  // 최근 7일 신규 매칭 (opted_in_at 기준, KST 달력 날짜로 버킷)
+  // timestamp 차이가 아니라 KST 기준 YYYY-MM-DD 문자열 비교 — 자정 경계 정확.
+  const kstDateStr = (utcMs: number) =>
+    new Date(utcMs + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
+  const todayKst = kstDateStr(Date.now());
+  const buckets: {
+    date: string;
+    label: string;
+    sub: string;
+    count: number;
+    isToday: boolean;
+  }[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    d.setUTCDate(d.getUTCDate() - (6 - i));
+    const dateStr = d.toISOString().slice(0, 10);
+    const mm = d.getUTCMonth() + 1;
+    const dd = d.getUTCDate();
+    const dow = ["일", "월", "화", "수", "목", "금", "토"][d.getUTCDay()];
+    return {
+      date: dateStr,
+      label: `${mm}/${dd}`,
+      sub: dow,
+      count: 0,
+      isToday: dateStr === todayKst,
+    };
+  });
+
+  const bucketByDate = new Map(buckets.map((b) => [b.date, b]));
   for (const m of matches) {
     if (!m.opted_in_at) continue;
-    const t = new Date(m.opted_in_at).getTime() + 9 * 60 * 60 * 1000; // KST
-    const daysAgo = Math.floor((kstNow.getTime() - t) / (24 * 60 * 60 * 1000));
-    const idx = 6 - daysAgo;
-    if (idx >= 0 && idx < 7) buckets[idx].count++;
+    const dateStr = kstDateStr(new Date(m.opted_in_at).getTime());
+    const bucket = bucketByDate.get(dateStr);
+    if (bucket) bucket.count++;
   }
 
   const maxCount = Math.max(...buckets.map((b) => b.count), 1);
