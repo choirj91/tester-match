@@ -7,7 +7,7 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 import { BoostToggle } from "./boost-toggle";
 import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
-import { TESTER_GROUP_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
 import { KpiSection } from "./kpi-section";
 import {
   isGroupsAutoJoinEnabled,
@@ -188,7 +188,19 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
 
         <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
-          {app.google_group_url && (
+          {app.google_group_url === TESTER_GROUP_URL ? (
+            <div className="mt-4 rounded-xl border border-mint-500/30 bg-mint-500/5 p-4">
+              <p className="text-xs font-semibold text-neutral-800">공용 테스터 그룹 사용 중</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+                Play Console 비공개 테스트 트랙의 테스터 목록에{" "}
+                <code className="rounded bg-white px-1 py-0.5 text-[11px] font-semibold text-trust-700">
+                  {TESTER_GROUP_EMAIL}
+                </code>{" "}
+                이 등록되어 있어야 합니다. Tester Match 회원은 이 그룹에 자동
+                가입되므로 테스터가 별도로 할 일은 없습니다.
+              </p>
+            </div>
+          ) : app.google_group_url ? (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <p className="text-xs font-semibold text-amber-800">Google 그룹 (1단계 필수)</p>
               <p className="mt-0.5 text-xs text-amber-700">
@@ -196,9 +208,9 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
               </p>
               <Row label="Google 그룹" url={app.google_group_url} amber />
             </div>
-          )}
+          ) : null}
           <div className="mt-4 space-y-3 text-sm">
-            {app.google_group_url && (
+            {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL && (
               <p className="text-xs font-semibold text-neutral-500">초대 링크 (2단계)</p>
             )}
             <Row label="안드로이드" url={app.store_invite_url} />
