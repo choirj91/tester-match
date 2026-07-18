@@ -2,7 +2,9 @@ import Link from "next/link";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { SiteHeader } from "@/components/site-header";
 import { AppScrollBanner } from "@/components/app-scroll-banner";
+import { OnboardingProgress } from "@/components/onboarding-progress";
 import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = 'edge';
 
@@ -113,6 +115,28 @@ const ORG_JSON_LD = {
 export default async function HomePage() {
   const user = await getCurrentUser();
 
+  // 로그인 유저 온보딩 진행률 계산
+  let onboarding: { signedUp: boolean; hasApp: boolean; hasMatch: boolean } | null = null;
+  if (user) {
+    const supabase = createSupabaseAdminClient();
+    const [{ count: appCount }, { count: matchCount }] = await Promise.all([
+      supabase
+        .from("apps")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_user_id", user.id)
+        .neq("status", "deleted"),
+      supabase
+        .from("matches")
+        .select("id", { count: "exact", head: true })
+        .eq("tester_user_id", user.id),
+    ]);
+    onboarding = {
+      signedUp: true,
+      hasApp: (appCount ?? 0) > 0,
+      hasMatch: (matchCount ?? 0) > 0,
+    };
+  }
+
   return (
     <main className="min-h-screen">
       <script
@@ -124,6 +148,8 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
       />
       <SiteHeader user={user} />
+
+      {onboarding && <OnboardingProgress steps={onboarding} />}
 
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">

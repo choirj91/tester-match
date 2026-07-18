@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -11,10 +11,69 @@ type Props = {
 const inputClass =
   "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 disabled:bg-neutral-50 disabled:text-neutral-500";
 
+type ParsedApp = {
+  package_id: string;
+  name: string;
+  short_description: string;
+  icon_url: string;
+  store_invite_url: string;
+  web_invite_url: string;
+};
+
 export function AppForm({ initialNickname, email }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [parseUrl, setParseUrl] = useState("");
+  const [parseMsg, setParseMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function setField(name: string, value: string) {
+    const form = formRef.current;
+    if (!form) return;
+    const el = form.elements.namedItem(name) as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | null;
+    if (el && !el.value) el.value = value; // 기존 입력 덮어쓰지 않음
+  }
+
+  async function autofillFromPlayStore() {
+    setParseMsg(null);
+    if (!parseUrl.trim()) {
+      setParseMsg({ tone: "err", text: "Play Store URL 을 입력해주세요." });
+      return;
+    }
+    setParsing(true);
+    try {
+      const res = await fetch("/api/apps/parse-play-store", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: parseUrl.trim() }),
+      });
+      const j = (await res.json()) as
+        | { ok: true; data: ParsedApp }
+        | { ok: false; message: string };
+      if (!res.ok || !j.ok) {
+        setParseMsg({ tone: "err", text: !j.ok ? j.message : "파싱 실패" });
+        return;
+      }
+      const d = j.data;
+      setField("name", d.name);
+      setField("short_description", d.short_description);
+      setField("store_invite_url", d.store_invite_url);
+      setField("web_invite_url", d.web_invite_url);
+      setParseMsg({
+        tone: "ok",
+        text: `✓ "${d.name}" 정보를 채웠습니다. Google 그룹·목표 인원은 직접 입력해주세요.`,
+      });
+    } catch {
+      setParseMsg({ tone: "err", text: "네트워크 오류. 잠시 후 다시 시도해주세요." });
+    } finally {
+      setParsing(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,7 +112,50 @@ export function AppForm({ initialNickname, email }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form ref={formRef} onSubmit={onSubmit} className="space-y-5">
+      {/* Play Store URL 자동 채움 */}
+      <section className="rounded-2xl border border-trust-500/30 bg-trust-50 p-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
+            자동 채움
+          </span>
+          <p className="text-sm font-semibold text-neutral-900">
+            Play Store URL 붙여넣기
+          </p>
+        </div>
+        <p className="mt-1 text-xs text-neutral-600">
+          Play Store 앱 상세 URL 을 붙여넣으면 이름·설명·초대 링크를 자동으로 채웁니다.
+        </p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="url"
+            value={parseUrl}
+            onChange={(e) => setParseUrl(e.target.value)}
+            placeholder="https://play.google.com/store/apps/details?id=com.example.myapp"
+            className={inputClass}
+          />
+          <button
+            type="button"
+            onClick={autofillFromPlayStore}
+            disabled={parsing}
+            className="shrink-0 rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          >
+            {parsing ? "가져오는 중..." : "자동 채움"}
+          </button>
+        </div>
+        {parseMsg && (
+          <p
+            className={`mt-2 text-xs ${
+              parseMsg.tone === "ok"
+                ? "font-semibold text-mint-500"
+                : "font-semibold text-crimson-500"
+            }`}
+          >
+            {parseMsg.text}
+          </p>
+        )}
+      </section>
+
       <Field label="닉네임" hint="앱 등록 시 발신자 표기명. 변경하면 프로필에도 반영됩니다.">
         <input
           name="nickname"
