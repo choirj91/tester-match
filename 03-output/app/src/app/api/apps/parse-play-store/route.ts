@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/auth";
 
 export const runtime = "edge";
 
@@ -12,8 +13,14 @@ const Body = z.object({
  *
  * 개발자가 Play Store 앱 상세 URL 을 붙여넣으면 앱 이름, 설명, 아이콘,
  * 패키지 ID, 초대 링크(2종) 를 자동 추출.
+ * 로그인 필수 — 익명 프록시 악용 방지.
  */
 export async function POST(req: Request) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "로그인이 필요합니다." }, { status: 401 });
+  }
+
   let body;
   try {
     body = Body.parse(await req.json());
