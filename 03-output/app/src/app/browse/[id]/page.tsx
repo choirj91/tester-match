@@ -206,6 +206,30 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </div>
               </div>
             </div>
+          ) : app.google_group_url === TESTER_GROUP_URL ? (
+            // 공용 그룹 + 비로그인 → 로그인 유도 (그룹 웹 페이지는 외부 비공개라 링크 무의미)
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  1단계 필수
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-amber-900">
+                    로그인하면 테스터 그룹에 자동 가입됩니다
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                    이 앱은 Tester Match 공용 테스터 그룹을 사용합니다. Google 로그인 한 번이면
+                    그룹 가입이 자동으로 처리되고, 모든 앱의 초대 링크를 바로 사용할 수 있습니다.
+                  </p>
+                  <Link
+                    href={`/auth/login?next=/browse/${app.id}`}
+                    className="mt-3 inline-flex items-center gap-1 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
+                  >
+                    Google로 시작하기 →
+                  </Link>
+                </div>
+              </div>
+            </div>
           ) : app.google_group_url ? (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">

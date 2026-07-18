@@ -87,8 +87,8 @@ export function GroupStatusCard() {
             )}
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {!data.joined && (
+          {!data.joined && (
+            <div className="mt-4">
               <button
                 type="button"
                 onClick={retry}
@@ -97,16 +97,12 @@ export function GroupStatusCard() {
               >
                 {retrying ? "가입 시도 중..." : "지금 가입하기"}
               </button>
-            )}
-            <a
-              href={data.group_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-trust-600 underline-offset-2 hover:underline"
-            >
-              그룹 페이지 열기 ↗
-            </a>
-          </div>
+            </div>
+          )}
+          <p className="mt-3 text-[11px] leading-relaxed text-neutral-400">
+            그룹 웹 페이지는 외부에 비공개라 접속 시 &ldquo;콘텐츠 사용 불가&rdquo;로 표시될 수
+            있습니다. 정상이며, 테스트 참여 자격에는 영향이 없습니다.
+          </p>
         </>
       )}
     </section>

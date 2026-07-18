@@ -7,6 +7,7 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
 import { BoostToggle } from "./boost-toggle";
 import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
+import { TESTER_GROUP_URL } from "@/lib/tester-group";
 import { KpiSection } from "./kpi-section";
 import {
   isGroupsAutoJoinEnabled,
@@ -301,7 +302,12 @@ function buildShareText(args: {
   let stepIdx = 1;
   const stepMarks = ["①", "②", "③", "④"];
 
-  if (args.googleGroupUrl) {
+  if (args.googleGroupUrl === TESTER_GROUP_URL) {
+    // 공용 그룹 — 그룹 웹 페이지는 외부 비공개. Tester Match 로그인이 곧 그룹 가입.
+    lines.push(`${stepMarks[stepIdx - 1]} Tester Match 에서 Google 로그인 (테스터 그룹 자동 가입)`);
+    lines.push(`→ ${SITE_URL}/browse/${args.appId}`);
+    stepIdx++;
+  } else if (args.googleGroupUrl) {
     lines.push(`${stepMarks[stepIdx - 1]} 아래 그룹 가입 (버튼만 누르면 바로 승인)`);
     lines.push(`→ ${args.googleGroupUrl}`);
     stepIdx++;
