@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
 import { WithdrawButton } from "./withdraw-button";
+import { GroupStatusCard } from "./group-status-card";
 import { formatKrw } from "@/lib/credits";
 
 export const runtime = 'edge';
@@ -47,6 +48,8 @@ export default async function ProfilePage() {
             </div>
           </dl>
         </section>
+
+        <GroupStatusCard />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">닉네임 변경</h2>

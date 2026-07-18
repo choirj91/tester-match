@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AppUpdateSchema } from "@/lib/validators/app";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { TESTER_GROUP_URL } from "@/lib/tester-group";
 
 export const runtime = "edge";
 
@@ -60,6 +61,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const { nickname, ...appPatch } = payload;
   if (nickname && nickname !== user.nickname) {
     await supabase.from("users").update({ nickname }).eq("id", user.id);
+  }
+
+  // 공용 테스터 그룹 고정 (F-GRP-01) — 수정 시에도 클라이언트 값 무시
+  if (Object.prototype.hasOwnProperty.call(appPatch, "google_group_url")) {
+    (appPatch as { google_group_url?: string }).google_group_url = TESTER_GROUP_URL;
   }
 
   // 급구 자동 만료 — 7일 후 boost_deadline_at 세팅 / 해제 시 null

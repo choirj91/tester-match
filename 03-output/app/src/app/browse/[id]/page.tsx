@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
+import { TESTER_GROUP_URL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
 
@@ -182,8 +183,30 @@ export default async function BrowseDetailPage({ params }: Props) {
         <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
 
-          {/* ── Google 그룹 가입 (필수 1단계) ── */}
-          {app.google_group_url && (
+          {/* ── Google 그룹 안내 ── */}
+          {app.google_group_url === TESTER_GROUP_URL && user ? (
+            // 공용 그룹 + 로그인 → 자동 가입됨. 별도 가입 불필요.
+            <div className="mt-4 rounded-xl border border-mint-500/30 bg-mint-500/5 p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  자동 가입
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    테스터 그룹에 이미 가입되어 있습니다
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+                    이 앱은 Tester Match 공용 테스터 그룹을 사용합니다. 회원은 로그인 시
+                    자동으로 그룹에 가입되므로 아래 초대 링크를 바로 사용할 수 있습니다.
+                    {" "}
+                    <Link href="/profile" className="font-medium text-trust-600 underline-offset-2 hover:underline">
+                      가입 상태 확인
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : app.google_group_url ? (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
@@ -206,7 +229,7 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* ── 초대 링크 (그룹 가입 후 2단계 / 그룹 없으면 바로) ── */}
           {linksRevealed ? (
@@ -214,10 +237,12 @@ export default async function BrowseDetailPage({ params }: Props) {
               {app.google_group_url && (
                 <div className="mb-3 flex items-center gap-2">
                   <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                    2단계
+                    {app.google_group_url === TESTER_GROUP_URL && user ? "바로 참여" : "2단계"}
                   </span>
                   <p className="text-xs text-neutral-500">
-                    그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요.
+                    {app.google_group_url === TESTER_GROUP_URL && user
+                      ? "아래 링크로 Closed Testing에 바로 참여하세요."
+                      : "그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요."}
                   </p>
                 </div>
               )}

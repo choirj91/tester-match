@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EDITABLE_APP_STATUSES } from "@/lib/app-status";
+import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
 
 type Initial = {
   nickname: string;
@@ -35,7 +36,8 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
       short_description: String(fd.get("short_description") ?? "").trim(),
       store_invite_url: String(fd.get("store_invite_url") ?? "").trim(),
       web_invite_url: String(fd.get("web_invite_url") ?? "").trim(),
-      google_group_url: String(fd.get("google_group_url") ?? "").trim() || undefined,
+      // 공용 테스터 그룹 고정 — 저장 시 기존 개별 그룹도 공용 그룹으로 이관
+      google_group_url: TESTER_GROUP_URL,
       required_testers: Number(fd.get("required_testers") ?? 0),
       status: String(fd.get("status") ?? "matching") as Initial["status"],
     };
@@ -99,18 +101,26 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         />
       </Field>
 
-      <Field
-        label="Google 그룹 URL (선택)"
-        hint="테스터가 초대 링크 전에 먼저 가입해야 하는 Google 그룹 URL."
-      >
-        <input
-          name="google_group_url"
-          type="url"
-          defaultValue={initial.google_group_url ?? ""}
-          placeholder="https://groups.google.com/g/your-group-name"
-          className={inputClass}
-        />
-      </Field>
+      {/* 공용 테스터 그룹 (고정) */}
+      <div className="rounded-2xl border border-mint-500/30 bg-mint-500/5 p-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+            자동 설정
+          </span>
+          <p className="text-sm font-semibold text-neutral-900">Google 그룹 — 공용 테스터 그룹</p>
+        </div>
+        <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
+          저장 시 공용 그룹 <strong className="font-semibold text-neutral-800">{TESTER_GROUP_EMAIL}</strong> 으로
+          설정됩니다. Play Console 비공개 테스트 트랙의 테스터 목록에 이 그룹 이메일을 등록해주세요.
+          Tester Match 회원은 자동으로 이 그룹에 가입되어 있습니다.
+        </p>
+        {initial.google_group_url && initial.google_group_url !== TESTER_GROUP_URL && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-800">
+            현재 개별 그룹(<span className="break-all">{initial.google_group_url}</span>)을 쓰고 있습니다.
+            저장하면 공용 그룹으로 변경되니, Play Console 테스터 목록에도 공용 그룹 이메일을 추가해주세요.
+          </p>
+        )}
+      </div>
 
       <Field label="목표 테스터 수">
         <input

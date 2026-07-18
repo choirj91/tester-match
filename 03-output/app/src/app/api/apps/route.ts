@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { AppCreateSchema } from "@/lib/validators/app";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { TESTER_GROUP_URL } from "@/lib/tester-group";
 
 export const runtime = "edge";
 
@@ -52,7 +53,8 @@ export async function POST(req: Request) {
       name: payload.name,
       store_invite_url: payload.store_invite_url,
       web_invite_url: payload.web_invite_url,
-      google_group_url: payload.google_group_url ?? null,
+      // 공용 테스터 그룹 고정 (F-GRP-01) — 클라이언트 값 무시
+      google_group_url: TESTER_GROUP_URL,
       required_testers: payload.required_testers,
       short_description: payload.short_description,
       // MVP: 등록 즉시 매칭 큐 진입 (draft 단계 생략)

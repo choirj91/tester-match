@@ -65,6 +65,98 @@ export async function addUserToTesterGroup(email: string): Promise<void> {
   }
 }
 
+export type GroupMember = {
+  email: string;
+  role: string;
+  status: string;
+  type: string;
+};
+
+/**
+ * 그룹 전체 멤버 목록 (페이지네이션 자동 처리).
+ * 미설정/실패 시 null — 호출부에서 "조회 불가" 안내.
+ */
+export async function listGroupMembers(): Promise<GroupMember[] | null> {
+  const sa = getServiceAccount();
+  const groupEmail = process.env.TESTER_GROUP_EMAIL;
+  const adminEmail = process.env.GOOGLE_ADMIN_EMAIL;
+  if (!sa || !groupEmail || !adminEmail) return null;
+
+  try {
+    const jwt = await buildJwt(sa, adminEmail, SCOPE);
+    const token = await exchangeJwtForToken(jwt);
+
+    const members: GroupMember[] = [];
+    let pageToken: string | undefined;
+    // 안전 상한 20페이지 (200명 × 20 = 4,000명)
+    for (let page = 0; page < 20; page++) {
+      const url = new URL(DIRECTORY_MEMBERS_URL(groupEmail));
+      url.searchParams.set("maxResults", "200");
+      if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) {
+        console.error("[google-groups] list failed", res.status, await res.text());
+        return null;
+      }
+      const json = (await res.json()) as {
+        members?: Array<{ email?: string; role?: string; status?: string; type?: string }>;
+        nextPageToken?: string;
+      };
+      for (const m of json.members ?? []) {
+        if (!m.email) continue;
+        members.push({
+          email: m.email,
+          role: m.role ?? "MEMBER",
+          status: m.status ?? "-",
+          type: m.type ?? "USER",
+        });
+      }
+      pageToken = json.nextPageToken;
+      if (!pageToken) break;
+    }
+    return members;
+  } catch (err) {
+    console.error("[google-groups] list exception", err);
+    return null;
+  }
+}
+
+/**
+ * 특정 이메일이 그룹 멤버인지 실시간 확인.
+ * true/false = 확정 답, null = 확인 불가 (미설정·API 오류).
+ */
+export async function isGroupMember(email: string): Promise<boolean | null> {
+  const sa = getServiceAccount();
+  const groupEmail = process.env.TESTER_GROUP_EMAIL;
+  const adminEmail = process.env.GOOGLE_ADMIN_EMAIL;
+  if (!sa || !groupEmail || !adminEmail) return null;
+
+  try {
+    const jwt = await buildJwt(sa, adminEmail, SCOPE);
+    const token = await exchangeJwtForToken(jwt);
+    const res = await fetch(
+      `${DIRECTORY_MEMBERS_URL(groupEmail)}/${encodeURIComponent(email)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(8_000),
+      },
+    );
+    if (res.status === 404) return false;
+    if (!res.ok) {
+      console.error("[google-groups] member check failed", res.status);
+      return null;
+    }
+    return true;
+  } catch (err) {
+    console.error("[google-groups] member check exception", err);
+    return null;
+  }
+}
+
 /**
  * 이 서비스가 Groups 자동 가입 기능을 활성화한 상태인지 여부.
  * UI 에서 안내 문구 표시 조건 등에 사용.

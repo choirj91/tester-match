@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
 
 type Props = {
   initialNickname: string;
@@ -66,7 +67,7 @@ export function AppForm({ initialNickname, email }: Props) {
       setField("web_invite_url", d.web_invite_url);
       setParseMsg({
         tone: "ok",
-        text: `✓ "${d.name}" 정보를 채웠습니다. Google 그룹·목표 인원은 직접 입력해주세요.`,
+        text: `✓ "${d.name}" 정보를 채웠습니다. 목표 인원만 확인하면 됩니다.`,
       });
     } catch {
       setParseMsg({ tone: "err", text: "네트워크 오류. 잠시 후 다시 시도해주세요." });
@@ -86,7 +87,8 @@ export function AppForm({ initialNickname, email }: Props) {
       name: String(fd.get("name") ?? "").trim(),
       store_invite_url: String(fd.get("store_invite_url") ?? "").trim(),
       web_invite_url: String(fd.get("web_invite_url") ?? "").trim(),
-      google_group_url: String(fd.get("google_group_url") ?? "").trim() || undefined,
+      // 공용 테스터 그룹 고정 — 서버에서도 강제 세팅됨
+      google_group_url: TESTER_GROUP_URL,
       required_testers: Number(fd.get("required_testers") ?? 0),
       short_description: String(fd.get("short_description") ?? "").trim(),
     };
@@ -208,17 +210,43 @@ export function AppForm({ initialNickname, email }: Props) {
         />
       </Field>
 
-      <Field
-        label="Google 그룹 URL (선택)"
-        hint="Google Play Closed Testing은 Google 그룹에 먼저 가입해야 초대 링크를 사용할 수 있습니다. 그룹 URL을 입력하면 테스터에게 가입 안내가 먼저 표시됩니다."
-      >
-        <input
-          name="google_group_url"
-          type="url"
-          placeholder="https://groups.google.com/g/your-group-name"
-          className={inputClass}
-        />
-      </Field>
+      {/* 공용 테스터 그룹 안내 (고정) */}
+      <section className="rounded-2xl border border-mint-500/30 bg-mint-500/5 p-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+            자동 설정
+          </span>
+          <p className="text-sm font-semibold text-neutral-900">Tester Match 공용 테스터 그룹</p>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-neutral-600">
+          모든 앱은 공용 그룹 <strong className="font-semibold text-neutral-800">{TESTER_GROUP_EMAIL}</strong> 을
+          사용합니다. Tester Match 회원은 로그인 시 이 그룹에 자동 가입되므로,
+          테스터가 별도로 그룹에 가입할 필요가 없습니다.
+        </p>
+        <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-3">
+          <p className="text-xs font-bold text-neutral-800">
+            📌 등록 전 Play Console 설정 (1회, 1분)
+          </p>
+          <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-neutral-600">
+            <li>Play Console → 테스트 → <strong>비공개 테스트</strong> 트랙 → 테스터 탭</li>
+            <li>
+              &ldquo;Google 그룹으로 이메일 목록 만들기&rdquo;에{" "}
+              <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] font-semibold text-trust-700">
+                {TESTER_GROUP_EMAIL}
+              </code>{" "}
+              추가
+            </li>
+            <li>저장 → 이후 테스터 관리가 자동화됩니다</li>
+          </ol>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(TESTER_GROUP_EMAIL).catch(() => {})}
+            className="mt-2 rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+          >
+            그룹 이메일 복사
+          </button>
+        </div>
+      </section>
 
       <Field
         label="목표 테스터 수"

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { listGroupMembers } from "@/lib/google-groups";
+import { TESTER_GROUP_EMAIL } from "@/lib/tester-group";
 
 export const runtime = "edge";
 export const metadata = { title: "사용자 통계" };
@@ -84,7 +86,7 @@ export default async function AdminStatsPage() {
   // ── 사용자 목록 ────────────────────────────────────────────────────────
   const { data: users } = await supabase
     .from("users")
-    .select("id, nickname, email, trust_score, status, created_at")
+    .select("id, nickname, email, trust_score, status, created_at, groups_joined_at")
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
@@ -136,6 +138,27 @@ export default async function AdminStatsPage() {
     .filter((u) => u.completedCount > 0)
     .sort((a, b) => b.completedCount - a.completedCount)
     .slice(0, 20);
+
+  // ── 테스터 그룹 멤버 (Directory API 실시간) ───────────────────────────
+  const groupMembers = await listGroupMembers();
+  const userByEmail = new Map(
+    (users ?? []).map((u) => [u.email.toLowerCase(), u]),
+  );
+  const groupRows = (groupMembers ?? [])
+    .filter((m) => m.type === "USER")
+    .map((m) => {
+      const matched = userByEmail.get(m.email.toLowerCase());
+      return {
+        email: m.email,
+        role: m.role,
+        status: m.status,
+        nickname: matched?.nickname ?? null,
+        joinedAt: matched?.groups_joined_at ?? null,
+        isServiceUser: !!matched,
+      };
+    })
+    .sort((a, b) => (a.isServiceUser === b.isServiceUser ? 0 : a.isServiceUser ? -1 : 1));
+  const dbJoinedCount = (users ?? []).filter((u) => u.groups_joined_at).length;
 
   return (
     <>
@@ -289,6 +312,80 @@ export default async function AdminStatsPage() {
             </div>
           </section>
         </div>
+
+        {/* 테스터 그룹 멤버 */}
+        <section className="mt-12">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold text-neutral-900">테스터 그룹 멤버</h2>
+            <span className="rounded-full bg-mint-500/10 px-2 py-0.5 text-[10px] font-bold text-mint-500">
+              실시간
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {TESTER_GROUP_EMAIL} · Directory API 조회
+            {groupMembers ? ` · 그룹 ${groupRows.length}명` : ""} · DB 가입 기록 {dbJoinedCount}명
+          </p>
+
+          {groupMembers === null ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+              그룹 멤버를 조회할 수 없습니다. 환경변수(GOOGLE_SERVICE_ACCOUNT_JSON 등) 또는
+              도메인 위임 설정을 확인해주세요.
+            </div>
+          ) : groupRows.length === 0 ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+              아직 그룹 멤버가 없습니다.
+            </div>
+          ) : (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-100 bg-neutral-50 text-left text-xs text-neutral-500">
+                      <th className="px-4 py-3 font-semibold">이메일</th>
+                      <th className="px-4 py-3 font-semibold">닉네임</th>
+                      <th className="px-4 py-3 font-semibold">역할</th>
+                      <th className="px-4 py-3 font-semibold">상태</th>
+                      <th className="px-4 py-3 font-semibold">서비스 가입</th>
+                      <th className="px-4 py-3 font-semibold">그룹 등록일</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {groupRows.map((m) => (
+                      <tr key={m.email} className="hover:bg-neutral-50">
+                        <td className="px-4 py-3 text-neutral-900">{m.email}</td>
+                        <td className="px-4 py-3 text-neutral-700">{m.nickname ?? "—"}</td>
+                        <td className="px-4 py-3 text-neutral-500">{m.role}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              m.status === "ACTIVE"
+                                ? "bg-mint-500/10 text-mint-500"
+                                : "bg-neutral-100 text-neutral-500"
+                            }`}
+                          >
+                            {m.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {m.isServiceUser ? (
+                            <span className="font-semibold text-trust-600">회원</span>
+                          ) : (
+                            <span className="text-neutral-400">외부</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 tabular text-neutral-400">
+                          {m.joinedAt
+                            ? new Date(m.joinedAt).toLocaleDateString("ko-KR")
+                            : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* 전체 사용자 목록 */}
         <section className="mt-12">
