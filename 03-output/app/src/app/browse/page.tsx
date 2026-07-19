@@ -41,6 +41,15 @@ function sortByStatus(apps: BrowseApp[]): BrowseApp[] {
   });
 }
 
+// 인피드 광고 간격 (리스트 N개마다 광고 1개)
+const AD_INTERVAL = 10;
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 // Fisher-Yates 셔플 (요청마다 서버 렌더 → 매 방문 새 순서)
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -351,9 +360,16 @@ export default async function BrowsePage({
               </section>
             )}
             <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
-            {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
+            {chunk(apps, AD_INTERVAL).map((group, gi) => (
+              <div key={gi} className={gi > 0 ? "mt-4" : undefined}>
+                {view === "card" ? <CardGrid apps={group} /> : <ListView apps={group} />}
+                {/* 10개 간격 인피드 광고 (마지막 그룹이 꽉 찼을 때도 표시) */}
+                {group.length === AD_INTERVAL && (
+                  <AdUnit slot="browseInFeed" preview={user?.role === "admin"} compact />
+                )}
+              </div>
+            ))}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
-            <AdUnit slot="browseList" preview={user?.role === "admin"} />
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
