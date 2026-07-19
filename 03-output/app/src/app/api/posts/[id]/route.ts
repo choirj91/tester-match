@@ -30,7 +30,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   }
 
   // view_count 증가는 정확도 낮아도 OK — 비차단 호출, 오류 무시.
-  void supabase.from("posts").update({ view_count: (data.view_count ?? 0) + 1 }).eq("id", postId);
+  void supabase.rpc("increment_post_view", { p_post_id: postId });
 
   return NextResponse.json({ ok: true, post: data });
 }

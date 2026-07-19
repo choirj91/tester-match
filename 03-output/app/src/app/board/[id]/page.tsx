@@ -58,6 +58,10 @@ export default async function PostDetailPage({ params }: Props) {
 
   if (!post) notFound();
 
+  // 조회수 +1 (원자적 UPDATE) — 이번 열람 반영해 표시
+  await supabase.rpc("increment_post_view", { p_post_id: post.id });
+  const viewCount = (post.view_count ?? 0) + 1;
+
   const author = Array.isArray(post.users_public_profile)
     ? post.users_public_profile[0]
     : post.users_public_profile;
@@ -94,7 +98,7 @@ export default async function PostDetailPage({ params }: Props) {
     interactionStatistic: {
       "@type": "InteractionCounter",
       interactionType: "https://schema.org/ViewAction",
-      userInteractionCount: post.view_count,
+      userInteractionCount: viewCount,
     },
   };
 
@@ -117,7 +121,7 @@ export default async function PostDetailPage({ params }: Props) {
           <h1 className="mt-3 text-3xl font-bold text-neutral-900">{post.title}</h1>
           <p className="mt-2 text-xs text-neutral-500">
             {author?.nickname ?? "—"} · {new Date(post.created_at).toLocaleString("ko-KR")} · 조회{" "}
-            <span className="tabular">{post.view_count}</span>
+            <span className="tabular">{viewCount}</span>
           </p>
 
           <div className="mt-8 whitespace-pre-wrap text-base leading-relaxed text-neutral-800">
