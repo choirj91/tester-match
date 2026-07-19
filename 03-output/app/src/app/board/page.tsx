@@ -99,7 +99,7 @@ export default async function BoardPage({ searchParams }: Props) {
             </div>
           )}
         </div>
-        <AdUnit slot="boardList" />
+        <AdUnit slot="boardList" preview={user?.role === "admin"} />
       </main>
     </>
   );

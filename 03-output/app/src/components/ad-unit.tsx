@@ -11,12 +11,15 @@ declare global {
 
 /**
  * 반응형 디스플레이 광고 유닛.
- * - 슬롯 ID 미설정(빈 문자열) → 아무것도 렌더링 안 함
- * - min-height 예약으로 CLS(레이아웃 흔들림) 완화
+ * - 슬롯 ID 설정됨 → 실제 광고 렌더링 (전체 사용자)
+ * - 슬롯 비어있음 + preview(관리자) 또는 로컬 dev → 점선 플레이스홀더
+ * - 슬롯 비어있음 + 일반 사용자 → 아무것도 렌더링 안 함
  */
-export function AdUnit({ slot }: { slot: AdSlotKey }) {
+export function AdUnit({ slot, preview = false }: { slot: AdSlotKey; preview?: boolean }) {
   const slotId = AD_SLOTS[slot];
   const pushed = useRef(false);
+  const showPlaceholder =
+    !slotId && (preview || process.env.NODE_ENV === "development");
 
   useEffect(() => {
     if (!slotId || pushed.current) return;
@@ -28,7 +31,23 @@ export function AdUnit({ slot }: { slot: AdSlotKey }) {
     }
   }, [slotId]);
 
-  if (!slotId) return null;
+  if (!slotId && !showPlaceholder) return null;
+
+  if (showPlaceholder) {
+    return (
+      <div className="my-8 flex min-h-[100px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/50 px-4 py-6">
+        <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
+          AD PLACEHOLDER
+        </p>
+        <p className="text-sm font-semibold text-amber-700">
+          광고 위치: <code className="font-mono">{slot}</code>
+        </p>
+        <p className="text-[11px] text-amber-500">
+          반응형 디스플레이 · 슬롯 ID 설정 시 실제 광고로 교체됩니다 (관리자에게만 표시)
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="my-8 flex min-h-[100px] items-center justify-center overflow-hidden">

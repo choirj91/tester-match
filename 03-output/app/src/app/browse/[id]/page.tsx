@@ -349,7 +349,7 @@ export default async function BrowseDetailPage({ params }: Props) {
           </section>
         )}
 
-        <AdUnit slot="browseDetail" />
+        <AdUnit slot="browseDetail" preview={user?.role === "admin"} />
       </main>
     </>
   );
