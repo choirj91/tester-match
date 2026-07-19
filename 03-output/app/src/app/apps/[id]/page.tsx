@@ -303,8 +303,9 @@ function buildShareText(args: {
 
   if (args.googleGroupUrl === TESTER_GROUP_URL) {
     // 공용 그룹 — 그룹 웹 페이지는 외부 비공개. Tester Match 로그인이 곧 그룹 가입.
-    lines.push(`${stepMarks[stepIdx - 1]} Tester Match 에서 Google 로그인해 주세요 (테스터 그룹 자동 등록)`);
+    lines.push(`${stepMarks[stepIdx - 1]} Tester Match 에서 Google 로그인해 주세요`);
     lines.push(`→ ${SITE_URL}/browse/${args.appId}`);
+    lines.push("✨ 로그인만 하면 테스터 그룹에 자동 가입됩니다. 번거로운 그룹 가입 절차가 아예 없어요!");
     stepIdx++;
   } else if (args.googleGroupUrl) {
     lines.push(`${stepMarks[stepIdx - 1]} Google 그룹에 가입해 주세요 (버튼만 누르면 바로 승인)`);

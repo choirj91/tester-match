@@ -193,11 +193,11 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-neutral-900">
-                    테스터 그룹에 이미 가입되어 있습니다
+                    ✨ 테스터 그룹에 이미 자동 가입되어 있습니다
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-                    이 앱은 Tester Match 공용 테스터 그룹을 사용합니다. 회원은 로그인 시
-                    자동으로 그룹에 가입되므로 아래 초대 링크를 바로 사용할 수 있습니다.
+                    별도 그룹 가입 절차 없이 아래 초대 링크를 바로 사용하세요. 로그인하는 순간
+                    그룹 등록이 자동으로 끝났습니다.
                     {" "}
                     <Link href="/profile" className="font-medium text-trust-600 underline-offset-2 hover:underline">
                       가입 상태 확인
@@ -215,11 +215,12 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-amber-900">
-                    로그인하면 테스터 그룹에 자동 가입됩니다
+                    ✨ 그룹 가입 절차 없음 — Google 로그인 한 번이면 끝
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    이 앱은 Tester Match 공용 테스터 그룹을 사용합니다. Google 로그인 한 번이면
-                    그룹 가입이 자동으로 처리되고, 모든 앱의 초대 링크를 바로 사용할 수 있습니다.
+                    보통 비공개 테스트는 Google 그룹에 따로 가입해야 하지만, Tester Match 는{" "}
+                    <strong>로그인만 하면 테스터 그룹에 자동 가입</strong>됩니다. 이후 모든 앱의
+                    초대 링크를 바로 사용할 수 있습니다.
                   </p>
                   <Link
                     href={`/auth/login?next=/browse/${app.id}`}
