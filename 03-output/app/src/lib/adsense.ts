@@ -7,8 +7,8 @@
 export const ADSENSE_CLIENT = "ca-pub-6738372737459853";
 
 export const AD_SLOTS = {
-  /** 매칭 리스트 10개 간격 인피드 카드 (트래픽 최다) */
-  browseInFeed: "",
+  /** 매칭 가능 앱 리스트 하단 (트래픽 최다) */
+  browseList: "",
   /** 앱 상세 댓글 아래 */
   browseDetail: "",
   /** 게시판 리스트 하단 */

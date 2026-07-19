@@ -15,16 +15,7 @@ declare global {
  * - 슬롯 비어있음 + preview(관리자) 또는 로컬 dev → 점선 플레이스홀더
  * - 슬롯 비어있음 + 일반 사용자 → 아무것도 렌더링 안 함
  */
-export function AdUnit({
-  slot,
-  preview = false,
-  compact = false,
-}: {
-  slot: AdSlotKey;
-  preview?: boolean;
-  /** 리스트 사이 인피드용 — 여백 축소 */
-  compact?: boolean;
-}) {
+export function AdUnit({ slot, preview = false }: { slot: AdSlotKey; preview?: boolean }) {
   const slotId = AD_SLOTS[slot];
   const pushed = useRef(false);
   const showPlaceholder =
@@ -42,13 +33,9 @@ export function AdUnit({
 
   if (!slotId && !showPlaceholder) return null;
 
-  const wrapMargin = compact ? "my-4" : "my-8";
-
   if (showPlaceholder) {
     return (
-      <div
-        className={`${wrapMargin} flex min-h-[100px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/50 px-4 py-6`}
-      >
+      <div className="my-8 flex min-h-[100px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/50 px-4 py-6">
         <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
           AD PLACEHOLDER
         </p>
@@ -63,7 +50,7 @@ export function AdUnit({
   }
 
   return (
-    <div className={`${wrapMargin} flex min-h-[100px] items-center justify-center overflow-hidden`}>
+    <div className="my-8 flex min-h-[100px] items-center justify-center overflow-hidden">
       <ins
         className="adsbygoogle"
         style={{ display: "block", width: "100%" }}
