@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AdminBadge } from "@/components/admin-badge";
 
 type Comment = {
   id: number;
@@ -9,15 +10,17 @@ type Comment = {
   created_at: string;
   author_user_id: number;
   author_nickname: string;
+  author_role?: string;
 };
 
 type Props = {
   postId: number;
   currentUserId: number;
+  currentUserRole?: string;
   initialComments: Comment[];
 };
 
-export function CommentList({ postId, currentUserId, initialComments }: Props) {
+export function CommentList({ postId, currentUserId, currentUserRole, initialComments }: Props) {
   const router = useRouter();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [body, setBody] = useState("");
@@ -47,6 +50,7 @@ export function CommentList({ postId, currentUserId, initialComments }: Props) {
         created_at: new Date().toISOString(),
         author_user_id: currentUserId,
         author_nickname: "나",
+        author_role: currentUserRole,
       },
     ]);
     setBody("");
@@ -96,10 +100,18 @@ export function CommentList({ postId, currentUserId, initialComments }: Props) {
           </li>
         ) : (
           comments.map((c) => (
-            <li key={c.id} className="rounded-xl border border-neutral-200 bg-white p-4">
+            <li
+              key={c.id}
+              className={`rounded-xl border p-4 ${
+                c.author_role === "admin"
+                  ? "border-trust-500/40 bg-trust-50"
+                  : "border-neutral-200 bg-white"
+              }`}
+            >
               <div className="flex items-center justify-between gap-4 text-xs text-neutral-500">
-                <span>
+                <span className="inline-flex items-center gap-1.5">
                   <strong className="text-neutral-700">{c.author_nickname}</strong>
+                  {c.author_role === "admin" && <AdminBadge />}
                   {" · "}
                   {new Date(c.created_at).toLocaleString("ko-KR")}
                 </span>

@@ -8,6 +8,7 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { TESTER_GROUP_URL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
+import { AdminBadge } from "@/components/admin-badge";
 
 export const runtime = 'edge';
 
@@ -72,7 +73,7 @@ export default async function BrowseDetailPage({ params }: Props) {
       supabase
         .from("app_comments")
         .select(
-          "id, body, created_at, author_user_id, promoted_app_id, users_public_profile!inner(nickname)",
+          "id, body, created_at, author_user_id, promoted_app_id, users_public_profile!inner(nickname, role)",
         )
         .eq("app_id", appId)
         .is("deleted_at", null)
@@ -123,6 +124,7 @@ export default async function BrowseDetailPage({ params }: Props) {
       created_at: c.created_at,
       author_user_id: c.author_user_id,
       author_nickname: author?.nickname ?? "—",
+      author_role: author?.role,
       promoted_app_id: c.promoted_app_id,
       promoted_app_name: c.promoted_app_id ? (promotedAppMap[c.promoted_app_id] ?? null) : null,
     };
@@ -339,7 +341,10 @@ export default async function BrowseDetailPage({ params }: Props) {
               <ul className="mt-4 divide-y divide-neutral-100">
                 {enrichedComments.slice(0, 10).map((c) => (
                   <li key={c.id} className="py-3">
-                    <p className="text-xs font-semibold text-neutral-700">{c.author_nickname}</p>
+                    <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700">
+                      {c.author_nickname}
+                      {c.author_role === "admin" && <AdminBadge />}
+                    </p>
                     <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap">{c.body}</p>
                   </li>
                 ))}

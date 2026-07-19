@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
+import { AdminBadge } from "@/components/admin-badge";
 
 export const runtime = 'edge';
 
@@ -64,7 +65,7 @@ export default async function PostDetailPage({ params }: Props) {
   const { data: comments } = await supabase
     .from("comments")
     .select(
-      "id, body, created_at, updated_at, author_user_id, users_public_profile!inner(nickname, trust_score)",
+      "id, body, created_at, updated_at, author_user_id, users_public_profile!inner(nickname, trust_score, role)",
     )
     .eq("post_id", postId)
     .is("deleted_at", null)
@@ -123,6 +124,7 @@ export default async function PostDetailPage({ params }: Props) {
             <CommentList
               postId={post.id}
               currentUserId={user.id}
+              currentUserRole={user.role}
               initialComments={(comments ?? []).map((c) => {
                 const a = Array.isArray(c.users_public_profile)
                   ? c.users_public_profile[0]
@@ -133,6 +135,7 @@ export default async function PostDetailPage({ params }: Props) {
                   created_at: c.created_at,
                   author_user_id: c.author_user_id,
                   author_nickname: a?.nickname ?? "—",
+                  author_role: a?.role,
                 };
               })}
             />
@@ -147,8 +150,9 @@ export default async function PostDetailPage({ params }: Props) {
                       : c.users_public_profile;
                     return (
                       <li key={c.id} className="py-3">
-                        <p className="text-xs font-semibold text-neutral-700">
+                        <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700">
                           {a?.nickname ?? "—"}
+                          {a?.role === "admin" && <AdminBadge />}
                         </p>
                         <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap">{c.body}</p>
                       </li>

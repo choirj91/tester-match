@@ -106,11 +106,12 @@ export async function POST(req: Request, { params }: Ctx) {
     .eq("id", appId)
     .maybeSingle();
   if (app && app.owner_user_id !== user.id) {
+    const isAdmin = user.role === "admin";
     void createNotification({
       userId: app.owner_user_id,
       type: "comment_new",
-      title: "앱에 새 댓글이 달렸습니다",
-      body: `${user.nickname}님: ${payload.body.slice(0, 80)}`,
+      title: isAdmin ? "🛡 관리자가 앱에 댓글을 남겼습니다" : "앱에 새 댓글이 달렸습니다",
+      body: `${isAdmin ? "[관리자] " : ""}${user.nickname}님: ${payload.body.slice(0, 80)}`,
       link: `/browse/${appId}`,
     });
   }

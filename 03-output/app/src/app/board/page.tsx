@@ -30,6 +30,19 @@ export default async function BoardPage({ searchParams }: Props) {
 
   const { data: posts } = await query;
 
+  // 관리자 댓글이 달린 게시물 집합 (제목 옆 배지용)
+  const postIds = (posts ?? []).map((p) => p.id);
+  let adminCommentedPostIds = new Set<number>();
+  if (postIds.length > 0) {
+    const { data: adminComments } = await supabase
+      .from("comments")
+      .select("post_id, users_public_profile!inner(role)")
+      .in("post_id", postIds)
+      .eq("users_public_profile.role", "admin")
+      .is("deleted_at", null);
+    adminCommentedPostIds = new Set((adminComments ?? []).map((c) => c.post_id));
+  }
+
   return (
     <>
       <SiteHeader user={user} />
@@ -77,8 +90,15 @@ export default async function BoardPage({ searchParams }: Props) {
                       <span className="shrink-0 rounded-full bg-trust-50 px-2 py-0.5 text-xs font-semibold text-trust-700">
                         {post.category}
                       </span>
-                      <span className="flex-1 truncate text-sm font-medium text-neutral-900">
-                        {post.title}
+                      <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                        <span className="truncate text-sm font-medium text-neutral-900">
+                          {post.title}
+                        </span>
+                        {adminCommentedPostIds.has(post.id) && (
+                          <span className="shrink-0 rounded-full bg-trust-50 px-1.5 py-0.5 text-[9px] font-bold text-trust-700 ring-1 ring-trust-500/30">
+                            🛡 관리자 답변
+                          </span>
+                        )}
                       </span>
                       <span className="shrink-0 text-xs text-neutral-500">
                         {author?.nickname ?? "—"}
