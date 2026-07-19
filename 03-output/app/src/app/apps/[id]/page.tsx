@@ -9,11 +9,7 @@ import { BoostToggle } from "./boost-toggle";
 import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
 import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
 import { KpiSection } from "./kpi-section";
-import {
-  isGroupsAutoJoinEnabled,
-  getTesterGroupEmail,
-  getTesterGroupUrl,
-} from "@/lib/google-groups";
+import { isGroupsAutoJoinEnabled, getTesterGroupEmail } from "@/lib/google-groups";
 
 export const runtime = 'edge';
 
@@ -162,26 +158,17 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
               이 그룹 이메일을 Play Console 클로즈드 트랙의 tester group 으로 지정하면,
               별도 이메일 등록 없이 전체 커뮤니티가 즉시 테스터로 잡힙니다.
             </p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-3">
               <p className="text-xs text-neutral-500">
                 <strong className="text-neutral-700">그룹 이메일:</strong>{" "}
                 <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-mint-600">
                   {getTesterGroupEmail()}
                 </code>
               </p>
-              {getTesterGroupUrl() && (
-                <p className="text-xs text-neutral-500">
-                  <strong className="text-neutral-700">그룹 페이지:</strong>{" "}
-                  <a
-                    href={getTesterGroupUrl() ?? undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-trust-600 underline hover:text-trust-700"
-                  >
-                    {getTesterGroupUrl()}
-                  </a>
-                </p>
-              )}
+              <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">
+                그룹 웹 페이지는 외부 비공개입니다. 회원 가입·관리는 모두 자동으로
+                처리되므로 별도 방문이 필요 없습니다.
+              </p>
             </div>
           </section>
         )}
@@ -305,7 +292,7 @@ function buildShareText(args: {
   storeInviteUrl: string | null;
 }): string {
   const lines: string[] = [];
-  lines.push(`📱 [Tester Match] "${args.appName}" 안드로이드 비공개 테스터 모집 (${args.remaining}명)`);
+  lines.push(`📱 ${args.appName} 안드로이드 비공개 테스터 모집 (${args.remaining}명)`);
   lines.push("");
   lines.push(args.shortDescription);
   lines.push("");
@@ -316,31 +303,37 @@ function buildShareText(args: {
 
   if (args.googleGroupUrl === TESTER_GROUP_URL) {
     // 공용 그룹 — 그룹 웹 페이지는 외부 비공개. Tester Match 로그인이 곧 그룹 가입.
-    lines.push(`${stepMarks[stepIdx - 1]} Tester Match 에서 Google 로그인 (테스터 그룹 자동 가입)`);
+    lines.push(`${stepMarks[stepIdx - 1]} Tester Match 에서 Google 로그인해 주세요 (테스터 그룹 자동 등록)`);
     lines.push(`→ ${SITE_URL}/browse/${args.appId}`);
     stepIdx++;
   } else if (args.googleGroupUrl) {
-    lines.push(`${stepMarks[stepIdx - 1]} 아래 그룹 가입 (버튼만 누르면 바로 승인)`);
+    lines.push(`${stepMarks[stepIdx - 1]} Google 그룹에 가입해 주세요 (버튼만 누르면 바로 승인)`);
     lines.push(`→ ${args.googleGroupUrl}`);
     stepIdx++;
   }
   if (args.webInviteUrl) {
-    lines.push(`${stepMarks[stepIdx - 1]} 테스터 참여하기`);
+    lines.push(`${stepMarks[stepIdx - 1]} 비공개 테스트에 참여해 주세요 ('테스터 되기' 클릭)`);
     lines.push(`→ ${args.webInviteUrl}`);
     stepIdx++;
   }
   if (args.storeInviteUrl) {
-    lines.push(`${stepMarks[stepIdx - 1]} 플레이스토어에서 설치`);
+    lines.push(`${stepMarks[stepIdx - 1]} Play 스토어에서 앱을 설치해 주세요`);
     lines.push(`→ ${args.storeInviteUrl}`);
     stepIdx++;
   }
 
   lines.push("");
-  lines.push("⚠️ 꼭 지켜주세요");
-  lines.push("- 설치 후 삭제하지 말고 14일 유지해주세요");
-  lines.push("- 품앗이 상대 앱도 알려주시면 저도 똑같이 테스터로 참여하겠습니다 🙌");
+  lines.push("⚠️ 꼭 확인해 주세요");
+  lines.push("- Google Play에서 사용하는 동일한 Google 계정으로 참여해 주세요");
+  lines.push("- 설치 후 삭제하지 말고 14일 이상 유지해 주세요");
+  lines.push("- 테스트 기간에는 가능하면 매일 앱을 한 번씩 실행해 주세요");
+  lines.push("- 오류나 개선 의견을 남겨주시면 큰 힘이 됩니다");
   lines.push("");
-  lines.push(`👉 상세: ${SITE_URL}/browse/${args.appId}`);
+  lines.push("🤝 품앗이 환영");
+  lines.push("품앗이할 앱과 참여 링크를 알려주시면 저도 똑같이 테스터로 참여하겠습니다.");
+  lines.push("도움 주셔서 감사합니다 🙏");
+  lines.push("");
+  lines.push(`👉 앱 상세·참여 현황: ${SITE_URL}/browse/${args.appId}`);
 
   return lines.join("\n");
 }
