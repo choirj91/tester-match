@@ -10,6 +10,7 @@ import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-butt
 import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
 import { KpiSection } from "./kpi-section";
 import { isGroupsAutoJoinEnabled, getTesterGroupEmail } from "@/lib/google-groups";
+import { UpgradeGroupBanner } from "./upgrade-group-banner";
 
 export const runtime = 'edge';
 
@@ -143,7 +144,11 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           <Stat label="목표 인원" value={`${app.required_testers}명`} />
         </dl>
 
-        {isGroupsAutoJoinEnabled() && (
+        {isGroupsAutoJoinEnabled() && app.google_group_url !== TESTER_GROUP_URL && (
+          <UpgradeGroupBanner id={app.id} />
+        )}
+
+        {isGroupsAutoJoinEnabled() && app.google_group_url === TESTER_GROUP_URL && (
           <section className="mt-8 rounded-2xl border border-mint-500/40 bg-mint-500/5 p-6">
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
