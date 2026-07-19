@@ -13,7 +13,8 @@ export type NotificationType =
   | "comment_new"
   | "post_comment"
   | "boost_expiring"
-  | "boost_expired";
+  | "boost_expired"
+  | "group_upgrade";
 
 type Args = {
   userId: number;

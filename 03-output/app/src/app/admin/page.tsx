@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
+import { NotifyGroupUpgradeButton } from "./notify-group-upgrade-button";
 
 export const runtime = 'edge';
 
@@ -46,6 +47,10 @@ export default async function AdminHomePage() {
             </li>
           ))}
         </ul>
+
+        <div className="mt-8">
+          <NotifyGroupUpgradeButton />
+        </div>
       </main>
     </>
   );
