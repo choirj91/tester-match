@@ -1,6 +1,11 @@
+import { NoticeFloatButton } from "@/components/notice-float-button";
+
 export function FloatButtons() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* 공지사항 버튼 */}
+      <NoticeFloatButton />
+
       {/* 이메일 문의 버튼 */}
       <div className="group relative">
         <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100">

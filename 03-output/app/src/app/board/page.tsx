@@ -45,6 +45,14 @@ export default async function BoardPage({ searchParams }: Props) {
         .order("created_at", { ascending: false })
         .limit(5);
 
+  // 공지 필터로 진입 시 → 목록의 공지 전체 읽음 처리
+  if (user && activeCategory === NOTICE_CATEGORY && (posts ?? []).length > 0) {
+    await supabase.from("post_reads").upsert(
+      (posts ?? []).map((p) => ({ user_id: user.id, post_id: p.id })),
+      { onConflict: "user_id,post_id", ignoreDuplicates: true },
+    );
+  }
+
   // 관리자 댓글이 달린 게시물 집합 (제목 옆 배지용)
   const postIds = (posts ?? []).map((p) => p.id);
   let adminCommentedPostIds = new Set<number>();

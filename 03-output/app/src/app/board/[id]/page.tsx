@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
 import { AdminBadge } from "@/components/admin-badge";
+import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
 export const runtime = 'edge';
 
@@ -61,6 +62,16 @@ export default async function PostDetailPage({ params }: Props) {
     ? post.users_public_profile[0]
     : post.users_public_profile;
   const isOwner = !!user && post.author_user_id === user.id;
+
+  // 공지 상세 열람 시 읽음 기록
+  if (user && post.category === NOTICE_CATEGORY) {
+    await supabase
+      .from("post_reads")
+      .upsert(
+        { user_id: user.id, post_id: post.id },
+        { onConflict: "user_id,post_id", ignoreDuplicates: true },
+      );
+  }
 
   const { data: comments } = await supabase
     .from("comments")
