@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: Ctx) {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "id, category, title, body, view_count, created_at, updated_at, author_user_id, users_public_profile!inner(nickname, trust_score)",
+      "id, category, title, body, view_count, created_at, updated_at, author_user_id, users_public_profile!posts_author_user_id_fkey!inner(nickname, trust_score)",
     )
     .eq("id", postId)
     .is("deleted_at", null)

@@ -22,7 +22,7 @@ export default async function BoardPage({ searchParams }: Props) {
   let query = supabase
     .from("posts")
     .select(
-      "id, category, title, view_count, created_at, author_user_id, users_public_profile!inner(nickname)",
+      "id, category, title, view_count, created_at, author_user_id, users_public_profile!posts_author_user_id_fkey!inner(nickname)",
     )
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -38,7 +38,7 @@ export default async function BoardPage({ searchParams }: Props) {
     : await supabase
         .from("posts")
         .select(
-          "id, category, title, view_count, created_at, author_user_id, users_public_profile!inner(nickname)",
+          "id, category, title, view_count, created_at, author_user_id, users_public_profile!posts_author_user_id_fkey!inner(nickname)",
         )
         .eq("category", NOTICE_CATEGORY)
         .is("deleted_at", null)

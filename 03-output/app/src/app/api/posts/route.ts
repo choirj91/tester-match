@@ -15,7 +15,7 @@ export async function GET(req: Request) {
   let query = supabase
     .from("posts")
     .select(
-      "id, category, title, view_count, created_at, author_user_id, users_public_profile!inner(nickname, trust_score)",
+      "id, category, title, view_count, created_at, author_user_id, users_public_profile!posts_author_user_id_fkey!inner(nickname, trust_score)",
     )
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
