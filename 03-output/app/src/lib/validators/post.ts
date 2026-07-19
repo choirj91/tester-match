@@ -1,10 +1,15 @@
 import { z } from "zod";
 
+/** 일반 사용자가 선택 가능한 카테고리 */
 export const POST_CATEGORIES = ["자유", "질문", "공유", "구인"] as const;
-export type PostCategory = (typeof POST_CATEGORIES)[number];
+/** 관리자 전용 카테고리 — API 에서 role 검증 */
+export const NOTICE_CATEGORY = "공지" as const;
+/** 필터·검증용 전체 카테고리 */
+export const ALL_POST_CATEGORIES = [NOTICE_CATEGORY, ...POST_CATEGORIES] as const;
+export type PostCategory = (typeof ALL_POST_CATEGORIES)[number];
 
 export const PostCreateSchema = z.object({
-  category: z.enum(POST_CATEGORIES),
+  category: z.enum(ALL_POST_CATEGORIES),
   title: z
     .string()
     .trim()

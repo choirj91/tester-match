@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { POST_CATEGORIES } from "@/lib/validators/post";
+import { NOTICE_CATEGORY, POST_CATEGORIES } from "@/lib/validators/post";
 
 const inputClass =
   "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
 
-export function PostForm() {
+export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +50,7 @@ export function PostForm() {
                 {c}
               </option>
             ))}
+            {isAdmin && <option value={NOTICE_CATEGORY}>📢 {NOTICE_CATEGORY} (관리자)</option>}
           </select>
         </div>
       </label>

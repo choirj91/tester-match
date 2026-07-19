@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { POST_CATEGORIES, PostCreateSchema } from "@/lib/validators/post";
+import { ALL_POST_CATEGORIES, NOTICE_CATEGORY, PostCreateSchema } from "@/lib/validators/post";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (category && (POST_CATEGORIES as readonly string[]).includes(category)) {
+  if (category && (ALL_POST_CATEGORIES as readonly string[]).includes(category)) {
     query = query.eq("category", category);
   }
 
@@ -50,6 +50,14 @@ export async function POST(req: Request) {
       );
     }
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
+  }
+
+  // 공지는 관리자 전용
+  if (payload.category === NOTICE_CATEGORY && user.role !== "admin") {
+    return NextResponse.json(
+      { ok: false, message: "공지사항은 관리자만 작성할 수 있습니다." },
+      { status: 403 },
+    );
   }
 
   const supabase = createSupabaseAdminClient();

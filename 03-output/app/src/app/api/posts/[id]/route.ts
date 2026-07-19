@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { PostUpdateSchema } from "@/lib/validators/post";
+import { NOTICE_CATEGORY, PostUpdateSchema } from "@/lib/validators/post";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -57,6 +57,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
       );
     }
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
+  }
+
+  // 공지 카테고리로 변경은 관리자 전용
+  if (payload.category === NOTICE_CATEGORY && user.role !== "admin") {
+    return NextResponse.json(
+      { ok: false, message: "공지사항은 관리자만 작성할 수 있습니다." },
+      { status: 403 },
+    );
   }
 
   const supabase = createSupabaseAdminClient();

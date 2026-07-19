@@ -21,7 +21,7 @@ export default async function NewPostPage() {
         </Link>
         <h1 className="mt-4 text-2xl font-bold text-neutral-900">글 쓰기</h1>
         <div className="mt-8">
-          <PostForm />
+          <PostForm isAdmin={user.role === "admin"} />
         </div>
       </main>
     </>

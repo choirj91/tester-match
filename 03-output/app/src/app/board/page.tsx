@@ -2,7 +2,8 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { POST_CATEGORIES } from "@/lib/validators/post";
+import { ALL_POST_CATEGORIES, NOTICE_CATEGORY } from "@/lib/validators/post";
+import { AdminBadge } from "@/components/admin-badge";
 
 export const runtime = 'edge';
 
@@ -15,7 +16,7 @@ export default async function BoardPage({ searchParams }: Props) {
 
   const { category } = await searchParams;
   const activeCategory =
-    category && (POST_CATEGORIES as readonly string[]).includes(category) ? category : null;
+    category && (ALL_POST_CATEGORIES as readonly string[]).includes(category) ? category : null;
 
   const supabase = createSupabaseAdminClient();
   let query = supabase
@@ -27,8 +28,22 @@ export default async function BoardPage({ searchParams }: Props) {
     .order("created_at", { ascending: false })
     .limit(50);
   if (activeCategory) query = query.eq("category", activeCategory);
+  else query = query.neq("category", NOTICE_CATEGORY); // 공지는 상단 고정 섹션에서 별도 표시
 
   const { data: posts } = await query;
+
+  // 공지 상단 고정 (필터 없을 때만, 최신 5개)
+  const { data: notices } = activeCategory
+    ? { data: [] as NonNullable<typeof posts> }
+    : await supabase
+        .from("posts")
+        .select(
+          "id, category, title, view_count, created_at, author_user_id, users_public_profile!inner(nickname)",
+        )
+        .eq("category", NOTICE_CATEGORY)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5);
 
   // 관리자 댓글이 달린 게시물 집합 (제목 옆 배지용)
   const postIds = (posts ?? []).map((p) => p.id);
@@ -64,15 +79,40 @@ export default async function BoardPage({ searchParams }: Props) {
 
         <nav className="mt-6 flex flex-wrap items-center gap-2">
           <FilterChip href="/board" label="전체" active={!activeCategory} />
-          {POST_CATEGORIES.map((c) => (
+          {ALL_POST_CATEGORIES.map((c) => (
             <FilterChip
               key={c}
               href={`/board?category=${encodeURIComponent(c)}`}
-              label={c}
+              label={c === NOTICE_CATEGORY ? `📢 ${c}` : c}
               active={activeCategory === c}
             />
           ))}
         </nav>
+
+        {/* 공지 상단 고정 */}
+        {(notices ?? []).length > 0 && (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-trust-500/30 bg-trust-50/50 shadow-sm">
+            <ul className="divide-y divide-trust-500/10">
+              {(notices ?? []).map((n) => (
+                <li key={n.id}>
+                  <Link
+                    href={`/board/${n.id}`}
+                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-trust-50"
+                  >
+                    <span className="shrink-0 text-sm">📢</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                      {n.title}
+                    </span>
+                    <AdminBadge className="shrink-0" />
+                    <span className="shrink-0 text-xs text-neutral-400">
+                      {new Date(n.created_at).toLocaleDateString("ko-KR")}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
           {posts && posts.length > 0 ? (
