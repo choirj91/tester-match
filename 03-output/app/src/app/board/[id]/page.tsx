@@ -6,7 +6,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
-import { AdUnit } from "@/components/ad-unit";
 
 export const runtime = 'edge';
 
@@ -115,8 +114,6 @@ export default async function PostDetailPage({ params }: Props) {
 
           {isOwner && <PostActions id={post.id} />}
         </article>
-
-        <AdUnit slot="boardDetail" />
 
         <section className="mt-12">
           <h2 className="text-lg font-semibold text-neutral-900">

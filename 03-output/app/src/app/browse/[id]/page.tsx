@@ -8,7 +8,6 @@ import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { TESTER_GROUP_URL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
-import { AdUnit } from "@/components/ad-unit";
 
 export const runtime = 'edge';
 
@@ -348,8 +347,6 @@ export default async function BrowseDetailPage({ params }: Props) {
             )}
           </section>
         )}
-
-        <AdUnit slot="browseDetail" />
       </main>
     </>
   );
