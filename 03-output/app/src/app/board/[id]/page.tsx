@@ -116,7 +116,7 @@ export default async function PostDetailPage({ params }: Props) {
           {isOwner && <PostActions id={post.id} />}
         </article>
 
-        <AdUnit slot="boardDetail" preview={user?.role === "admin"} />
+        <AdUnit slot="boardDetail" />
 
         <section className="mt-12">
           <h2 className="text-lg font-semibold text-neutral-900">

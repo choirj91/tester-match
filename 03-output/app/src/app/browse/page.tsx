@@ -353,7 +353,7 @@ export default async function BrowsePage({
             <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
             {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
-            <AdUnit slot="browseList" preview={user?.role === "admin"} />
+            <AdUnit slot="browseList" />
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
