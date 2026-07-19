@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { AdUnit } from "@/components/ad-unit";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { POST_CATEGORIES } from "@/lib/validators/post";
@@ -98,6 +99,7 @@ export default async function BoardPage({ searchParams }: Props) {
             </div>
           )}
         </div>
+        <AdUnit slot="boardList" />
       </main>
     </>
   );

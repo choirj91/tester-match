@@ -7,6 +7,7 @@ import { APP_STATUS_LABEL, APP_STATUS_ORDER, BROWSE_STATUSES } from "@/lib/app-s
 import type { AppStatus } from "@/lib/app-status";
 import { BrowseControls } from "./browse-controls";
 import type { SortKey } from "./browse-controls";
+import { AdUnit } from "@/components/ad-unit";
 
 export const runtime = "edge";
 export const metadata = { title: "매칭 가능 앱" };
@@ -352,6 +353,7 @@ export default async function BrowsePage({
             <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
             {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
+            <AdUnit slot="browseList" />
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
