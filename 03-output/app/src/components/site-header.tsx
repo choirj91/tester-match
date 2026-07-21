@@ -13,6 +13,7 @@ const NAV: readonly NavItem[] = [
   { href: "/my-reviews", label: "맞리뷰" },
   { href: "/apps", label: "내 앱" },
   { href: "/credits", label: "크레딧" },
+  { href: "/profile", label: "프로필" },
 ];
 
 export function SiteHeader({ user }: { user: AppUser | null }) {
