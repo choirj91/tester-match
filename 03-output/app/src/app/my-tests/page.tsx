@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { currentDayN } from "@/lib/checkin";
-import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL, PLAY_GROUP_JOIN_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 import { OptOutButton } from "./opt-out-button";
 import { CheckInButton } from "./check-in-button";
@@ -32,14 +32,6 @@ export default async function MyTestsPage() {
     )
     .eq("tester_user_id", user.id)
     .order("opted_in_at", { ascending: false });
-
-  // Play 테스터 그룹 가입 자가확인 상태
-  const { data: me } = await supabase
-    .from("users")
-    .select("play_group_joined_at")
-    .eq("id", user.id)
-    .maybeSingle();
-  const playJoined = !!me?.play_group_joined_at;
 
   return (
     <>
@@ -110,24 +102,7 @@ export default async function MyTestsPage() {
                     )}
 
                     {/* Google 그룹 — 초대 링크보다 먼저 표시 */}
-                    {app.google_group_url === TESTER_GROUP_URL && isActive && playJoined ? (
-                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-mint-500/30 bg-mint-500/5 px-3 py-2">
-                        <span className="shrink-0 rounded-full bg-mint-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          가입 확인
-                        </span>
-                        <p className="min-w-0 flex-1 text-xs text-neutral-600">
-                          공용 테스터 그룹 가입 확인됨. 초대 링크를 바로 사용하세요.{" "}
-                          <a
-                            href={PLAY_GROUP_JOIN_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-trust-600 underline-offset-2 hover:underline"
-                          >
-                            그룹 페이지 ↗
-                          </a>
-                        </p>
-                      </div>
-                    ) : app.google_group_url === TESTER_GROUP_URL && isActive ? (
+                    {app.google_group_url === TESTER_GROUP_URL && isActive ? (
                       <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                         <span className="shrink-0 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                           1단계
@@ -135,6 +110,7 @@ export default async function MyTestsPage() {
                         <div className="min-w-0 flex-1">
                           <p className="text-xs text-amber-800">
                             공용 테스터 그룹({PLAY_GROUP_EMAIL}) 가입이 필요합니다 (최초 1회).
+                            이미 가입했다면 초대 링크를 바로 사용하세요.
                           </p>
                           <PlayGroupJoinPrompt compact />
                         </div>

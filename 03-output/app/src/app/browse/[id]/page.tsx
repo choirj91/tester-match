@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
-import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL, PLAY_GROUP_JOIN_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
@@ -91,17 +91,6 @@ export default async function BrowseDetailPage({ params }: Props) {
     ]);
 
   if (!app || app.status === "deleted") notFound();
-
-  // Play 테스터 그룹 가입 자가확인 상태 (공용 그룹 앱 안내용)
-  let playJoined = false;
-  if (user) {
-    const { data: me } = await supabase
-      .from("users")
-      .select("play_group_joined_at")
-      .eq("id", user.id)
-      .maybeSingle();
-    playJoined = !!me?.play_group_joined_at;
-  }
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
@@ -198,39 +187,8 @@ export default async function BrowseDetailPage({ params }: Props) {
           <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
 
           {/* ── Google 그룹 안내 ── */}
-          {app.google_group_url === TESTER_GROUP_URL && user && playJoined ? (
-            // 공용 그룹 + 가입 확인됨
-            <div className="mt-4 rounded-xl border border-mint-500/30 bg-mint-500/5 p-4">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 shrink-0 rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                  가입 확인
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-neutral-900">
-                    ✓ 공용 테스터 그룹 가입이 확인되었습니다
-                  </p>
-                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-                    아래 초대 링크를 바로 사용하세요. 초대 링크가 안 열리면 그룹 가입이
-                    안 된 상태일 수 있습니다.
-                    {" "}
-                    <a
-                      href={PLAY_GROUP_JOIN_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-trust-600 underline-offset-2 hover:underline"
-                    >
-                      그룹 가입 페이지 ↗
-                    </a>
-                    {" · "}
-                    <Link href="/profile" className="font-medium text-trust-600 underline-offset-2 hover:underline">
-                      가입 상태 관리
-                    </Link>
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : app.google_group_url === TESTER_GROUP_URL && user ? (
-            // 공용 그룹 + 로그인 + 미가입 → 1클릭 가입 유도
+          {app.google_group_url === TESTER_GROUP_URL && user ? (
+            // 공용 그룹 + 로그인 → 1클릭 가입 안내 (이미 가입했으면 무시)
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
@@ -243,7 +201,8 @@ export default async function BrowseDetailPage({ params }: Props) {
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
                     이 앱은 공용 그룹 <strong>{PLAY_GROUP_EMAIL}</strong> 을 사용합니다.
                     한 번 가입하면 모든 앱의 테스트에 참여할 수 있습니다. Google Play 에서
-                    쓰는 것과 동일한 계정으로 가입해주세요.
+                    쓰는 것과 동일한 계정으로 가입해주세요. 이미 가입했다면 바로 아래
+                    초대 링크를 사용하세요.
                   </p>
                   <PlayGroupJoinPrompt compact />
                 </div>
@@ -296,7 +255,7 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </div>
               </div>
             </div>
-          ) : user && !playJoined ? (
+          ) : user ? (
             // 그룹 미설정 앱 — 공용 그룹 가입을 소프트하게 유도 (테스터 전용 유저 접점)
             <div className="mt-4 rounded-xl border border-trust-500/30 bg-trust-50 p-4">
               <div className="flex items-start gap-3">
@@ -324,14 +283,10 @@ export default async function BrowseDetailPage({ params }: Props) {
               {app.google_group_url && (
                 <div className="mb-3 flex items-center gap-2">
                   <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                    {app.google_group_url === TESTER_GROUP_URL && user && playJoined
-                      ? "바로 참여"
-                      : "2단계"}
+                    2단계
                   </span>
                   <p className="text-xs text-neutral-500">
-                    {app.google_group_url === TESTER_GROUP_URL && user && playJoined
-                      ? "아래 링크로 Closed Testing에 바로 참여하세요."
-                      : "그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요."}
+                    그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요.
                   </p>
                 </div>
               )}
