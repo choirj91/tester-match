@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 
 type Props = {
   initialNickname: string;
@@ -219,9 +219,9 @@ export function AppForm({ initialNickname, email }: Props) {
           <p className="text-sm font-semibold text-neutral-900">Tester Match 공용 테스터 그룹</p>
         </div>
         <p className="mt-2 text-xs leading-relaxed text-neutral-600">
-          모든 앱은 공용 그룹 <strong className="font-semibold text-neutral-800">{TESTER_GROUP_EMAIL}</strong> 을
-          사용합니다. Tester Match 회원은 로그인 시 이 그룹에 자동 가입되므로,
-          테스터가 별도로 그룹에 가입할 필요가 없습니다.
+          모든 앱은 공용 그룹 <strong className="font-semibold text-neutral-800">{PLAY_GROUP_EMAIL}</strong> 을
+          사용합니다. 테스터에게는 그룹 1클릭 가입 안내가 자동으로 표시되고, 한 번
+          가입한 테스터는 모든 앱에 바로 참여할 수 있습니다.
         </p>
         <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-3">
           <p className="text-xs font-bold text-neutral-800">
@@ -232,7 +232,7 @@ export function AppForm({ initialNickname, email }: Props) {
             <li>
               &ldquo;Google 그룹으로 이메일 목록 만들기&rdquo;에{" "}
               <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] font-semibold text-trust-700">
-                {TESTER_GROUP_EMAIL}
+                {PLAY_GROUP_EMAIL}
               </code>{" "}
               추가
             </li>
@@ -240,7 +240,7 @@ export function AppForm({ initialNickname, email }: Props) {
           </ol>
           <button
             type="button"
-            onClick={() => navigator.clipboard.writeText(TESTER_GROUP_EMAIL).catch(() => {})}
+            onClick={() => navigator.clipboard.writeText(PLAY_GROUP_EMAIL).catch(() => {})}
             className="mt-2 rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
           >
             그룹 이메일 복사

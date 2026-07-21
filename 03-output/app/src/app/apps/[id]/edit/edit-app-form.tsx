@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EDITABLE_APP_STATUSES } from "@/lib/app-status";
-import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 
 type Initial = {
   nickname: string;
@@ -110,7 +110,7 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
           <p className="text-sm font-semibold text-neutral-900">Google 그룹 — 공용 테스터 그룹</p>
         </div>
         <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
-          저장 시 공용 그룹 <strong className="font-semibold text-neutral-800">{TESTER_GROUP_EMAIL}</strong> 으로
+          저장 시 공용 그룹 <strong className="font-semibold text-neutral-800">{PLAY_GROUP_EMAIL}</strong> 으로
           설정됩니다. Play Console 비공개 테스트 트랙의 테스터 목록에 이 그룹 이메일을 등록해주세요.
           Tester Match 회원은 자동으로 이 그룹에 가입되어 있습니다.
         </p>

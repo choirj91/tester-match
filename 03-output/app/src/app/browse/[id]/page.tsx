@@ -5,10 +5,11 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
-import { TESTER_GROUP_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
+import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 
 export const runtime = 'edge';
 
@@ -90,6 +91,17 @@ export default async function BrowseDetailPage({ params }: Props) {
     ]);
 
   if (!app || app.status === "deleted") notFound();
+
+  // Play 테스터 그룹 가입 자가확인 상태 (공용 그룹 앱 안내용)
+  let playJoined = false;
+  if (user) {
+    const { data: me } = await supabase
+      .from("users")
+      .select("play_group_joined_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    playJoined = !!me?.play_group_joined_at;
+  }
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
@@ -186,30 +198,29 @@ export default async function BrowseDetailPage({ params }: Props) {
           <h2 className="text-lg font-semibold text-neutral-900">참여하기</h2>
 
           {/* ── Google 그룹 안내 ── */}
-          {app.google_group_url === TESTER_GROUP_URL && user ? (
-            // 공용 그룹 + 로그인 → 자동 가입됨. 별도 가입 불필요.
+          {app.google_group_url === TESTER_GROUP_URL && user && playJoined ? (
+            // 공용 그룹 + 가입 확인됨
             <div className="mt-4 rounded-xl border border-mint-500/30 bg-mint-500/5 p-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                  자동 가입
+                  가입 확인
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-neutral-900">
-                    ✨ 테스터 그룹에 이미 자동 가입되어 있습니다
+                    ✓ 공용 테스터 그룹 가입이 확인되었습니다
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-                    별도 그룹 가입 절차 없이 아래 초대 링크를 바로 사용하세요. 로그인하는 순간
-                    그룹 등록이 자동으로 끝났습니다.
+                    아래 초대 링크를 바로 사용하세요.
                     {" "}
                     <Link href="/profile" className="font-medium text-trust-600 underline-offset-2 hover:underline">
-                      가입 상태 확인
+                      가입 상태 관리
                     </Link>
                   </p>
                 </div>
               </div>
             </div>
-          ) : app.google_group_url === TESTER_GROUP_URL ? (
-            // 공용 그룹 + 비로그인 → 로그인 유도 (그룹 웹 페이지는 외부 비공개라 링크 무의미)
+          ) : app.google_group_url === TESTER_GROUP_URL && user ? (
+            // 공용 그룹 + 로그인 + 미가입 → 1클릭 가입 유도
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
@@ -217,12 +228,31 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-amber-900">
-                    ✨ 그룹 가입 절차 없음 — Google 로그인 한 번이면 끝
+                    공용 테스터 그룹에 가입해주세요 (최초 1회)
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-amber-800">
-                    보통 비공개 테스트는 Google 그룹에 따로 가입해야 하지만, Tester Match 는{" "}
-                    <strong>로그인만 하면 테스터 그룹에 자동 가입</strong>됩니다. 이후 모든 앱의
-                    초대 링크를 바로 사용할 수 있습니다.
+                    이 앱은 공용 그룹 <strong>{PLAY_GROUP_EMAIL}</strong> 을 사용합니다.
+                    한 번 가입하면 모든 앱의 테스트에 참여할 수 있습니다. Google Play 에서
+                    쓰는 것과 동일한 계정으로 가입해주세요.
+                  </p>
+                  <PlayGroupJoinPrompt compact />
+                </div>
+              </div>
+            </div>
+          ) : app.google_group_url === TESTER_GROUP_URL ? (
+            // 공용 그룹 + 비로그인 → 로그인 유도
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                  1단계 필수
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-amber-900">
+                    로그인 후 공용 테스터 그룹에 가입하세요 (가입은 1클릭)
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-800">
+                    이 앱은 공용 테스터 그룹({PLAY_GROUP_EMAIL})을 사용합니다. 그룹 가입
+                    한 번이면 Tester Match 의 모든 앱 테스트에 참여할 수 있습니다.
                   </p>
                   <Link
                     href={`/auth/login?next=/browse/${app.id}`}
@@ -264,10 +294,12 @@ export default async function BrowseDetailPage({ params }: Props) {
               {app.google_group_url && (
                 <div className="mb-3 flex items-center gap-2">
                   <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                    {app.google_group_url === TESTER_GROUP_URL && user ? "바로 참여" : "2단계"}
+                    {app.google_group_url === TESTER_GROUP_URL && user && playJoined
+                      ? "바로 참여"
+                      : "2단계"}
                   </span>
                   <p className="text-xs text-neutral-500">
-                    {app.google_group_url === TESTER_GROUP_URL && user
+                    {app.google_group_url === TESTER_GROUP_URL && user && playJoined
                       ? "아래 링크로 Closed Testing에 바로 참여하세요."
                       : "그룹 가입 완료 후 아래 링크로 Closed Testing에 참여하세요."}
                   </p>

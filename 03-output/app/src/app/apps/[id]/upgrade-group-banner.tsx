@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TESTER_GROUP_EMAIL, TESTER_GROUP_URL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 
 /**
  * 레거시 앱(개별 그룹/그룹 없음)용 공용 그룹 전환 배너.
@@ -39,7 +39,7 @@ export function UpgradeGroupBanner({ id }: { id: number }) {
         <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
           마지막 한 단계 — Play Console → 테스트 → 비공개 테스트 트랙 → 테스터 목록에{" "}
           <code className="rounded bg-white px-1 py-0.5 text-[11px] font-semibold text-trust-700">
-            {TESTER_GROUP_EMAIL}
+            {PLAY_GROUP_EMAIL}
           </code>{" "}
           을 추가해주세요. 이후 테스터 관리는 완전 자동입니다.
         </p>
@@ -75,7 +75,7 @@ export function UpgradeGroupBanner({ id }: { id: number }) {
           <span className="shrink-0 font-bold text-trust-600">•</span>
           전환 후 Play Console 테스터 목록에{" "}
           <code className="rounded bg-white px-1 py-0.5 text-[11px] font-semibold text-trust-700">
-            {TESTER_GROUP_EMAIL}
+            {PLAY_GROUP_EMAIL}
           </code>{" "}
           한 줄만 추가하면 끝
         </li>
