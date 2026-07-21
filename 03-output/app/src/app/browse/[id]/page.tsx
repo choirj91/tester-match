@@ -286,6 +286,26 @@ export default async function BrowseDetailPage({ params }: Props) {
                 </div>
               </div>
             </div>
+          ) : user && !playJoined ? (
+            // 그룹 미설정 앱 — 공용 그룹 가입을 소프트하게 유도 (테스터 전용 유저 접점)
+            <div className="mt-4 rounded-xl border border-trust-500/30 bg-trust-50 p-4">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                  추천
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    공용 테스터 그룹에 미리 가입해두세요 (최초 1회)
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+                    Tester Match 앱 대부분이 공용 그룹 <strong>{PLAY_GROUP_EMAIL}</strong> 으로
+                    테스터를 승인합니다. 한 번 가입해두면 앞으로 어떤 앱이든 바로 참여할 수
+                    있습니다. Google Play 와 동일한 계정으로 가입해주세요.
+                  </p>
+                  <PlayGroupJoinPrompt compact />
+                </div>
+              </div>
+            </div>
           ) : null}
 
           {/* ── 초대 링크 (그룹 가입 후 2단계 / 그룹 없으면 바로) ── */}
