@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { currentDayN } from "@/lib/checkin";
-import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL, PLAY_GROUP_JOIN_URL } from "@/lib/tester-group";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 import { OptOutButton } from "./opt-out-button";
 import { CheckInButton } from "./check-in-button";
@@ -116,7 +116,15 @@ export default async function MyTestsPage() {
                           가입 확인
                         </span>
                         <p className="min-w-0 flex-1 text-xs text-neutral-600">
-                          공용 테스터 그룹 가입 확인됨. 초대 링크를 바로 사용하세요.
+                          공용 테스터 그룹 가입 확인됨. 초대 링크를 바로 사용하세요.{" "}
+                          <a
+                            href={PLAY_GROUP_JOIN_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-trust-600 underline-offset-2 hover:underline"
+                          >
+                            그룹 페이지 ↗
+                          </a>
                         </p>
                       </div>
                     ) : app.google_group_url === TESTER_GROUP_URL && isActive ? (

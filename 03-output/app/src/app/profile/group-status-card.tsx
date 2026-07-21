@@ -87,14 +87,28 @@ export function GroupStatusCard() {
               <p className="text-sm font-semibold text-mint-500">
                 ✓ 그룹 가입 확인됨 — 모든 앱의 초대 링크를 바로 사용할 수 있습니다
               </p>
-              <button
-                type="button"
-                onClick={() => markPlayJoined(false)}
-                disabled={busy}
-                className="mt-1.5 text-[11px] text-neutral-400 underline-offset-2 hover:underline"
-              >
-                가입 상태 재설정
-              </button>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <a
+                  href={data.play_group_join_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                >
+                  그룹 가입 페이지 열기 ↗
+                </a>
+                <button
+                  type="button"
+                  onClick={() => markPlayJoined(false)}
+                  disabled={busy}
+                  className="text-[11px] text-neutral-400 underline-offset-2 hover:underline"
+                >
+                  실수로 눌렀다면: 가입 상태 재설정
+                </button>
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">
+                실제로 그룹에 가입되어 있지 않으면 초대 링크가 열리지 않습니다. 위 버튼으로
+                가입 여부를 언제든 다시 확인할 수 있습니다.
+              </p>
             </div>
           ) : (
             <div className="mt-4 space-y-3">

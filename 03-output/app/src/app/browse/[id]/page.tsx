@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
-import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
+import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL, PLAY_GROUP_JOIN_URL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
 import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
@@ -210,8 +210,18 @@ export default async function BrowseDetailPage({ params }: Props) {
                     ✓ 공용 테스터 그룹 가입이 확인되었습니다
                   </p>
                   <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-                    아래 초대 링크를 바로 사용하세요.
+                    아래 초대 링크를 바로 사용하세요. 초대 링크가 안 열리면 그룹 가입이
+                    안 된 상태일 수 있습니다.
                     {" "}
+                    <a
+                      href={PLAY_GROUP_JOIN_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-trust-600 underline-offset-2 hover:underline"
+                    >
+                      그룹 가입 페이지 ↗
+                    </a>
+                    {" · "}
                     <Link href="/profile" className="font-medium text-trust-600 underline-offset-2 hover:underline">
                       가입 상태 관리
                     </Link>
