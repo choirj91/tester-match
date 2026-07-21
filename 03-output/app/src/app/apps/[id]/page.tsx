@@ -12,20 +12,13 @@ import { CopyGroupEmailButton } from "@/components/copy-group-email-button";
 import { KpiSection } from "./kpi-section";
 import { isGroupsAutoJoinEnabled } from "@/lib/google-groups";
 import { UpgradeGroupBanner } from "./upgrade-group-banner";
+import { TesterMonitor } from "./tester-monitor";
 
 export const runtime = 'edge';
 
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ welcome?: string }>;
-};
-
-const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
-  active: { text: "진행중", tone: "bg-trust-50 text-trust-700" },
-  completed: { text: "완주", tone: "bg-mint-500/10 text-mint-500" },
-  opted_out: { text: "옵트아웃", tone: "bg-neutral-100 text-neutral-500" },
-  penalized: { text: "페널티", tone: "bg-crimson-500/10 text-crimson-500" },
-  pending: { text: "대기", tone: "bg-neutral-100 text-neutral-700" },
 };
 
 export default async function AppDetailPage({ params, searchParams }: Props) {
@@ -56,10 +49,38 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, opted_in_at, day_count, tester_user_id, users_public_profile!inner(nickname, trust_score), checkins(id, day_n)",
+      "id, status, opted_in_at, day_count, installed_at, tester_user_id, users_public_profile!inner(nickname, trust_score), checkins(id, day_n, checked_in_at)",
     )
     .eq("app_id", appId)
     .order("opted_in_at", { ascending: false });
+
+  // 테스터별 플랫폼 마지막 접속 (users_public_profile 뷰에 없음 → 별도 조회)
+  const testerIds = [...new Set((matches ?? []).map((m) => m.tester_user_id))];
+  const lastSeenMap = new Map<number, string | null>();
+  if (testerIds.length > 0) {
+    const { data: seen } = await supabase
+      .from("users")
+      .select("id, last_seen_at")
+      .in("id", testerIds);
+    for (const s of seen ?? []) lastSeenMap.set(s.id, s.last_seen_at);
+  }
+
+  const monitorRows = (matches ?? []).map((m) => {
+    const tester = Array.isArray(m.users_public_profile)
+      ? m.users_public_profile[0]
+      : m.users_public_profile;
+    return {
+      matchId: m.id,
+      nickname: tester?.nickname ?? "—",
+      trustScore: tester?.trust_score ?? 50,
+      status: m.status,
+      installedAt: m.installed_at ?? null,
+      lastSeenAt: lastSeenMap.get(m.tester_user_id) ?? null,
+      checkins: ((m.checkins ?? []) as Array<{ day_n: number; checked_in_at: string }>).map(
+        (c) => ({ day_n: c.day_n, checked_in_at: c.checked_in_at }),
+      ),
+    };
+  });
 
   const activeCount = matches?.filter((m) => m.status === "active").length ?? 0;
   const completedCount = matches?.filter((m) => m.status === "completed").length ?? 0;
@@ -220,59 +241,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
 
         <KpiSection matches={matches ?? []} />
 
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold text-neutral-900">
-            참여중인 테스터{" "}
-            <span className="tabular text-neutral-500">{matches?.length ?? 0}</span>
-          </h2>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-            {matches && matches.length > 0 ? (
-              <ul className="divide-y divide-neutral-100">
-                {matches.map((m) => {
-                  const tester = Array.isArray(m.users_public_profile)
-                    ? m.users_public_profile[0]
-                    : m.users_public_profile;
-                  const checkins = (m.checkins ?? []) as Array<{ day_n: number }>;
-                  const distinctDays = new Set(checkins.map((c) => c.day_n)).size;
-                  const label = MATCH_STATUS_LABEL[m.status] ?? MATCH_STATUS_LABEL.pending;
-
-                  return (
-                    <li
-                      key={m.id}
-                      className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:gap-4"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-neutral-900">
-                          {tester?.nickname ?? "—"}
-                        </p>
-                        <p className="text-xs text-neutral-500">
-                          신뢰 <span className="tabular">{tester?.trust_score ?? 50}</span>
-                          {" · "}
-                          체크인 <span className="tabular">{distinctDays}</span>/14일
-                        </p>
-                        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-neutral-100">
-                          <div
-                            className="h-full bg-trust-600"
-                            style={{ width: `${(distinctDays / 14) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${label.tone}`}
-                      >
-                        {label.text}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <div className="px-6 py-10 text-center text-sm text-neutral-500">
-                아직 참여한 테스터가 없습니다.
-              </div>
-            )}
-          </div>
-        </section>
+        <TesterMonitor appId={app.id} rows={monitorRows} />
       </main>
     </>
   );

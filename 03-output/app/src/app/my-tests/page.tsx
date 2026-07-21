@@ -8,6 +8,7 @@ import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 import { OptOutButton } from "./opt-out-button";
 import { CheckInButton } from "./check-in-button";
+import { InstalledButton } from "./installed-button";
 
 export const runtime = 'edge';
 
@@ -28,7 +29,7 @@ export default async function MyTestsPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, matched_at, opted_in_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, google_group_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
+      "id, status, matched_at, opted_in_at, installed_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, google_group_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
     )
     .eq("tester_user_id", user.id)
     .order("opted_in_at", { ascending: false });
@@ -144,6 +145,14 @@ export default async function MyTestsPage() {
                           expired={expired}
                         />
                       )}
+                      {isActive &&
+                        (m.installed_at ? (
+                          <span className="rounded-lg bg-mint-500/10 px-2.5 py-1.5 text-xs font-semibold text-mint-500">
+                            📲 설치 확인됨 ✓
+                          </span>
+                        ) : (
+                          <InstalledButton matchId={m.id} />
+                        ))}
                       {app.store_invite_url && (
                         <a
                           href={app.store_invite_url}

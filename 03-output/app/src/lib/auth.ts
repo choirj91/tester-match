@@ -35,11 +35,20 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("users")
-    .select("id, auth_user_id, email, nickname, trust_score, role, groups_joined_at")
+    .select("id, auth_user_id, email, nickname, trust_score, role, groups_joined_at, last_seen_at")
     .eq("auth_user_id", authUser.id)
     .maybeSingle();
 
   if (error || !data) return null;
+
+  // 플랫폼 출석 기록 — 1시간 throttle (개발자 모니터링의 "마지막 접속" 신호)
+  const lastSeen = data.last_seen_at ? new Date(data.last_seen_at).getTime() : 0;
+  if (Date.now() - lastSeen > 60 * 60 * 1000) {
+    await admin
+      .from("users")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("id", data.id);
+  }
 
   // Google 그룹 자동 가입 (1회만) — edge runtime waitUntil 로 완료 보장
   if (
