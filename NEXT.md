@@ -1,97 +1,85 @@
 # NEXT — 다음 액션
 
-> **현재 위치**: 12주 로드맵 **Week 5** (핵심 기능 완료, 관리자 도구 운영 중)
-> **마지막 업데이트**: 2026-05-05
+> **현재 위치**: MVP 라이브 운영 중 (https://tester-match.pages.dev, 회원 850+)
+> **회사**: Knock Knock Company (사업자 등록 완료) · 도메인 knockknock.company 확보
+> **마지막 업데이트**: 2026-07-21
 
 ---
 
-## 즉시 (사용자 액션)
+## 🔥 즉시 (사용자 액션 — 코드 아님)
 
-- [x] ~~pnpm install + dev 검증~~ (2026-05-04 완료)
-- [x] ~~Supabase 프로젝트 연결 + 12 테이블 적용~~ (2026-05-04 완료)
-- [x] ~~Google OAuth 자격증명 등록~~ (2026-05-04 완료)
-- [x] ~~매칭 엔진 v1~~ (2026-05-05 완료)
-- [x] ~~14일 체크인 + 크레딧~~ (2026-05-05 완료)
-- [x] ~~앱 상태 관리 (matching/reviewing/launched)~~ (2026-05-05 완료)
-- [x] ~~게시판~~ (2026-05-05 완료)
-- [x] ~~관리자 일괄 등록~~ (2026-05-05 완료)
-- [x] ~~맞리뷰 + 신뢰도 헤더~~ (2026-05-05 완료)
-- [ ] **`supabase db push`** — feat/admin-bulk-import 브랜치 마이그레이션 적용 (admin role 트리거 fix + store_invite_url nullable)
-- [ ] **feat/admin-bulk-import PR** 생성 + 머지
-- [ ] **관리자 role 부여** — `supabase db push` 후 재시도: `update public.users set role='admin' where email='choirj91@gmail.com';`
-- [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지, 5분 ping)
+- [ ] **공용 그룹 최종 검증** — `tester-match@googlegroups.com`
+  - [ ] groups.google.com 설정 확인: 그룹 보기 "웹의 모든 사용자" / 가입 "웹상의 모든 사용자가 가입 가능"(승인 없이)
+  - [ ] 본인 Play Console 테스터 탭에 `tester-match@googlegroups.com` 등록 → 인식되는지
+  - [ ] 본인 gmail로 그룹 가입 → 앱 웹 옵트인 링크에서 "테스터 되기" 나오는지
+- [ ] 검증 통과 후 **문의 개발자 회신** (ilovejs97@gmail.com 등) + **공지 글 게시** ("그룹 등록 정상화 + 새 참여 방법")
+- [ ] **tester02~20 최초 로그인** — 실기기, 며칠 분산, 같은 복구번호 반복 금지 (tester01 차단 사례 참고)
+- [ ] tester01~20 → `testers-pro@knockknock.company` 그룹 등록
+- [ ] AdSense 심사 결과 대기 → 승인 시 `feat/adsense-placements` 병합 + 슬롯 ID 4개 발급·기입
 
-## Discovery 병행 (Week 1 잔여)
+## 코드 작업 (다음 세션)
 
-- [ ] 브랜드명 후보 5개 + 도메인 가용성 체크 (Cloudflare Registrar 우선)
-- [ ] 경쟁사 5종 직접 가입·결제·체험 (LaunchPad, BETAFLOW, 크몽, Testers Community, PrimeTestLab)
-- [ ] Disquiet, GeekNews, Reddit r/kr_dev에 인터뷰 글 업로드
-- [ ] 응답 5건 이상 확보 → BP v0.2 업데이트
+- [ ] 그룹 검증 실패 시 폴백: 앱별 "참여 테스터 이메일 목록 복사" 기능 (Play Console 이메일 목록 방식)
+- [ ] 프로필 확장 검토 — 자기소개·연락 수단 필드 (사용자 언급)
+- [ ] 유료(Pro) 티어 상품화 — testers-pro 그룹 20계정 운영 대행 페이지 + 가격
+- [ ] 커스텀 도메인 이전 (knockknock.company) — AdSense 승인 이후 권장 (심사 도중 도메인 변경 금지)
 
-## Week 2 — 완료된 코드 스켈레톤
+## 그룹 아키텍처 (확정 — [ADR-0009](01-source/decisions/ADR-0009-dual-group-architecture.md))
 
-- [x] Next.js 15 (App Router) + TS + Tailwind 4 (`03-output/app/`)
-- [x] Cloudflare Pages 호환 빌드 (`@cloudflare/next-on-pages`) + 환경 변수 템플릿
-- [x] Supabase 마이그레이션 — ERD 12 테이블 + waitlist_signups + RLS ENABLE (`03-output/supabase/`)
-- [x] Waitlist 랜딩 페이지 (한국어, Trust Blue + Pretendard)
-- [x] GitHub Actions CI (lint + typecheck + test + build)
-- [x] 인프라 가이드 (`03-output/infra/cloudflare-pages.md`)
+```
+tester-match@googlegroups.com   ← Play Console 등록용 (consumer). 테스터 1클릭 가입. API 없음 → 자동 추가 불가
+testers@knockknock.company      ← 내부 명단 (Workspace). 로그인 시 Directory API 자동 등록. Play Console 미인식
+testers-pro@knockknock.company  ← 유료 티어. 회사 계정 20개(tester01~20)로 운영 대행
+```
 
-세션 기록: [04-review/history/2026-05-04-week2-scaffold.md](04-review/history/2026-05-04-week2-scaffold.md)
+## 백로그
+
+- [ ] 웹 푸시 알림
+- [ ] Play Console API 설치 검증 (개발자 본인 앱 설치 수 자동 집계)
+- [ ] 유료 급구 (토스페이먼츠) — [ADR-0007](01-source/decisions/ADR-0007-payments-v2-defer.md) 보류 중
+- [ ] UptimeRobot 등록 (Supabase Free 일시정지 방지)
+- [ ] 변호사 검토 (이용약관·개인정보처리방침, 출시 규모 커지기 전)
 
 ---
 
-## 12주 로드맵 (요약)
+## 최근 완료 (2026-07 하이라이트)
 
-| Phase | Week | 핵심 산출물 |
+| 날짜 | 작업 |
+|---|---|
+| 07-21 | 이중 그룹 아키텍처 배포 — Play용 consumer 그룹 + 가입 버튼 전 페이지 노출 |
+| 07-20 | 공지사항 시스템 (관리자 전용 카테고리, 플로팅 버튼, post_reads), 조회수 실집계, PGRST201 임베드 장애 복구 |
+| 07-19 | 관리자 표시 (댓글 배지·게시판 칩), 그룹 전환 배너·일괄 알림 |
+| 07-18 | 공용 그룹 전면 적용 (폼 고정, 실시간 상태), Workspace 자동 가입 (Directory API) |
+| 07-17 | 사업자 등록 후 자동화 — Play Store URL 자동 채움, 온보딩, KPI 대시보드 |
+| 07-16 | AdSense 심사 신청, 광고 배치는 `feat/adsense-placements` 브랜치 보존 후 main 리버트 |
+| 07-15 | 급구 무료 오픈 (7일 자동 만료·랜덤 셔플), 카톡 공유 3단계 모달 |
+
+상세: [WORKLOG.md](WORKLOG.md) · 세션 기록: [04-review/history/](04-review/history/)
+
+---
+
+## 운영 정보
+
+- **배포**: [DEPLOY.md](DEPLOY.md) (CLI 원커맨드 절차)
+- **프로덕션**: https://tester-match.pages.dev
+- **관리자 계정**: choirj91@gmail.com (role=admin), 940번 계정
+- **Supabase**: 마이그레이션 `03-output/supabase/migrations/` → `npx supabase db push` (03-output에서)
+- **광고 브랜치**: `feat/adsense-placements` (승인 시 병합)
+
+## KPI 게이트 (기존 유지)
+
+| 단계 | 지표 | 목표 |
 |---|---|---|
-| Discovery | 1~2 | 브랜드·도메인·랜딩·기반 |
-| Core #1 | 3~5 | 인증·앱 등록·매칭 엔진 v1 |
-| Core #2 | 6~8 | 크레딧·14일 체크인·Trust Score |
-| Monetize | 9~10 | 토스페이먼츠·Boost SLA·환불 |
-| Beta | 11 | 클로즈드 베타 50명 + 핫픽스 |
-| Launch | 12 | 퍼블릭 런칭 (한국 채널) + KPI 게이트 |
-
-상세: [01-source/bp/Tester_Match_사업계획서_v0.1.md §12](01-source/bp/Tester_Match_사업계획서_v0.1.md)
-
----
-
-## Open Questions (결정 대기)
-
-### 비즈니스
-- [ ] Boost 가격 — 24h SLA 49,000원 / 48h SLA 29,000원 적정성 (A/B 테스트 필요)
-- [ ] 적립 비율 80/20 — 테스터 활성도 vs 플랫폼 마진 균형 검증
-- [ ] 시드 테스터 — 초기 14일 크레딧 풀 부족 시 플랫폼 직접 운영 여부
-- [ ] v2 영어권 진입 시점 — 매칭 성공률 80% 도달 후 vs 12개월 정량 게이트
-
-### 정책/법무
-- [ ] 크레딧 = 선불전자지급수단 분류 여부 (금감원 사전 자문, v3 외부 전환 활성화 전 필수)
-- [ ] 크레딧 양도/거래 시 AML 의무
-- [ ] 변호사 검토 (이용약관·개인정보처리방침, 약 100~200만원, 출시 전)
-
-### 운영
-- [ ] CS 응대 채널 — Crisp/Intercom 도입 시점
-- [ ] Trust Score 어뷰징 (스크린샷 위조) 대응 — ML 검증 도입 시점
-
-상세: [01-source/bp/Tester_Match_사업계획서_v0.1.md §15](01-source/bp/Tester_Match_사업계획서_v0.1.md)
-
----
-
-## KPI 게이트
-
-| 단계 | 지표 | 목표 | 미달성 시 |
-|---|---|---|---|
-| Pre-Launch (W1~12) | Waitlist 가입 | 200명 | 마케팅 채널 재검토 |
-| Launch (W12~16) | 등록 앱 수 | 100건 | 매칭 메커니즘 점검 |
-| Operational (W16~24) | 매칭 성공률 | 80% 이상 | 14일 체크인 UX 개선 |
-| Monetization (W16~24) | Boost 첫 결제 | W12 내 1건 | Boost 가격·노출 재설계 |
-| Scale (M6~12) | MAU / 월 결제 | 1,500 / 25건 | v2 글로벌 확장 검토 |
+| Launch | 등록 앱 수 | 100건 |
+| Operational | 매칭 성공률 | 80% 이상 |
+| Monetization | Boost 첫 결제 | 1건 |
+| Scale | MAU / 월 결제 | 1,500 / 25건 |
 
 ---
 
 ## 다음 작업자에게
 
-1. 먼저 [README.md](README.md) → [01-source/decisions/](01-source/decisions/) 순으로 읽으면 30분 내 컨텍스트 회복.
-2. 잠금 결정과 충돌하는 작업이 필요하면 **코드 전에 ADR을 추가**한다 (`01-source/decisions/ADR-NNNN-*.md`).
-3. 각 Week 시작 시 이 NEXT.md를 업데이트한다 (지난 주 체크리스트 → 04-review/history/).
-4. 기획 변경은 `01-source/spec/` 직접 수정 X → 새 ADR + 04-review/history/에 변경 사유 기록.
+1. 컨텍스트 회복 순서: [README.md](README.md) → [NEXT.md](NEXT.md)(이 문서) → [WORKLOG.md](WORKLOG.md) 최근 3일 → [01-source/decisions/](01-source/decisions/)
+2. 잠금 결정 충돌 시 **코드 전에 ADR 추가** (`01-source/decisions/ADR-NNNN-*.md`)
+3. 세션 종료 시: WORKLOG.md 오늘 항목 + NEXT.md 할일 갱신 + 큰 결정은 04-review/history/에 세션 기록
+4. 배포는 반드시 [DEPLOY.md](DEPLOY.md) 절차 — cwd 틀리면 이전 빌드가 배포되는 사고 이력 있음

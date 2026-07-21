@@ -77,6 +77,12 @@ Wave 3 (순차): E2E 테스트 → 통합 검증
 
 ---
 
+## 세션 사이클 (필수)
+
+- **시작**: [WORKLOG.md](WORKLOG.md) 최근 3일 → [NEXT.md](NEXT.md) 🔥 즉시 섹션 → `git log` 순으로 컨텍스트 회복 (`tm-session` 스킬)
+- **배포**: [DEPLOY.md](DEPLOY.md) 절차 고정 (`tm-deploy` 스킬). `&&` 체인에 `| head` 금지 — exit code 삼킴 사고 이력
+- **종료**: WORKLOG.md 오늘 항목(한 일/결정/내일) + NEXT.md 갱신. 큰 결정은 04-review/history/ + ADR
+
 ## 작업 원칙
 
 - 파일을 **읽기 전에 수정하지 않는다**.
