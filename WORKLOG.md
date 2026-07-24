@@ -6,6 +6,11 @@
 
 ---
 
+## 2026-07-25 (금)
+
+- **한 일**: 방문자 그래프 날짜 버그 수정 — page_views.visit_date 가 UTC current_date 라 KST 00~09시 방문이 전날로 기록 (오늘 막대 오전 9시까지 0). 기본값 KST 로 변경 + created_at 기준 전 행 소급 보정 (unique 재구축)
+- **교훈**: date 컬럼 default current_date 는 서버 TZ(UTC) — KST 서비스는 (now() at time zone 'Asia/Seoul')::date 명시
+
 ## 2026-07-24 (목)
 
 - **한 일**: ① CS — 앱 1561(YEONRI) 소유권 이전 ② 관리자 통계 앱 순위 버그 수정 (42703 침묵 실패 + 1,000행 잘림 → fetchAll) ③ 공개 랭킹 `/stats` + 공개 프로필 `/u/[id]` + 네비 "랭킹" ④ **신뢰도 정책 v1 시행** — 체크인 +1(상한 1,000) / 옵트아웃 −3 / 무단 이탈 −10, `lib/trust.ts` 단일화, 공개 랭킹은 완주 랭킹 대신 신뢰도 랭킹(50 초과자만)
