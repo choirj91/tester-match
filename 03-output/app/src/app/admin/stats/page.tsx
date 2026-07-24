@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { listGroupMembers } from "@/lib/google-groups";
+import { fetchAll } from "@/lib/fetch-all";
 import { TESTER_GROUP_EMAIL } from "@/lib/tester-group";
 
 export const runtime = "edge";
@@ -23,24 +24,6 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
       {sub && <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>}
     </div>
   );
-}
-
-/**
- * PostgREST 는 요청당 최대 1,000행 반환 — matches 등이 이미 초과.
- * 1,000행씩 range 페이지네이션으로 전체를 모은다.
- */
-async function fetchAll<T>(
-  query: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
-): Promise<T[]> {
-  const pageSize = 1000;
-  const rows: T[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const { data } = await query(from, from + pageSize - 1);
-    if (!data || data.length === 0) break;
-    rows.push(...data);
-    if (data.length < pageSize) break;
-  }
-  return rows;
 }
 
 export default async function AdminStatsPage() {

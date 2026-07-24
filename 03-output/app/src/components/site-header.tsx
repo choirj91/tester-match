@@ -9,6 +9,7 @@ const NAV: readonly NavItem[] = [
   { href: "/browse", label: "매칭 가능" },
   { href: "/boost", label: "급구" },
   { href: "/board", label: "게시판" },
+  { href: "/stats", label: "랭킹" },
   { href: "/my-tests", label: "내 테스트" },
   { href: "/my-reviews", label: "맞리뷰" },
   { href: "/apps", label: "내 앱" },
