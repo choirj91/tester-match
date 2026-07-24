@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { MatchOptOutSchema } from "@/lib/validators/match";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
+import { applyTrustDelta, OPTOUT_TRUST_DELTA } from "@/lib/trust";
 
 export const runtime = "edge";
 
@@ -77,6 +78,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
     console.error("[matches/PATCH] update failed", updErr);
     return NextResponse.json({ ok: false, message: "옵트아웃 실패" }, { status: 500 });
   }
+
+  // 신뢰도 -3 (자진 중도 포기 — 무단 이탈 -10 보다 가볍게, UI 에 사전 고지)
+  await applyTrustDelta(supabase, {
+    userId: user.id,
+    delta: OPTOUT_TRUST_DELTA,
+    reason: "penalty.opt_out",
+    refType: "match",
+    refId: matchId,
+  });
 
   // required_testers 복구 (best-effort)
   const { data: app } = await supabase

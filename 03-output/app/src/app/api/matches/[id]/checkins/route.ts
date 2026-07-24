@@ -5,6 +5,7 @@ import { currentDayN } from "@/lib/checkin";
 import { sendEmail } from "@/lib/email";
 import { matchCompletedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
+import { applyTrustDelta, COMPLETION_TRUST_DELTA } from "@/lib/trust";
 
 export const runtime = "edge";
 
@@ -85,6 +86,15 @@ export async function POST(_req: Request, { params }: Ctx) {
       .from("matches")
       .update({ status: "completed", day_count: 14 })
       .eq("id", matchId);
+
+    // 신뢰도 +5 — 14번째 체크인은 UNIQUE(match_id, day_n) 덕에 1회만 도달 (중복 지급 없음)
+    await applyTrustDelta(supabase, {
+      userId: user.id,
+      delta: COMPLETION_TRUST_DELTA,
+      reason: "reward.completion",
+      refType: "match",
+      refId: matchId,
+    });
 
     // 잔액 + 800 크레딧 적립 (append-only ledger).
     const { data: ledger } = await supabase

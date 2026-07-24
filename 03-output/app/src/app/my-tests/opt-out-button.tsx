@@ -8,6 +8,12 @@ export function OptOutButton({ matchId }: { matchId: number }) {
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
+    if (
+      !confirm(
+        "테스트를 중도 포기하면 신뢰도가 3점 차감됩니다.\n(무단 이탈 시에는 10점 차감 — 포기하실 거라면 옵트아웃이 유리합니다.)\n\n계속하시겠습니까?",
+      )
+    )
+      return;
     const reason = prompt("옵트아웃 사유를 적어주세요 (선택). 매칭 통계 개선에 사용됩니다.");
     if (reason === null) return; // cancelled
 

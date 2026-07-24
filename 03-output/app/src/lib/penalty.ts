@@ -23,4 +23,5 @@ export function shouldPenalize(
   return cur - lastCheckinDayN >= 5;
 }
 
-export const PENALTY_TRUST_DELTA = -10;
+// 정책 상수는 lib/trust.ts 로 일원화 — 기존 import 경로 호환용 재수출
+export { PENALTY_TRUST_DELTA } from "@/lib/trust";

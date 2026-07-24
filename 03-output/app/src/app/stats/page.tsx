@@ -41,12 +41,16 @@ function RankingList({
   rows,
   unit,
   accent,
+  showStar = true,
+  emptyText = "데이터 없음",
 }: {
   title: string;
   sub: string;
   rows: RankedUser[];
   unit: string;
   accent: string;
+  showStar?: boolean;
+  emptyText?: string;
 }) {
   return (
     <section>
@@ -54,7 +58,7 @@ function RankingList({
       <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>
       <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-neutral-400">데이터 없음</p>
+          <p className="px-5 py-8 text-center text-sm text-neutral-400">{emptyText}</p>
         ) : (
           <ul className="divide-y divide-neutral-100">
             {rows.map((u, i) => (
@@ -66,7 +70,7 @@ function RankingList({
                   <Medal rank={i + 1} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-neutral-900">{u.nickname}</p>
-                    <p className="text-xs text-spark-500">★{u.trust_score}</p>
+                    {showStar && <p className="text-xs text-spark-500">★{u.trust_score}</p>}
                   </div>
                   <span className={`shrink-0 tabular text-sm font-bold ${accent}`}>
                     {u.count}
@@ -186,7 +190,22 @@ export default async function PublicStatsPage() {
 
   const byApps = rank(appCountByUser);
   const byMatches = rank(matchCountByUser);
-  const byCompleted = rank(completedByUser);
+
+  // 신뢰도 랭킹 — 기본값(50) 초과, 즉 가점을 받은 사용자만. 동점은 완주 횟수 순.
+  const byTrust: RankedUser[] = usersRows
+    .filter((u) => u.trust_score > 50)
+    .map((u) => ({
+      id: u.id,
+      nickname: u.nickname,
+      trust_score: u.trust_score,
+      count: u.trust_score,
+    }))
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        (completedByUser.get(b.id) ?? 0) - (completedByUser.get(a.id) ?? 0),
+    )
+    .slice(0, 20);
 
   return (
     <>
@@ -289,11 +308,13 @@ export default async function PublicStatsPage() {
             accent="text-trust-600"
           />
           <RankingList
-            title="14일 완주 많은 순"
-            sub="14일 테스트 완주 기준 · TOP 20"
-            rows={byCompleted}
-            unit="회"
-            accent="text-mint-500"
+            title="신뢰도 높은 순"
+            sub="14일 완주로 쌓는 점수 · TOP 20"
+            rows={byTrust}
+            unit="점"
+            accent="text-spark-500"
+            showStar={false}
+            emptyText="아직 집계 중입니다. 14일 완주로 신뢰도를 쌓아보세요!"
           />
         </div>
       </main>
