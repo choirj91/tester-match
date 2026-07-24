@@ -25,6 +25,24 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
   );
 }
 
+/**
+ * PostgREST 는 요청당 최대 1,000행 반환 — matches 등이 이미 초과.
+ * 1,000행씩 range 페이지네이션으로 전체를 모은다.
+ */
+async function fetchAll<T>(
+  query: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+): Promise<T[]> {
+  const pageSize = 1000;
+  const rows: T[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data } = await query(from, from + pageSize - 1);
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+  }
+  return rows;
+}
+
 export default async function AdminStatsPage() {
   const user = await requireAdminUser("/admin/stats");
   const supabase = createSupabaseAdminClient();
@@ -47,7 +65,8 @@ export default async function AdminStatsPage() {
     { data: pageViewRows },
   ] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }).is("deleted_at", null),
-    supabase.from("apps").select("id", { count: "exact", head: true }).is("deleted_at", null),
+    // apps 는 deleted_at 컬럼이 없고 status='deleted' 로 소프트 삭제
+    supabase.from("apps").select("id", { count: "exact", head: true }).neq("status", "deleted"),
     supabase.from("matches").select("id", { count: "exact", head: true }),
     supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "active"),
     supabase.from("matches").select("id", { count: "exact", head: true }).eq("status", "completed"),
@@ -83,23 +102,40 @@ export default async function AdminStatsPage() {
   const weekVisitors = weeklyData.reduce((s, d) => s + d.visitors, 0);
   const maxVisitors = Math.max(...weeklyData.map((d) => d.visitors), 1);
 
-  // ── 사용자 목록 ────────────────────────────────────────────────────────
-  const { data: users } = await supabase
-    .from("users")
-    .select("id, nickname, email, trust_score, status, created_at, groups_joined_at")
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  // ── 사용자 목록 (전행 — 1,000행 제한 우회) ────────────────────────────
+  const users = await fetchAll<{
+    id: number;
+    nickname: string;
+    email: string;
+    trust_score: number;
+    status: string;
+    created_at: string;
+    groups_joined_at: string | null;
+  }>((from, to) =>
+    supabase
+      .from("users")
+      .select("id, nickname, email, trust_score, status, created_at, groups_joined_at")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 
-  // ── 앱 목록 (deleted_at IS NULL) ──────────────────────────────────────
-  const { data: apps } = await supabase
-    .from("apps")
-    .select("id, owner_user_id, status")
-    .is("deleted_at", null);
+  // ── 앱 목록 (status='deleted' 제외 — apps 에 deleted_at 컬럼 없음) ────
+  const apps = await fetchAll<{ id: number; owner_user_id: number; status: string }>(
+    (from, to) =>
+      supabase
+        .from("apps")
+        .select("id, owner_user_id, status")
+        .neq("status", "deleted")
+        .order("id")
+        .range(from, to),
+  );
 
-  // ── 매칭 목록 ─────────────────────────────────────────────────────────
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("id, tester_user_id, status");
+  // ── 매칭 목록 (전행) ──────────────────────────────────────────────────
+  const matches = await fetchAll<{ id: number; tester_user_id: number; status: string }>(
+    (from, to) =>
+      supabase.from("matches").select("id, tester_user_id, status").order("id").range(from, to),
+  );
 
   // ── JS 집계 ───────────────────────────────────────────────────────────
   const appCountByUser = new Map<number, number>();
