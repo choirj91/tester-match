@@ -309,12 +309,12 @@ export default async function PublicStatsPage() {
           />
           <RankingList
             title="신뢰도 높은 순"
-            sub="14일 완주로 쌓는 점수 · TOP 20"
+            sub="매일 체크인 +1점 · 최대 1,000점 · TOP 20"
             rows={byTrust}
             unit="점"
             accent="text-spark-500"
             showStar={false}
-            emptyText="아직 집계 중입니다. 14일 완주로 신뢰도를 쌓아보세요!"
+            emptyText="아직 집계 중입니다. 매일 체크인으로 신뢰도를 쌓아보세요!"
           />
         </div>
       </main>

@@ -2,24 +2,24 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * 신뢰도(Trust Score) 정책 상수 — 단일 소스.
- * 정책 문서: 03-output/policy/trust-score.md · 결정: ADR-0010
+ * 정책 문서: 03-output/policy/trust-score.md · 결정: ADR-0010 (v1.1)
  *
- * 원칙: 가점은 "완주"에만, 감점은 "이탈"에만. 앱 등록·게시글 등
+ * 원칙: 가점은 "체크인 실행"에만, 감점은 "이탈"에만. 앱 등록·게시글 등
  * 어뷰징 가능한 행위에는 점수를 연결하지 않는다.
  */
 export const TRUST_START = 50;
 export const TRUST_MIN = 0;
-export const TRUST_MAX = 100;
+export const TRUST_MAX = 1000;
 
-/** 14일 완주 보상 */
-export const COMPLETION_TRUST_DELTA = +5;
+/** 일일 체크인 1회 — UNIQUE(match_id, day_n) 가드로 하루 1회만 발생 */
+export const CHECKIN_TRUST_DELTA = +1;
 /** 자진 중도 포기 (옵트아웃) — 사전 고지된 소액 감점 */
 export const OPTOUT_TRUST_DELTA = -3;
 /** 무단 이탈 (기간 만료 미완주 또는 5일 연속 미체크인) */
 export const PENALTY_TRUST_DELTA = -10;
 
 export type TrustReason =
-  | "reward.completion"
+  | "reward.checkin"
   | "penalty.opt_out"
   | "penalty.no_checkin"
   | "admin.adjust";
