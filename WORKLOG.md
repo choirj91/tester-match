@@ -6,6 +6,12 @@
 
 ---
 
+## 2026-08-14 (금)
+
+- **한 일**: 3주 만 복귀 세션. **중대 버그 수정** — users_protect_admin_fields 트리거가 service_role 의 trust_score UPDATE 를 조용히 원복 → 신뢰도 증감 전 기간 미반영 (원장만 2,494행 축적). 트리거에 service_role 예외 추가 + 원장 델타 합으로 users·history 전면 소급 보정 (TOP 259점, 감점자 190명 반영 시작)
+- **교훈**: service_role 은 RLS 는 우회하지만 **트리거는 우회 못 함** — 보호 트리거 만들 때 service_role 예외 필수. "에러 없는 원복"은 원장·실값 비교로만 발견됨
+- **다음**: 실체크인 1건으로 가점 왕복 검증, 랭킹 크레딧 보상 설계, AdSense 심사 결과 확인
+
 ## 2026-07-25 (금)
 
 - **한 일**: 방문자 그래프 날짜 버그 수정 — page_views.visit_date 가 UTC current_date 라 KST 00~09시 방문이 전날로 기록 (오늘 막대 오전 9시까지 0). 기본값 KST 로 변경 + created_at 기준 전 행 소급 보정 (unique 재구축)
