@@ -93,13 +93,13 @@ const HOME_JSON_LD = {
   "@type": "WebSite",
   name: "Tester Match",
   alternateName: "테스터 매치",
-  url: "https://tester-match.pages.dev",
+  url: "https://tester-match.knockknock.company",
   inLanguage: "ko-KR",
   description:
     "Google Play Closed Testing 12명/14일 요건을 인디 개발자끼리 품앗이로 해결하는 무료 매칭 플랫폼.",
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://tester-match.pages.dev/browse?q={search_term_string}",
+    target: "https://tester-match.knockknock.company/browse?q={search_term_string}",
     "query-input": "required name=search_term_string",
   },
 };
@@ -108,8 +108,8 @@ const ORG_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Tester Match",
-  url: "https://tester-match.pages.dev",
-  logo: "https://tester-match.pages.dev/og-image.svg",
+  url: "https://tester-match.knockknock.company",
+  logo: "https://tester-match.knockknock.company/og-image.svg",
 };
 
 export default async function HomePage() {

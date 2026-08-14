@@ -256,7 +256,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-const SITE_URL = "https://tester-match.pages.dev";
+const SITE_URL = "https://tester-match.knockknock.company";
 
 function buildShareText(args: {
   appName: string;

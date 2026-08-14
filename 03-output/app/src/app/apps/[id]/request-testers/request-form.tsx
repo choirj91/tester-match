@@ -44,7 +44,7 @@ export function RequestForm({ appId, appName, senderNickname, shortDescription, 
   const [selected, setSelected] = useState<Set<number>>(defaultSelected);
   const [subject, setSubject] = useState(`[테스터 요청] "${appName}" 앱 테스트에 참여해주세요`);
   const [message, setMessage] = useState(
-    `안녕하세요!\n\n저는 ${senderNickname}입니다. Google Play 출시를 준비 중인 "${appName}" 앱의 테스터를 구하고 있습니다.\n\n${shortDescription}\n\n14일 동안 앱을 설치하고 사용해주시면 큰 도움이 됩니다.\n관심이 있으시다면 아래 링크에서 참여 신청해주세요!\n\nhttps://tester-match.pages.dev/browse/${appId}\n\n감사합니다 :)\n${senderNickname}`,
+    `안녕하세요!\n\n저는 ${senderNickname}입니다. Google Play 출시를 준비 중인 "${appName}" 앱의 테스터를 구하고 있습니다.\n\n${shortDescription}\n\n14일 동안 앱을 설치하고 사용해주시면 큰 도움이 됩니다.\n관심이 있으시다면 아래 링크에서 참여 신청해주세요!\n\nhttps://tester-match.knockknock.company/browse/${appId}\n\n감사합니다 :)\n${senderNickname}`,
   );
   const [tab, setTab] = useState<"recipients" | "content">("recipients");
 

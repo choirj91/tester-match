@@ -57,7 +57,7 @@ export async function POST(req: Request) {
     const res = await fetch(canonicalUrl, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; TesterMatch/1.0; +https://tester-match.pages.dev)",
+          "Mozilla/5.0 (compatible; TesterMatch/1.0; +https://tester-match.knockknock.company)",
         "Accept-Language": "ko-KR,ko;q=0.9",
       },
       signal: AbortSignal.timeout(8_000),

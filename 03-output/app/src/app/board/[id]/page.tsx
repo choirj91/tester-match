@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: post.title,
       description,
-      url: `https://tester-match.pages.dev/board/${postId}`,
+      url: `https://tester-match.knockknock.company/board/${postId}`,
       type: "article",
     },
   };

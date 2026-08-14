@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { FloatButtons } from "@/components/kakao-float-button";
 import { PageTracker } from "@/components/page-tracker";
+import { SiteFooter } from "@/components/site-footer";
 
 const ADSENSE_CLIENT = "ca-pub-6738372737459853";
 
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     "테스터 매치",
     "안드로이드 앱 테스트",
   ],
-  metadataBase: new URL("https://tester-match.pages.dev"),
+  metadataBase: new URL("https://tester-match.knockknock.company"),
   alternates: {
     canonical: "/",
   },
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "Tester Match",
-    url: "https://tester-match.pages.dev",
+    url: "https://tester-match.knockknock.company",
     title: "Tester Match — Google Play 비공개 테스트 12명을 7일 안에",
     description:
       "Google Play Closed Testing 12명/14일 요건을 인디 개발자끼리 품앗이로 해결하는 무료 매칭 플랫폼.",
@@ -84,7 +85,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-white text-neutral-900 antialiased">
-        {children}
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+        </div>
         <FloatButtons />
         <PageTracker />
       </body>
