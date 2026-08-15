@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       "Google Play Closed Testing 12명/14일 요건을 인디 개발자끼리 품앗이로 해결하는 무료 매칭 플랫폼.",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Tester Match — 안드로이드 비공개 테스터 매칭",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: "Tester Match — Google Play 비공개 테스트 12명을 7일 안에",
     description:
       "안드로이드 테스터 12명/14일 요건을 인디 개발자끼리 품앗이로 완주하세요.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { AppUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
 import { NotificationBell } from "@/components/notification-bell";
+import { LogoMark } from "@/components/logo";
 
 type NavItem = { href: string; label: string; soon?: boolean };
 
@@ -22,8 +23,14 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-6">
-        <Link href="/" className="shrink-0 text-lg font-bold tracking-tight text-trust-600">
-          Tester Match
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight text-neutral-900"
+        >
+          <LogoMark size={28} />
+          <span>
+            Tester <span className="text-trust-600">Match</span>
+          </span>
         </Link>
 
         <nav className="hidden flex-1 items-center gap-6 sm:flex">
