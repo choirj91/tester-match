@@ -8,6 +8,7 @@
 
 ## 2026-08-15 (토)
 
+- **추가**: 브랜드 로고 시행 — 하이파이브 두 테스터 + 매치 스파크 (시안 C). 헤더 마크·파비콘(icon.svg)·apple-icon·OG PNG(1200×630) 교체 배포
 - **한 일**: 월간 완주 랭킹 크레딧 보상 v1 배포 — 정책 문서·lib(ranking-rewards.ts, 테스트 6종)·ranking_rewards 테이블·관리자 미리보기/수동지급 `/admin/ranking-rewards`·/stats 배너 확정 교체. 신뢰도 체크인 소급 +1 일괄 시행 (최고 578점)
 - **결정**: 승인 — 6,000/월(3,000/2,000/1,000), 첫 대상 9월분(10월 초 지급), 지표는 당월 완주 수만(신뢰도 인플레 배제), 1위 요건 완주≥2 미달 시 공석
 - **추가**: 지급 자동화 — grantMonthlyRewards() 공용 추출, 크론 `/api/cron/monthly-ranking-rewards` + GitHub Actions 매월 1~3일 KST 09:30 (멱등 3회 재시도). 관리자 버튼은 백업용
