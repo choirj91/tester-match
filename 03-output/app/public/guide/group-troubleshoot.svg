@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 330" font-family="Pretendard, -apple-system, sans-serif">
+  <rect width="800" height="330" fill="#f8fafc"/>
+  <text x="400" y="32" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">&ldquo;테스터인데 초대 링크가 안 열려요&rdquo; — 원인 체크리스트 (위에서부터 순서대로)</text>
+  <g>
+    <rect x="60" y="54" width="680" height="44" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="88" cy="76" r="13" fill="#2563eb"/><text x="88" y="81" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1</text>
+    <text x="112" y="73" font-size="12.5" font-weight="700" fill="#0f172a">트랙이 게시(Published) 상태인가?</text>
+    <text x="112" y="90" font-size="11" fill="#64748b">비공개 테스트도 Google 심사를 거칩니다 — 출시 검토가 끝나기 전엔 링크가 동작하지 않음</text>
+  </g>
+  <g>
+    <rect x="60" y="106" width="680" height="44" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="88" cy="128" r="13" fill="#2563eb"/><text x="88" y="133" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">2</text>
+    <text x="112" y="125" font-size="12.5" font-weight="700" fill="#0f172a">그룹이 @googlegroups.com 형식이고, 해당 트랙에 저장돼 있는가?</text>
+    <text x="112" y="142" font-size="11" fill="#64748b">Workspace 커스텀 도메인 그룹은 인식되지 않는 사례 다수 — 일반 그룹 사용</text>
+  </g>
+  <g>
+    <rect x="60" y="158" width="680" height="44" rx="10" fill="#fffbeb" stroke="#f59e0b"/>
+    <circle cx="88" cy="180" r="13" fill="#f59e0b"/><text x="88" y="185" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">3</text>
+    <text x="112" y="177" font-size="12.5" font-weight="700" fill="#92400e">테스터가 그룹의 &ldquo;회원(Members)&rdquo;인가? — 최다 원인</text>
+    <text x="112" y="194" font-size="11" fill="#a16207">초대만 받고 수락 안 한 &ldquo;대기(Pending)&rdquo; 상태는 테스터 자격이 없음 — 직접 가입 버튼을 눌러야 함</text>
+  </g>
+  <g>
+    <rect x="60" y="210" width="680" height="44" rx="10" fill="#fffbeb" stroke="#f59e0b"/>
+    <circle cx="88" cy="232" r="13" fill="#f59e0b"/><text x="88" y="237" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">4</text>
+    <text x="112" y="229" font-size="12.5" font-weight="700" fill="#92400e">그룹 가입·초대 링크·Play 스토어가 전부 같은 Google 계정인가?</text>
+    <text x="112" y="246" font-size="11" fill="#a16207">계정 여러 개 쓰는 기기에서 가장 자주 터짐 — 링크를 열 때 우상단 프로필 계정 확인</text>
+  </g>
+  <g>
+    <rect x="60" y="262" width="680" height="44" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="88" cy="284" r="13" fill="#2563eb"/><text x="88" y="289" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">5</text>
+    <text x="112" y="281" font-size="12.5" font-weight="700" fill="#0f172a">그래도 안 되면 — 국가/기기 요건 확인 후 Play 스토어 앱 캐시 삭제</text>
+    <text x="112" y="298" font-size="11" fill="#64748b">설정 › 애플리케이션 › Google Play 스토어 › 저장공간 › 캐시 삭제 후 링크 재시도</text>
+  </g>
+</svg>
