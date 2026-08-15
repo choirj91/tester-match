@@ -18,6 +18,11 @@ const TILES = [
     title: "사용자 통계",
     desc: "앱 등록 순위, 테스트 참여 순위, 완주 순위 등 사용자별 활동 통계와 전체 현황을 확인합니다.",
   },
+  {
+    href: "/admin/ranking-rewards" as const,
+    title: "월간 랭킹 보상",
+    desc: "지난달 완주 랭킹 1~3위 크레딧 지급 (3,000/2,000/1,000). 미리보기 확인 후 수동 지급, 멱등 처리.",
+  },
 ];
 
 export default async function AdminHomePage() {
