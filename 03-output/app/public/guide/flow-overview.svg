@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 220" font-family="Pretendard, -apple-system, sans-serif">
+  <rect width="800" height="220" fill="#f8fafc"/>
+  <text x="400" y="34" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">비공개 테스트 → 정식 출시까지 전체 흐름</text>
+  <!-- steps -->
+  <g>
+    <rect x="24" y="64" width="132" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="50" cy="88" r="12" fill="#2563eb"/><text x="50" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1</text>
+    <text x="90" y="92" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">트랙 만들기</text>
+    <text x="90" y="118" text-anchor="middle" font-size="11" fill="#475569">비공개 테스트 트랙</text>
+    <text x="90" y="134" text-anchor="middle" font-size="11" fill="#475569">AAB 업로드·심사</text>
+  </g>
+  <path d="M160 110 h18" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+  <g>
+    <rect x="182" y="64" width="132" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="208" cy="88" r="12" fill="#2563eb"/><text x="208" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">2</text>
+    <text x="248" y="92" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">테스터 지정</text>
+    <text x="248" y="118" text-anchor="middle" font-size="11" fill="#475569">Google 그룹 이메일</text>
+    <text x="248" y="134" text-anchor="middle" font-size="11" fill="#475569">등록 후 저장</text>
+  </g>
+  <path d="M318 110 h18" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+  <g>
+    <rect x="340" y="64" width="132" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="366" cy="88" r="12" fill="#2563eb"/><text x="366" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">3</text>
+    <text x="406" y="92" font-size="12.5" font-weight="700" fill="#0f172a" text-anchor="middle">초대 공유</text>
+    <text x="406" y="118" text-anchor="middle" font-size="11" fill="#475569">웹/Android 링크를</text>
+    <text x="406" y="134" text-anchor="middle" font-size="11" fill="#475569">테스터에게 전달</text>
+  </g>
+  <path d="M476 110 h18" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+  <g>
+    <rect x="498" y="64" width="132" height="92" rx="12" fill="#eff6ff" stroke="#2563eb"/>
+    <circle cx="524" cy="88" r="12" fill="#2563eb"/><text x="524" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">4</text>
+    <text x="564" y="92" font-size="12.5" font-weight="700" fill="#1d4ed8" text-anchor="middle">12명 × 14일</text>
+    <text x="564" y="118" text-anchor="middle" font-size="11" fill="#1e40af">12명 옵트인 유지</text>
+    <text x="564" y="134" text-anchor="middle" font-size="11" fill="#1e40af">연속 14일 (핵심!)</text>
+  </g>
+  <path d="M634 110 h18" stroke="#94a3b8" stroke-width="2" marker-end="url(#a)"/>
+  <g>
+    <rect x="656" y="64" width="120" height="92" rx="12" fill="#ecfdf5" stroke="#10b981"/>
+    <circle cx="682" cy="88" r="12" fill="#10b981"/><text x="682" y="93" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">5</text>
+    <text x="716" y="92" font-size="12.5" font-weight="700" fill="#047857" text-anchor="middle">정식 출시</text>
+    <text x="716" y="118" text-anchor="middle" font-size="11" fill="#065f46">프로덕션 액세스</text>
+    <text x="716" y="134" text-anchor="middle" font-size="11" fill="#065f46">신청 → 심사 ≤7일</text>
+  </g>
+  <text x="400" y="196" text-anchor="middle" font-size="11.5" fill="#64748b">2023-11-13 이후 생성된 개인 개발자 계정에 적용 · 법인 계정은 면제 (2024-12 부터 20명 → 12명으로 완화)</text>
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#94a3b8"/></marker></defs>
+</svg>

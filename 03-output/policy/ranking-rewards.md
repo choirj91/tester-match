@@ -27,12 +27,14 @@
 - 제외: 신뢰도 50 미만(페널티 −10이 반영되므로 간접 차단), 탈퇴·정지 계정
 - 자기 소유 앱에 대한 완주(부계정 의심)는 집계 제외
 
-## 3. 지급 방식 — 관리자 수동 (v1)
+## 3. 지급 방식 — 자동 (크론) + 수동 백업
 
-- 관리자 통계 페이지에 **"월간 랭킹 보상" 카드**: 지난달 순위 미리보기 → [지급] 버튼
-- 지급 = `ranking_rewards` insert (unique(reward_month, user_id)) + `credits_ledger` insert
-  (type `earn`, ref_type `ranking_reward`, ref_id = ranking_rewards.id) — 트랜잭션(RPC)
-- 크론 자동화는 2~3회 수동 지급으로 검증 후 전환 (오지급 리스크 > 자동화 편익)
+- **자동**: GitHub Actions 크론 — 매월 1~3일 KST 09:30, `/api/cron/monthly-ranking-rewards`
+  호출 (3일 연속 = 재시도, 멱등이라 안전)
+- **수동 백업**: `/admin/ranking-rewards` — 미리보기·크론 실패 시 재실행·지급 내역 확인
+- 지급 = `ranking_rewards` insert (unique(reward_month, user_id) 멱등 가드) +
+  `credits_ledger` insert (type `earn`, ref_type `ranking_reward`) + 수상 알림
+- 공용 로직: `grantMonthlyRewards()` (`lib/ranking-rewards.ts`) — 크론·관리자 버튼 동일 코드
 
 ## 4. 표시
 

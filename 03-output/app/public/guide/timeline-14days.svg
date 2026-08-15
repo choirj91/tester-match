@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" font-family="Pretendard, -apple-system, sans-serif">
+  <rect width="800" height="300" fill="#f8fafc"/>
+  <text x="400" y="32" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">14일 카운트가 실제로 흐르는 방식 — &ldquo;누적&rdquo;이 아니라 &ldquo;연속&rdquo;</text>
+
+  <!-- case 1: OK -->
+  <text x="60" y="76" font-size="12.5" font-weight="700" fill="#047857">✓ 통과하는 경우 — 12명이 14일 내내 유지</text>
+  <rect x="60" y="88" width="680" height="26" rx="13" fill="#d1fae5"/>
+  <rect x="60" y="88" width="680" height="26" rx="13" fill="none" stroke="#10b981"/>
+  <text x="80" y="105" font-size="11" fill="#065f46">D1</text>
+  <text x="720" y="105" text-anchor="end" font-size="11" font-weight="700" fill="#065f46">D14 → 프로덕션 신청 가능</text>
+  <text x="400" y="105" text-anchor="middle" font-size="11" fill="#047857">테스터 12명 이상 옵트인 상태 지속</text>
+
+  <!-- case 2: dropout -->
+  <text x="60" y="156" font-size="12.5" font-weight="700" fill="#b91c1c">✗ 카운트가 멈추는 경우 — 8일차에 1명 이탈 (12명 → 11명)</text>
+  <rect x="60" y="168" width="340" height="26" rx="13" fill="#d1fae5" stroke="#10b981"/>
+  <text x="80" y="185" font-size="11" fill="#065f46">D1</text>
+  <text x="230" y="185" text-anchor="middle" font-size="11" fill="#047857">순조롭게 진행 (D1~D7)</text>
+  <rect x="404" y="168" width="140" height="26" rx="13" fill="#fee2e2" stroke="#ef4444"/>
+  <text x="474" y="185" text-anchor="middle" font-size="11" font-weight="700" fill="#b91c1c">⏸ 11명 — 정지</text>
+  <rect x="548" y="168" width="192" height="26" rx="13" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="644" y="185" text-anchor="middle" font-size="11" fill="#92400e">12명 복구 후 이어서 카운트</text>
+  <text x="60" y="216" font-size="11" fill="#64748b">이탈 기간은 카운트되지 않고, 12명이 다시 채워지면 멈춘 지점부터 이어집니다. 단 &ldquo;14일 미만 참여 후 취소했다가</text>
+  <text x="60" y="232" font-size="11" fill="#64748b">재참여한 테스터&rdquo;는 요건 집계에 포함되지 않으므로 (공식 FAQ), 이탈한 사람 대신 새 테스터를 넣는 편이 안전합니다.</text>
+
+  <!-- tip -->
+  <rect x="60" y="248" width="680" height="36" rx="10" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="400" y="270" text-anchor="middle" font-size="12" font-weight="700" fill="#1d4ed8">💡 실전 팁: 정확히 12명이 아니라 15~18명을 확보해두면 한두 명이 이탈해도 카운트가 멈추지 않습니다</text>
+</svg>

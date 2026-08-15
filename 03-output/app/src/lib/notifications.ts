@@ -14,7 +14,8 @@ export type NotificationType =
   | "post_comment"
   | "boost_expiring"
   | "boost_expired"
-  | "group_upgrade";
+  | "group_upgrade"
+  | "reward_granted";
 
 type Args = {
   userId: number;

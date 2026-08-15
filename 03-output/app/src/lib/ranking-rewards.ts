@@ -121,6 +121,86 @@ export async function getMonthlyCompletions(
   );
 }
 
+export type GrantResult = {
+  month: string;
+  winners: number;
+  granted: number;
+  skipped: number[];
+};
+
+/**
+ * 대상 월 보상 지급 — 관리자 버튼·크론 공용.
+ * 멱등: ranking_rewards unique(reward_month, user_id) 가드로
+ * 이미 지급된 수상자는 스킵. 재실행·중복 호출 안전.
+ *
+ * 순서: 수상 기록 insert → 크레딧 원장 insert → 알림.
+ * 원장 실패 시 수상 기록은 남음 — skipped 로 보고, 관리자 페이지에서 재확인.
+ */
+export async function grantMonthlyRewards(
+  supabase: SupabaseClient,
+  args: { month: string; grantedBy?: number | null },
+): Promise<GrantResult> {
+  const { month, grantedBy = null } = args;
+  const completions = await getMonthlyCompletions(supabase, month);
+  const winners = pickWinners(completions);
+
+  let granted = 0;
+  const skipped: number[] = [];
+
+  for (const w of winners) {
+    const { data: reward, error: insErr } = await supabase
+      .from("ranking_rewards")
+      .insert({
+        reward_month: month,
+        user_id: w.userId,
+        rank: w.rank,
+        completed: w.completed,
+        amount: w.amount,
+        granted_by: grantedBy,
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (insErr || !reward) {
+      skipped.push(w.userId);
+      continue;
+    }
+
+    const { data: ledger } = await supabase
+      .from("credits_ledger")
+      .select("amount")
+      .eq("user_id", w.userId);
+    const balance = (ledger ?? []).reduce((s, r) => s + r.amount, 0);
+
+    const { error: credErr } = await supabase.from("credits_ledger").insert({
+      user_id: w.userId,
+      amount: w.amount,
+      balance_after: balance + w.amount,
+      type: "earn",
+      ref_type: "ranking_reward",
+      ref_id: reward.id,
+      description: `${month.slice(0, 7)} 월간 완주 랭킹 ${w.rank}위 보상`,
+    });
+    if (credErr) {
+      console.error("[ranking-rewards] ledger insert failed", w.userId, credErr);
+      skipped.push(w.userId);
+      continue;
+    }
+
+    await supabase.from("notifications").insert({
+      user_id: w.userId,
+      type: "reward_granted",
+      title: `🏆 ${Number(month.slice(5, 7))}월 완주 랭킹 ${w.rank}위!`,
+      body: `축하합니다! 월간 완주 랭킹 ${w.rank}위로 ${w.amount.toLocaleString()} 크레딧이 지급되었습니다.`,
+      link: "/credits",
+    });
+
+    granted++;
+  }
+
+  return { month, winners: winners.length, granted, skipped };
+}
+
 /**
  * 순위·자격 적용 → 지급 대상 (rank, amount 포함).
  * 1위 요건(완주 ≥ RANK1_MIN_COMPLETED) 미달이면 1위는 공석 —
