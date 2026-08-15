@@ -23,6 +23,11 @@ const TILES = [
     title: "월간 랭킹 보상",
     desc: "지난달 완주 랭킹 1~3위 크레딧 지급 (3,000/2,000/1,000). 미리보기 확인 후 수동 지급, 멱등 처리.",
   },
+  {
+    href: "/admin/digest" as const,
+    title: "오픈채팅 다이제스트",
+    desc: "이야기 글로 오픈채팅 공지 메시지를 생성합니다. 복사 → 오픈 카톡방 열기 → 붙여넣기. ?ids=17,18,19 로 글 지정.",
+  },
 ];
 
 export default async function AdminHomePage() {

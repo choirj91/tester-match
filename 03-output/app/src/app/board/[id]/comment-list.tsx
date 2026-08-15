@@ -1,5 +1,6 @@
 "use client";
 
+import { Linkify } from "@/components/linkify";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminBadge } from "@/components/admin-badge";
@@ -126,7 +127,7 @@ export function CommentList({ postId, currentUserId, currentUserRole, initialCom
                 )}
               </div>
               <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-                {c.body}
+                <Linkify text={c.body} />
               </p>
             </li>
           ))

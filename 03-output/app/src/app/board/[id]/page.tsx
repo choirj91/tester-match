@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CommentList } from "./comment-list";
 import { PostActions } from "./post-actions";
 import { AdminBadge } from "@/components/admin-badge";
+import { Linkify } from "@/components/linkify";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
 export const runtime = 'edge';
@@ -125,7 +126,7 @@ export default async function PostDetailPage({ params }: Props) {
           </p>
 
           <div className="mt-8 whitespace-pre-wrap text-base leading-relaxed text-neutral-800">
-            {post.body}
+            <Linkify text={post.body} />
           </div>
 
           {isOwner && <PostActions id={post.id} />}
@@ -169,7 +170,7 @@ export default async function PostDetailPage({ params }: Props) {
                           {a?.nickname ?? "—"}
                           {a?.role === "admin" && <AdminBadge />}
                         </p>
-                        <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap">{c.body}</p>
+                        <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap"><Linkify text={c.body} /></p>
                       </li>
                     );
                   })}
