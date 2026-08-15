@@ -3,3 +3,5 @@ export const SITE_URL = "https://tester-match.knockknock.company";
 export const SITE_NAME = "Tester Match";
 export const COMPANY_NAME = "Knock Knock Company (낰낰컴퍼니)";
 export const CONTACT_EMAIL = "admin@knockknock.company";
+/** 카카오 오픈채팅방 (커뮤니티 공지 대상) */
+export const OPEN_CHAT_URL = "https://open.kakao.com/o/ghJ9350f";
