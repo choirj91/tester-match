@@ -2,4 +2,4 @@
 export const SITE_URL = "https://tester-match.knockknock.company";
 export const SITE_NAME = "Tester Match";
 export const COMPANY_NAME = "Knock Knock Company (낰낰컴퍼니)";
-export const CONTACT_EMAIL = "choirj91@gmail.com";
+export const CONTACT_EMAIL = "admin@knockknock.company";

@@ -12,7 +12,7 @@ export function FloatButtons() {
           이메일 문의
         </span>
         <a
-          href="https://mail.google.com/mail/?view=cm&fs=1&to=choirj91@gmail.com&su=Tester%20Match%20%EB%AC%B8%EC%9D%98"
+          href="https://mail.google.com/mail/?view=cm&fs=1&to=admin%40knockknock.company&su=Tester%20Match%20%EB%AC%B8%EC%9D%98"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="이메일 문의하기"
