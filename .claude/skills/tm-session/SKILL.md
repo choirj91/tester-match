@@ -24,7 +24,7 @@ description: Tester Match 세션 사이클 — 시작 시 컨텍스트 회복, �
    - **내일**: (다음 액션 1줄)
    ```
 2. **NEXT.md**: 완료 항목 체크/이동, 새 할일 추가, "최근 완료" 표에 오늘 줄 추가, 마지막 업데이트 날짜 갱신
-3. **옵시디언 볼트 동기화**: 큰 기능·정책·사고는 `~/Documents/Obsidian Vault/낰낰컴퍼니/tester-match/` 해당 노트 + `06 히스토리` `07 TODO` 갱신
+3. **옵시디언 볼트 동기화**: 큰 기능·정책·사고는 `~/Documents/Obsidian Vault/낰낰컴퍼니-Vault/tester-match/` 해당 노트 + `06 히스토리` `07 TODO` 갱신
 4. **큰 결정·장애·아키텍처 변경 시에만**: `04-review/history/YYYY-MM-DD-<slug>.md` 세션 기록 생성 (배경/변경/교훈/후속)
 5. **잠금 결정 충돌·새 아키텍처 결정 시**: ADR 추가 (`01-source/decisions/ADR-NNNN-*.md`, 번호 이어서). 코드보다 ADR 먼저.
 
