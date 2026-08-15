@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-/** 일반 사용자가 선택 가능한 카테고리 */
-export const POST_CATEGORIES = ["자유", "질문", "공유", "구인"] as const;
+/** 일반 사용자가 선택 가능한 카테고리 — "이야기"가 첫 번째(글쓰기 기본값): 수익 인증·개발기·실패담 유도 */
+export const POST_CATEGORIES = ["이야기", "자유", "질문", "공유", "구인"] as const;
 /** 관리자 전용 카테고리 — API 에서 role 검증 */
 export const NOTICE_CATEGORY = "공지" as const;
 /** 필터·검증용 전체 카테고리 */

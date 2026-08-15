@@ -28,8 +28,8 @@ describe("PostCreateSchema", () => {
     ).toBe(false);
   });
 
-  it("exposes 4 categories", () => {
-    expect(POST_CATEGORIES).toEqual(["자유", "질문", "공유", "구인"]);
+  it("exposes 5 categories with 이야기 first (new-post default)", () => {
+    expect(POST_CATEGORIES).toEqual(["이야기", "자유", "질문", "공유", "구인"]);
   });
 });
 

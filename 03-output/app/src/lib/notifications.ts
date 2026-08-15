@@ -15,7 +15,8 @@ export type NotificationType =
   | "boost_expiring"
   | "boost_expired"
   | "group_upgrade"
-  | "reward_granted";
+  | "reward_granted"
+  | "weekly_hot";
 
 type Args = {
   userId: number;
@@ -39,4 +40,30 @@ export async function createNotification(args: Args): Promise<void> {
   } catch (e) {
     console.error("[notification] exception", e);
   }
+}
+
+/** 같은 내용을 여러 사용자에게 — 500명씩 배치 INSERT. 성공 건수 반환. */
+export async function createNotificationsBulk(
+  userIds: number[],
+  args: Omit<Args, "userId">,
+): Promise<number> {
+  const supabase = createSupabaseAdminClient();
+  const rows = userIds.map((userId) => ({
+    user_id: userId,
+    type: args.type,
+    title: args.title,
+    body: args.body.slice(0, 300),
+    link: args.link ?? null,
+  }));
+  let inserted = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const batch = rows.slice(i, i + 500);
+    const { error } = await supabase.from("notifications").insert(batch);
+    if (error) {
+      console.error("[notification] bulk insert failed", error.message);
+      continue;
+    }
+    inserted += batch.length;
+  }
+  return inserted;
 }

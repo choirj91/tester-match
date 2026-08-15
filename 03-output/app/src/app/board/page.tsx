@@ -53,6 +53,31 @@ export default async function BoardPage({ searchParams }: Props) {
     );
   }
 
+  // 이번 주 인기글 TOP 3 — 조회수 + 댓글수×5 (필터 없을 때만 표시)
+  let hotPosts: { id: number; title: string; category: string; score: number }[] = [];
+  if (!activeCategory) {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recent } = await supabase
+      .from("posts")
+      .select("id, title, category, view_count, comments(count)")
+      .neq("category", NOTICE_CATEGORY)
+      .is("deleted_at", null)
+      .gte("created_at", sevenDaysAgo)
+      .limit(200);
+    hotPosts = (recent ?? [])
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        category: p.category,
+        score:
+          (p.view_count ?? 0) +
+          ((p.comments as unknown as { count: number }[])?.[0]?.count ?? 0) * 5,
+      }))
+      .filter((p) => p.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  }
+
   // 관리자 댓글이 달린 게시물 집합 (제목 옆 배지용)
   const postIds = (posts ?? []).map((p) => p.id);
   let adminCommentedPostIds = new Set<number>();
@@ -74,7 +99,7 @@ export default async function BoardPage({ searchParams }: Props) {
           <div>
             <h1 className="text-2xl font-bold text-neutral-900">게시판</h1>
             <p className="mt-1 text-sm text-neutral-600">
-              개발자끼리 정보를 나누고 매칭에 대해 이야기합니다.
+              수익 인증, 개발기, 실패담 — 앱 만드는 사람들의 진짜 이야기를 나눕니다.
             </p>
           </div>
           <Link
@@ -114,6 +139,31 @@ export default async function BoardPage({ searchParams }: Props) {
                     <AdminBadge className="shrink-0" />
                     <span className="shrink-0 text-xs text-neutral-400">
                       {new Date(n.created_at).toLocaleDateString("ko-KR")}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* 이번 주 인기글 */}
+        {hotPosts.length > 0 && (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-spark-500/30 bg-spark-50/40 shadow-sm">
+            <p className="px-5 pt-3 text-xs font-bold text-spark-600">🔥 이번 주 인기글</p>
+            <ul className="divide-y divide-spark-500/10">
+              {hotPosts.map((h, i) => (
+                <li key={h.id}>
+                  <Link
+                    href={`/board/${h.id}`}
+                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-spark-50"
+                  >
+                    <span className="shrink-0 text-sm font-bold text-spark-500">{i + 1}</span>
+                    <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                      {h.category}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                      {h.title}
                     </span>
                   </Link>
                 </li>
