@@ -6,6 +6,12 @@
 
 ---
 
+## 2026-08-15 (토)
+
+- **한 일**: 월간 완주 랭킹 크레딧 보상 v1 배포 — 정책 문서·lib(ranking-rewards.ts, 테스트 6종)·ranking_rewards 테이블·관리자 미리보기/수동지급 `/admin/ranking-rewards`·/stats 배너 확정 교체. 신뢰도 체크인 소급 +1 일괄 시행 (최고 578점)
+- **결정**: 승인 — 6,000/월(3,000/2,000/1,000), 첫 대상 9월분(10월 초 지급), 지표는 당월 완주 수만(신뢰도 인플레 배제), 1위 요건 완주≥2 미달 시 공석
+- **내일**: 10월 초 첫 지급 실행(관리자 버튼), 그룹 검증·AdSense 확인 잔여
+
 ## 2026-08-14 (금)
 
 - **한 일**: AdSense 거절("가치 없는 콘텐츠") 대응 — 도메인 tester-match.knockknock.company 전환(코드 9파일), /about·/guide(실전 가이드 6편)·공통 푸터 신설, sitemap 확장. 3주 만 복귀 세션. **중대 버그 수정** — users_protect_admin_fields 트리거가 service_role 의 trust_score UPDATE 를 조용히 원복 → 신뢰도 증감 전 기간 미반영 (원장만 2,494행 축적). 트리거에 service_role 예외 추가 + 원장 델타 합으로 users·history 전면 소급 보정 (TOP 259점, 감점자 190명 반영 시작)
