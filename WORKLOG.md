@@ -6,6 +6,11 @@
 
 ---
 
+## 2026-08-16 (일)
+
+- **한 일**: SEO 마감 — /feed.xml RSS(게시글+가이드, 30분 캐시, 루트 autodiscovery), 가이드 Article JSON-LD·canonical·OG, about/guide canonical. 기존 board/browse 메타·JSON-LD는 감사 결과 정상
+- **다음 (사용자)**: Search Console 새 도메인 등록+sitemap 제출, 네이버 서치어드바이저 등록
+
 ## 2026-08-15 (토) — 크론 장애 수정
 
 - **장애**: 08-14 23:07 pages.dev→커스텀 도메인 308 리다이렉트 도입 후 **모든 GitHub Actions 크론 실패** (약 하루) — APP_URL secret 이 옛 주소, curl 이 308 을 최종 상태로 반환
