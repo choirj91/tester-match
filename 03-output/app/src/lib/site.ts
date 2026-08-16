@@ -4,11 +4,14 @@ export const SITE_NAME = "Tester Match";
 export const COMPANY_NAME = "Knock Knock Company (낰낰컴퍼니)";
 export const CONTACT_EMAIL = "admin@knockknock.company";
 
-/** 사업자 정보 — 푸터·약관 등 대외 표기의 단일 소스 */
+/**
+ * 사업자 정보 — 푸터·약관 등 대외 표기의 단일 소스.
+ * 주소는 자택 주소라 공개 표기하지 않는다 (통신판매업 신고 등 법정 표기 의무가
+ * 생기면 그때 재검토).
+ */
 export const BUSINESS = {
   name: "낰낰컴퍼니 (Knock Knock Company)",
   registrationNumber: "441-20-02677",
-  address: "경기도 용인시 기흥구 기흥로116번길 7, 104동 605호 (16959)",
   email: CONTACT_EMAIL,
 } as const;
 /** 카카오 오픈채팅방 (커뮤니티 공지 대상) */

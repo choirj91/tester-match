@@ -27,11 +27,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-5 space-y-1 text-xs leading-relaxed text-neutral-400">
           <p className="font-semibold text-neutral-500">{BUSINESS.name}</p>
-          <p>
-            사업자등록번호 {BUSINESS.registrationNumber}
-            <span className="mx-1.5 text-neutral-300">|</span>
-            {BUSINESS.address}
-          </p>
+          <p>사업자등록번호 {BUSINESS.registrationNumber}</p>
           <p>
             문의{" "}
             <a href={`mailto:${BUSINESS.email}`} className="hover:text-neutral-600">
