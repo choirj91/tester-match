@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://tester-match.knockknock.company"),
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": [{ url: "/feed.xml", title: "Tester Match RSS" }],
+    },
   },
   openGraph: {
     type: "website",

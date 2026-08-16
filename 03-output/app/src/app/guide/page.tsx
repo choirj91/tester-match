@@ -5,6 +5,7 @@ import { GUIDES } from "./guides";
 
 export const runtime = "edge";
 export const metadata = {
+  alternates: { canonical: "/guide" },
   title: "출시 가이드",
   description:
     "Google Play 비공개 테스트(12명·14일), 테스터 그룹 설정, 프로덕션 액세스, ASO 까지 — 인디 안드로이드 개발자를 위한 실전 출시 가이드.",

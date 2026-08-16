@@ -14,7 +14,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const guide = getGuide(slug);
   if (!guide) return {};
-  return { title: guide.title, description: guide.description };
+  return {
+    title: guide.title,
+    description: guide.description,
+    alternates: { canonical: `/guide/${slug}` },
+    openGraph: {
+      title: guide.title,
+      description: guide.description,
+      url: `https://tester-match.knockknock.company/guide/${slug}`,
+      type: "article",
+    },
+  };
 }
 
 export default async function GuidePage({
@@ -31,8 +41,24 @@ export default async function GuidePage({
   const next = GUIDES[idx + 1];
   const user = await getCurrentUser();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: guide.title,
+    description: guide.description,
+    datePublished: guide.date,
+    inLanguage: "ko",
+    author: { "@type": "Organization", name: "Tester Match" },
+    publisher: { "@type": "Organization", name: "Knock Knock Company" },
+    mainEntityOfPage: `https://tester-match.knockknock.company/guide/${slug}`,
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <Link href="/guide" className="text-sm text-neutral-500 hover:text-neutral-900">

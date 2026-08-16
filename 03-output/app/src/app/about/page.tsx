@@ -5,6 +5,7 @@ import { COMPANY_NAME, CONTACT_EMAIL } from "@/lib/site";
 
 export const runtime = "edge";
 export const metadata = {
+  alternates: { canonical: "/about" },
   title: "서비스 소개",
   description:
     "Tester Match 는 Google Play 비공개 테스트(Closed Testing) 12명·14일 요건을 품앗이로 해결하는 한국 인디 안드로이드 개발자 커뮤니티입니다.",
