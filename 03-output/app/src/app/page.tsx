@@ -368,19 +368,6 @@ export default async function HomePage() {
         </section>
       )}
 
-      <footer className="border-t border-neutral-200 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 text-sm text-neutral-500 sm:flex-row">
-          <span>© 2026 Tester Match. 사업자 정보 추후 등록.</span>
-          <div className="flex gap-6">
-            <Link href="/policies/terms" className="hover:text-neutral-900">
-              이용약관
-            </Link>
-            <Link href="/policies/privacy" className="hover:text-neutral-900">
-              개인정보처리방침
-            </Link>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

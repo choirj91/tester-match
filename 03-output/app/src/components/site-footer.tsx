@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { COMPANY_NAME, CONTACT_EMAIL } from "@/lib/site";
+import { BUSINESS, CONTACT_EMAIL } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -25,10 +25,25 @@ export function SiteFooter() {
             문의
           </a>
         </div>
-        <p className="mt-4 text-xs leading-relaxed text-neutral-400">
-          {COMPANY_NAME} · Tester Match 는 Google Play 비공개 테스트 요건을 개발자 품앗이로
-          해결하는 커뮤니티입니다. Google Play 는 Google LLC 의 상표입니다.
-        </p>
+        <div className="mt-5 space-y-1 text-xs leading-relaxed text-neutral-400">
+          <p className="font-semibold text-neutral-500">{BUSINESS.name}</p>
+          <p>
+            사업자등록번호 {BUSINESS.registrationNumber}
+            <span className="mx-1.5 text-neutral-300">|</span>
+            {BUSINESS.address}
+          </p>
+          <p>
+            문의{" "}
+            <a href={`mailto:${BUSINESS.email}`} className="hover:text-neutral-600">
+              {BUSINESS.email}
+            </a>
+          </p>
+          <p className="pt-2">
+            © {new Date().getFullYear()} {BUSINESS.name}. Tester Match 는 Google Play 비공개
+            테스트 요건을 개발자 품앗이로 해결하는 커뮤니티입니다. Google Play 는 Google LLC 의
+            상표입니다.
+          </p>
+        </div>
       </div>
     </footer>
   );
