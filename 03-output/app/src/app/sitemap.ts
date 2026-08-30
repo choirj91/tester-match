@@ -30,27 +30,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const supabase = createSupabaseAdminClient();
 
-    const [{ data: apps }, { data: posts }] = await Promise.all([
-      supabase
-        .from("apps")
-        .select("id, updated_at")
-        .in("status", ["matching", "reviewing", "launched"])
-        .order("updated_at", { ascending: false })
-        .limit(1000),
-      supabase
-        .from("posts")
-        .select("id, updated_at")
-        .is("deleted_at", null)
-        .order("updated_at", { ascending: false })
-        .limit(1000),
-    ]);
-
-    const appUrls: MetadataRoute.Sitemap = (apps ?? []).map((a) => ({
-      url: `${SITE_URL}/browse/${a.id}`,
-      lastModified: a.updated_at ? new Date(a.updated_at) : now,
-      changeFrequency: "daily",
-      priority: 0.6,
-    }));
+    // /browse/[id] 는 sitemap 에서 제외한다 — 스토어 설명을 그대로 싣는 기능
+    // 페이지라 색인 대상이 아니다 (page.tsx 에서 noindex).
+    const { data: posts } = await supabase
+      .from("posts")
+      .select("id, updated_at")
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(1000);
 
     const postUrls: MetadataRoute.Sitemap = (posts ?? []).map((p) => ({
       url: `${SITE_URL}/board/${p.id}`,
@@ -59,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }));
 
-    return [...staticUrls, ...appUrls, ...postUrls];
+    return [...staticUrls, ...postUrls];
   } catch (e) {
     console.error("[sitemap] fallback to static", e);
     return staticUrls;

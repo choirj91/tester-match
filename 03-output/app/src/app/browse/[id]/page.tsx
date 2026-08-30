@@ -31,6 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    // 앱 상세는 스토어 설명을 그대로 싣는 기능 페이지라 색인에서 제외한다.
+    // (AdSense "가치 없는 콘텐츠" 대응 — 링크는 계속 따라가도록 follow 유지)
+    robots: { index: false, follow: true },
     alternates: { canonical: `/browse/${appId}` },
     openGraph: { title, description, url: `https://tester-match.knockknock.company/browse/${appId}`, type: "article" },
     twitter: { card: "summary", title, description },
