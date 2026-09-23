@@ -8,6 +8,13 @@
 
 ## 🔥 즉시 (사용자 액션 — 코드 아님)
 
+- [ ] **유료 테스터 출시 준비** (feat/paid-testers 브랜치, [ADR-0011](01-source/decisions/ADR-0011-paid-operator-testers.md))
+  - [ ] 프리뷰 확인: https://feat-paid-testers.tester-match.pages.dev/paid-testers (관리자: /admin/paid-orders — 샌드박스 주문 2건 있음)
+  - [ ] 토스페이먼츠 가입 → 전자결제 신청 → 라이브 키 발급 (심사 수일~2주)
+  - [ ] Cloudflare Pages 대시보드 env: `TOSS_SECRET_KEY`(라이브), `NEXT_PUBLIC_TOSS_CLIENT_KEY`는 `.env.local` 교체 후 재빌드
+  - [ ] **Resend 도메인 검증** — resend.com/domains 에 `knockknock.company` 추가 + DNS 레코드 → `RESEND_FROM_EMAIL` 설정. ⚠️ 현재 미검증이라 admin@ 수신 알림 메일 전부 403 실패 중일 가능성 (기존 리마인더 메일 포함 — 점검 필요)
+  - [ ] 병합·본배포 승인 (환불정책 조항 포함 검토)
+
 - [ ] **공용 그룹 최종 검증** — `tester-match@googlegroups.com`
   - [ ] groups.google.com 설정 확인: 그룹 보기 "웹의 모든 사용자" / 가입 "웹상의 모든 사용자가 가입 가능"(승인 없이)
   - [ ] 본인 Play Console 테스터 탭에 `tester-match@googlegroups.com` 등록 → 인식되는지

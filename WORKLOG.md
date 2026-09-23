@@ -6,6 +6,13 @@
 
 ---
 
+## 2026-09-24 (목) — 유료 테스터 (feat/paid-testers 브랜치, main 미병합)
+
+- **결정**: AdSense 2차 거절 → 광고 포기, **유료 운영자 테스터 상품** 피벗 (ADR-0011, ADR-0007 부분 개정). 1명=1,000원(잠금 단가)·1~10명·토스 결제위젯
+- **한 일**: `/paid-testers` 상품·체크아웃·success/fail, 멱등 confirm(`lib/paid-orders.ts` — 금액 DB검증·provider_tx_id unique·조건부 전이), 결제 즉시 관리자 메일+영수 메일, `/admin/paid-orders`(개시/완료/취소), 일일 리포트 크론(KST 08:30, 미결제 24h 자동취소, 연50회 통판 카운터), 환불정책 조항, `paid_tester_orders` 마이그레이션 적용. **로컬 E2E 통과** — 샌드박스 문서키로 위젯→가상결제→confirm→DB paid 전이·재생 멱등·금액위조 차단 확인. 프리뷰: https://feat-paid-testers.tester-match.pages.dev
+- **발견**: ① Resend 도메인 미검증 — 알림 메일 전부 403 조용한 실패 가능성 (계정 소유자 choirj91@gmail.com 으로만 발송됨). ② pages.dev 프리뷰는 콘텐츠 정상이나 HTTP 404 status (기존 /browse 동일 — 프리뷰 env 특성)
+- **다음 (사용자)**: 프리뷰 확인 → 토스 가입·실키 발급 → resend.com/domains 에 knockknock.company 검증 → 병합 승인
+
 ## 2026-08-16 (일)
 
 - **한 일**: SEO 마감 — /feed.xml RSS(게시글+가이드, 30분 캐시, 루트 autodiscovery), 가이드 Article JSON-LD·canonical·OG, about/guide canonical. 기존 board/browse 메타·JSON-LD는 감사 결과 정상
