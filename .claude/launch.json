@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tester-match-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "03-output/app", "dev"],
+      "port": 3000
+    }
+  ]
+}

@@ -35,7 +35,19 @@ export default async function RefundPage() {
         </tbody>
       </table>
 
-      <h2>제3조 (환불 처리 기간)</h2>
+      <h2>제3조 (유료 테스터 환불)</h2>
+      <table>
+        <thead>
+          <tr><th>조건</th><th>환불액</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>테스트 개시 전 (운영팀 테스터 참여 전)</td><td>100% 환불</td></tr>
+          <tr><td>테스트 개시 후</td><td>미진행 일수 비례 환불 (일할 계산, 14일 기준)</td></tr>
+          <tr><td>회사 귀책 (테스터 미투입·체크인 누락 등)</td><td>해당 인원분 100% 환불</td></tr>
+        </tbody>
+      </table>
+
+      <h2>제4조 (환불 처리 기간)</h2>
       <table>
         <thead>
           <tr><th>결제 수단</th><th>처리 기간</th></tr>
@@ -47,12 +59,12 @@ export default async function RefundPage() {
         </tbody>
       </table>
 
-      <h2>제4조 (환불 신청 방법)</h2>
-      <p>마이페이지 → 크레딧 → 환불 신청 → 자동 승인</p>
+      <h2>제5조 (환불 신청 방법)</h2>
+      <p>크레딧 환불: 마이페이지 → 크레딧 → 환불 신청. 유료 테스터 환불: 운영팀 메일로 주문번호와 함께 신청.</p>
 
-      <h2>제5조 (분쟁 시 절차)</h2>
+      <h2>제6조 (분쟁 시 절차)</h2>
       <ol>
-        <li>1차: 운영팀 메일 (support@testermatch.com)</li>
+        <li>1차: 운영팀 메일 (admin@knockknock.company)</li>
         <li>2차: 한국소비자원 또는 공정거래위원회 분쟁조정</li>
       </ol>
     </PolicyLayout>

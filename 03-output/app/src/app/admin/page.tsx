@@ -28,6 +28,11 @@ const TILES = [
     title: "오픈채팅 다이제스트",
     desc: "이야기 글로 오픈채팅 공지 메시지를 생성합니다. 복사 → 오픈 카톡방 열기 → 붙여넣기. ?ids=17,18,19 로 글 지정.",
   },
+  {
+    href: "/admin/paid-orders" as const,
+    title: "유료 테스터 주문",
+    desc: "결제된 주문 확인 → 테스트 개시/완료 전환. 결제 시 즉시 메일 + 매일 08:30 일일 리포트 메일 (ADR-0011).",
+  },
 ];
 
 export default async function AdminHomePage() {

@@ -53,6 +53,19 @@ export default async function AppsPage() {
           </Link>
         </div>
 
+        <Link
+          href="/paid-testers"
+          className="mt-6 block rounded-2xl border border-trust-500/30 bg-trust-50 px-5 py-4 transition hover:border-trust-500"
+        >
+          <p className="text-sm font-semibold text-neutral-900">
+            테스터가 부족하신가요? — 유료 테스터 투입
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+            운영팀 테스터가 1명당 1,000원에 14일간 실기기로 매일 체크인합니다. 부족한
+            인원만 채워보세요. →
+          </p>
+        </Link>
+
         <div className="mt-8">
           {apps && apps.length > 0 ? (
             <ul className="space-y-3">
