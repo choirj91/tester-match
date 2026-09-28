@@ -1,10 +1,26 @@
 import { describe, expect, test } from "vitest";
 import {
+  PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_PRICE_KRW,
+  canOrderPaidTesters,
   newPaidOrderCode,
   paidTesterAmountKrw,
   paidTesterOrderName,
 } from "./paid-testers";
+
+describe("canOrderPaidTesters", () => {
+  test("비로그인은 주문할 수 없다", () => {
+    expect(canOrderPaidTesters(null)).toBe(false);
+  });
+
+  test("관리자는 항상 주문할 수 있다", () => {
+    expect(canOrderPaidTesters({ role: "admin" })).toBe(true);
+  });
+
+  test("일반 사용자는 공개 플래그를 따른다", () => {
+    expect(canOrderPaidTesters({ role: "user" })).toBe(PAID_TESTERS_PUBLIC_ORDERING);
+  });
+});
 
 describe("paidTesterAmountKrw", () => {
   test("1명은 단가와 동일하다", () => {

@@ -18,6 +18,14 @@ export type SendEmailResult =
 
 const RESEND_API = "https://api.resend.com/emails";
 
+/**
+ * 운영 알림 수신 주소. Resend 도메인 검증 전에는 계정 소유자 주소로만 발송되므로
+ * ADMIN_NOTIFY_EMAIL 로 일시 우회, 검증 후 제거하면 CONTACT_EMAIL 로 돌아간다.
+ */
+export function getAdminNotifyEmail(fallback: string): string {
+  return process.env.ADMIN_NOTIFY_EMAIL || fallback;
+}
+
 export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL ?? "Tester Match <noreply@testermatch.local>";

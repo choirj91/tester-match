@@ -3,7 +3,11 @@ import { ZodError } from "zod";
 import { PaidOrderCreateSchema } from "@/lib/validators/paid-order";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
-import { newPaidOrderCode, paidTesterAmountKrw } from "@/lib/paid-testers";
+import {
+  canOrderPaidTesters,
+  newPaidOrderCode,
+  paidTesterAmountKrw,
+} from "@/lib/paid-testers";
 
 export const runtime = "edge";
 
@@ -11,6 +15,12 @@ export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ ok: false, message: "로그인이 필요합니다." }, { status: 401 });
+  }
+  if (!canOrderPaidTesters(user)) {
+    return NextResponse.json(
+      { ok: false, message: "유료 테스터는 아직 오픈 전입니다." },
+      { status: 403 },
+    );
   }
 
   let payload;

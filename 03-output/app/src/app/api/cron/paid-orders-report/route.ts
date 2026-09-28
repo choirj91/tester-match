@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email";
+import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrdersDailyReportEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
 
@@ -130,7 +130,7 @@ export async function GET(request: Request) {
     autoCanceledCount,
     yearlyPaidCount: yearlyPaidCount ?? 0,
   });
-  const emailResult = await sendEmail({ to: CONTACT_EMAIL, ...tmpl });
+  const emailResult = await sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...tmpl });
 
   return NextResponse.json({
     ok: true,

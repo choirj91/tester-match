@@ -10,7 +10,7 @@
  */
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email";
+import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrderAdminEmail, paidOrderReceiptEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { TOSS_ALREADY_PROCESSED, confirmTossPayment } from "@/lib/toss";
@@ -157,7 +157,7 @@ async function notifyPaidOrder(
       buyerNickname: buyer?.nickname ?? `사용자 #${order.buyer_user_id}`,
       buyerEmail: buyer?.email ?? "-",
     });
-    await sendEmail({ to: CONTACT_EMAIL, ...adminTmpl });
+    await sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...adminTmpl });
 
     if (buyer?.email && !buyer.email.endsWith("@deleted.local")) {
       const receiptTmpl = paidOrderReceiptEmail({

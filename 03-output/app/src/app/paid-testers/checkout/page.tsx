@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { paidTesterOrderName } from "@/lib/paid-testers";
+import { canOrderPaidTesters, paidTesterOrderName } from "@/lib/paid-testers";
 import { CheckoutWidget } from "./checkout-widget";
 
 export const runtime = "edge";
@@ -22,7 +22,7 @@ export default async function CheckoutPage({
   if (!user) {
     redirect(`/auth/login?next=/paid-testers`);
   }
-  if (!orderCode) {
+  if (!orderCode || !canOrderPaidTesters(user)) {
     redirect("/paid-testers");
   }
 

@@ -4,7 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   PAID_ORDER_STATUS_LABEL,
+  PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_PRICE_KRW,
+  canOrderPaidTesters,
   type PaidOrderStatus,
 } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
@@ -109,7 +111,7 @@ export default async function PaidTestersPage() {
 
         <section className="mt-10">
           <h2 className="text-lg font-bold text-neutral-900">신청하기</h2>
-          {!user ? (
+          {!user && PAID_TESTERS_PUBLIC_ORDERING ? (
             <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
               <p className="text-sm text-neutral-600">로그인 후 신청할 수 있습니다.</p>
               <Link
@@ -118,6 +120,13 @@ export default async function PaidTestersPage() {
               >
                 로그인
               </Link>
+            </div>
+          ) : !canOrderPaidTesters(user) ? (
+            <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-6 text-center">
+              <p className="text-sm font-semibold text-amber-900">곧 오픈합니다</p>
+              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                결제 연동 마무리 중입니다. 오픈 시 게시판 공지로 안내드릴게요.
+              </p>
             </div>
           ) : apps.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
