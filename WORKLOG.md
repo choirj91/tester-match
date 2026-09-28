@@ -6,6 +6,13 @@
 
 ---
 
+## 2026-09-28 (월) — 유료 테스터 main 배포 (관리자 전용 게이트)
+
+- **문제**: 프리뷰 `/admin/paid-orders` 404 신고 → 원인은 라우트 누락이 아니라 ① Supabase 리다이렉트 허용 목록에 pages.dev 없음 → 로그인 후 프로덕션으로 튕김(main엔 라우트 없음) ② 프리뷰 환경 런타임 env 부재(크론 500). `supabase config push` 는 로컬 site_url 덮어써서 금지
+- **결정**: 사용자 선택 — 대시보드 설정 대신 **관리자 전용 게이트로 main 병합**. `canOrderPaidTesters()` 로 주문 API(403)·체크아웃·/apps 배너·상품 폼 차단, 일반 유저는 "곧 오픈". 라이브 키 오면 `PAID_TESTERS_PUBLIC_ORDERING=true`
+- **발견·조치**: 프로덕션 시크릿에 `RESEND_API_KEY`·`RESEND_FROM_EMAIL`·`TOSS_SECRET_KEY` 전무 → 지금까지 메일 0통 발송. 4개 등록 (Resend 키, 발신 onboarding@resend.dev, `ADMIN_NOTIFY_EMAIL`=choirj91@gmail.com 우회, 토스 샌드박스 시크릿). 도메인 검증 전까지 사용자 메일은 여전히 403
+- **배포**: `9d00953` ff 병합 → 프로덕션 검증 (상품 페이지 "곧 오픈", admin 307→로그인, 주문 API 401, 크론 401)
+
 ## 2026-09-24 (목) — 유료 테스터 (feat/paid-testers 브랜치, main 미병합)
 
 - **결정**: AdSense 2차 거절 → 광고 포기, **유료 운영자 테스터 상품** 피벗 (ADR-0011, ADR-0007 부분 개정). 1명=1,000원(잠금 단가)·1~10명·토스 결제위젯
