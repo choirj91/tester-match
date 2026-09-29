@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { ensureOrderSlots } from "@/lib/console-data";
 
 export const runtime = "edge";
 
@@ -59,6 +60,11 @@ export async function PATCH(req: Request) {
       { ok: false, message: "전이할 수 없는 상태입니다. 새로고침 후 다시 확인해주세요." },
       { status: 409 },
     );
+  }
+
+  // 개시 시 콘솔 슬롯(tester_count 개) 준비 — 멱등
+  if (payload.action === "start") {
+    await ensureOrderSlots(payload.id);
   }
 
   return NextResponse.json({ ok: true, status: data[0].status });

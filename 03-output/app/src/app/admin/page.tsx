@@ -33,6 +33,11 @@ const TILES = [
     title: "유료 테스터 주문",
     desc: "결제된 주문 확인 → 테스트 개시/완료 전환. 결제 시 즉시 메일 + 매일 08:30 일일 리포트 메일 (ADR-0011).",
   },
+  {
+    href: "/console" as const,
+    title: "테스트 콘솔",
+    desc: "주문별 테스터 슬롯 × 14일 출석표. 셀마다 실행 스크린샷·코멘트 기록 — 구매자도 같은 화면을 읽기 전용으로 봅니다.",
+  },
 ];
 
 export default async function AdminHomePage() {

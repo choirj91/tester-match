@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -108,7 +109,15 @@ export default async function AdminPaidOrdersPage() {
                       {o.admin_note ? ` · ${o.admin_note}` : ""}
                     </p>
                   </div>
-                  <OrderActions orderId={o.id} status={o.status} />
+                  <div className="flex shrink-0 items-start gap-2">
+                    <Link
+                      href={`/console/orders/${o.id}`}
+                      className="rounded-lg border border-neutral-300 px-3.5 py-2 text-xs font-semibold text-neutral-700 hover:border-trust-500 hover:text-trust-600"
+                    >
+                      콘솔 ↗
+                    </Link>
+                    <OrderActions orderId={o.id} status={o.status} />
+                  </div>
                 </div>
               </li>
             ))}

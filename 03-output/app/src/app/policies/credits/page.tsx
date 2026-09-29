@@ -12,7 +12,7 @@ export default async function CreditsPolicyPage() {
       user={user}
       active="/policies/credits"
       title="크레딧 운영 정책"
-      effectiveDate="2026년 ○월 ○일"
+      effectiveDate="2026년 5월 5일"
     >
       <h2>제1조 (크레딧의 정의)</h2>
       <p>

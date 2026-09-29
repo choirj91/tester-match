@@ -8,7 +8,7 @@ export const metadata = { title: "개인정보처리방침" };
 export default async function PrivacyPage() {
   const user = await getCurrentUser();
   return (
-    <PolicyLayout user={user} active="/policies/privacy" title="개인정보처리방침" effectiveDate="2026년 ○월 ○일">
+    <PolicyLayout user={user} active="/policies/privacy" title="개인정보처리방침" effectiveDate="2026년 5월 5일">
       <h2>제1조 (수집하는 개인정보 항목)</h2>
       <table>
         <thead>

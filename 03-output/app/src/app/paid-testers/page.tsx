@@ -150,22 +150,24 @@ export default async function PaidTestersPage() {
             <h2 className="text-lg font-bold text-neutral-900">내 주문</h2>
             <ul className="mt-4 space-y-2">
               {orders.map((o) => (
-                <li
-                  key={o.id}
-                  className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm"
-                >
-                  <div>
-                    <p className="font-semibold text-neutral-900">
-                      {o.apps?.name ?? "삭제된 앱"} — {o.tester_count}명
-                    </p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      {new Date(o.created_at).toLocaleDateString("ko-KR")} ·{" "}
-                      {formatKrw(o.amount_krw)}원 · {o.order_code}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
-                    {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
-                  </span>
+                <li key={o.id}>
+                  <Link
+                    href={`/console/orders/${o.id}`}
+                    className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm transition hover:border-trust-500"
+                  >
+                    <div>
+                      <p className="font-semibold text-neutral-900">
+                        {o.apps?.name ?? "삭제된 앱"} — {o.tester_count}명
+                      </p>
+                      <p className="mt-0.5 text-xs text-neutral-500">
+                        {new Date(o.created_at).toLocaleDateString("ko-KR")} ·{" "}
+                        {formatKrw(o.amount_krw)}원 · {o.order_code} · 출석표·스크린샷 보기 →
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+                      {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -8,7 +8,7 @@ export const metadata = { title: "이용약관" };
 export default async function TermsPage() {
   const user = await getCurrentUser();
   return (
-    <PolicyLayout user={user} active="/policies/terms" title="이용약관" effectiveDate="2026년 ○월 ○일">
+    <PolicyLayout user={user} active="/policies/terms" title="이용약관" effectiveDate="2026년 5월 5일">
       <h2>제1조 (목적)</h2>
       <p>
         본 약관은 (주)○○○(이하 &quot;회사&quot;)이 제공하는 &quot;Tester Match&quot; 서비스(이하 &quot;서비스&quot;)의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.

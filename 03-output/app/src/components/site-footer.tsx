@@ -21,6 +21,9 @@ export function SiteFooter() {
           <Link href="/policies/privacy" className="text-neutral-600 hover:text-neutral-900">
             개인정보처리방침
           </Link>
+          <Link href="/policies/refund" className="text-neutral-600 hover:text-neutral-900">
+            환불 정책
+          </Link>
           <a href={`mailto:${CONTACT_EMAIL}`} className="text-neutral-600 hover:text-neutral-900">
             문의
           </a>
