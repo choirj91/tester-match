@@ -9,7 +9,8 @@
 ## 🔥 즉시 (사용자 액션 — 코드 아님)
 
 - [ ] **유료 테스터 오픈** ([ADR-0011](01-source/decisions/ADR-0011-paid-operator-testers.md)) — 09-28 main 배포됨, **관리자 전용 게이트** 상태 (일반 유저는 "곧 오픈" 안내, 주문 API 403)
-  - [ ] 본 도메인에서 관리자 로그인 → `/admin/paid-orders` (샌드박스 주문 2건) · `/paid-testers` 에서 샌드박스 주문 시험 (비밀번호 000000)
+  - [ ] 본 도메인에서 관리자 로그인 → `/admin/paid-orders` 주문 2 [테스트 개시] → `/console/orders/2` 에서 슬롯 라벨·스샷 업로드·코멘트 실사용 확인 (구매자 계정으로도 읽기 전용 확인)
+  - [ ] 토스 전자결제 신청 — 환불정책 https://tester-match.knockknock.company/policies/refund · 약관 /policies/terms · 개인정보 /policies/privacy. 주소 표기 요구 시 재검토(자택 주소 비공개 결정)
   - [ ] 토스페이먼츠 가입 → 전자결제 신청 → 라이브 키 발급 (심사 수일~2주)
   - [ ] 라이브 전환: `wrangler pages secret put TOSS_SECRET_KEY` 교체 + `.env.local` 의 `NEXT_PUBLIC_TOSS_CLIENT_KEY` 교체 후 재빌드 + `PAID_TESTERS_PUBLIC_ORDERING = true` (lib/paid-testers.ts) → 배포 → 게시판 오픈 공지
   - [ ] **Resend 도메인 검증** — resend.com/domains 에 `knockknock.company` + DNS → `RESEND_FROM_EMAIL` 을 그 도메인 주소로, `ADMIN_NOTIFY_EMAIL` 시크릿 삭제(admin@ 로 복귀). ⚠️ 검증 전엔 choirj91@gmail.com 외 수신자 전부 403 — 리마인더·매칭 알림 등 사용자 메일 전부 미발송 상태 (09-28 이전엔 RESEND_API_KEY 자체가 프로덕션에 없었음)
