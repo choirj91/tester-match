@@ -7,6 +7,7 @@ import { matchCompletedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
 import { applyTrustDelta, CHECKIN_TRUST_DELTA } from "@/lib/trust";
 import { PAID_SEAT_LEDGER_REF, appendLedger } from "@/lib/credits";
+import { runAfterResponse } from "@/lib/wait-until";
 import { PAID_SEAT_REWARD, assignSeatSlot } from "@/lib/paid-seats";
 import {
   SCREENSHOT_BUCKET,
@@ -20,6 +21,8 @@ export const runtime = "edge";
 type Ctx = { params: Promise<{ id: string }> };
 
 const TOTAL_DAYS = 14;
+/** multipart 본문은 전부 버퍼링되므로 파싱 전에 길이로 먼저 거른다 (스샷 5MB + 여유) */
+const MAX_BODY_BYTES = 6 * 1024 * 1024;
 
 /**
  * 일일 체크인. 유료 시트(paid_order_id) 매칭은 스크린샷 1장이 필수이며,
@@ -74,6 +77,13 @@ export async function POST(req: Request, { params }: Ctx) {
   // 유료 시트: 스크린샷 필수 — INSERT 전에 검증해 실패 시 체크인 자체가 남지 않게 한다
   let screenshot: File | null = null;
   if (isPaidSeat) {
+    const contentLength = Number(req.headers.get("content-length") ?? 0);
+    if (contentLength > MAX_BODY_BYTES) {
+      return NextResponse.json(
+        { ok: false, message: "스크린샷은 5MB 이하여야 합니다." },
+        { status: 413 },
+      );
+    }
     const form = await req.formData().catch(() => null);
     const file = form?.get("screenshot");
     if (!(file instanceof File) || file.size === 0) {
@@ -82,7 +92,7 @@ export async function POST(req: Request, { params }: Ctx) {
         { status: 400 },
       );
     }
-    if (!SCREENSHOT_MIME_TO_EXT[file.type]) {
+    if (!Object.hasOwn(SCREENSHOT_MIME_TO_EXT, file.type)) {
       return NextResponse.json(
         { ok: false, message: "PNG·JPEG·WebP 이미지만 업로드할 수 있습니다." },
         { status: 400 },
@@ -115,9 +125,9 @@ export async function POST(req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "체크인 실패" }, { status: 500 });
   }
 
-  // 유료 시트: 스크린샷 업로드 + 콘솔 로그. 실패해도 체크인은 유지 (로그만)
+  // 유료 시트: 스크린샷 업로드 + 콘솔 로그. 실패 시 체크인을 되돌려 재시도 가능하게 한다
   if (isPaidSeat && screenshot && match.paid_order_id != null) {
-    await recordSeatScreenshot(supabase, {
+    const stored = await recordSeatScreenshot(supabase, {
       orderId: match.paid_order_id,
       matchId,
       checkinId: checkin.id,
@@ -126,6 +136,13 @@ export async function POST(req: Request, { params }: Ctx) {
       userId: user.id,
       nickname: user.nickname,
     });
+    if (!stored) {
+      await supabase.from("checkins").delete().eq("id", checkin.id);
+      return NextResponse.json(
+        { ok: false, message: "스크린샷 저장에 실패했습니다. 잠시 후 다시 시도해주세요." },
+        { status: 502 },
+      );
+    }
   }
 
   // 신뢰도 +1 — UNIQUE(match_id, day_n) 통과 시에만 도달 (하루 1회)
@@ -143,35 +160,48 @@ export async function POST(req: Request, { params }: Ctx) {
     .eq("match_id", matchId);
 
   if (count === TOTAL_DAYS) {
-    await supabase
+    const { data: completedRows } = await supabase
       .from("matches")
       .update({ status: "completed", day_count: TOTAL_DAYS })
       .eq("id", matchId)
-      .eq("status", "active");
+      .eq("status", "active")
+      .select("id");
+    const justCompleted = (completedRows ?? []).length > 0;
 
-    const reward = isPaidSeat ? PAID_SEAT_REWARD : 0;
-    if (reward > 0) {
-      const ledger = await appendLedger(supabase, {
-        userId: user.id,
-        amount: reward,
-        type: "earn",
-        refType: PAID_SEAT_LEDGER_REF,
-        refId: matchId,
-        description: "유료 시트 14일 완주 보상",
-      });
-      if (!ledger.ok) console.error("[checkins/POST] reward failed", ledger.message);
+    // 유료 시트 보상: 14일 전부 스크린샷 증빙이 있어야 지급. 부분 unique 로 이중 지급 불가.
+    let reward = 0;
+    if (justCompleted && isPaidSeat) {
+      const { count: evidenced } = await supabase
+        .from("checkins")
+        .select("id", { count: "exact", head: true })
+        .eq("match_id", matchId)
+        .not("screenshot_url", "is", null);
+      if ((evidenced ?? 0) >= TOTAL_DAYS) {
+        const ledger = await appendLedger(supabase, {
+          userId: user.id,
+          amount: PAID_SEAT_REWARD,
+          type: "earn",
+          refType: PAID_SEAT_LEDGER_REF,
+          refId: matchId,
+          description: "유료 시트 14일 완주 보상",
+        });
+        if (ledger.ok) reward = PAID_SEAT_REWARD;
+        else console.error("[checkins/POST] reward failed", ledger.message);
+      } else {
+        console.error("[checkins/POST] reward withheld — missing evidence", matchId, evidenced);
+      }
     }
     if (match.paid_order_id != null) {
       await completeOrderIfAllSeatsDone(supabase, match.paid_order_id);
     }
 
-    void notifyCompletion(supabase, {
+    await runAfterResponse(notifyCompletion(supabase, {
       appId: match.app_id,
       userId: user.id,
       nickname: user.nickname,
       email: user.email,
       reward,
-    });
+    }));
   } else {
     await supabase
       .from("matches")
@@ -195,7 +225,7 @@ async function recordSeatScreenshot(
     userId: number;
     nickname: string;
   },
-): Promise<void> {
+): Promise<boolean> {
   try {
     const { data: existing } = await supabase
       .from("paid_order_slots")
@@ -211,7 +241,7 @@ async function recordSeatScreenshot(
       }).then((s) => (s ? { id: s.slotId, slot_no: s.slotNo } : null)));
     if (!slot) {
       console.error("[checkins/POST] no slot for match", args.matchId);
-      return;
+      return false;
     }
 
     const ext = SCREENSHOT_MIME_TO_EXT[args.file.type];
@@ -221,10 +251,10 @@ async function recordSeatScreenshot(
       .upload(path, args.file, { contentType: args.file.type, upsert: true });
     if (upErr) {
       console.error("[checkins/POST] screenshot upload failed", upErr);
-      return;
+      return false;
     }
 
-    await Promise.all([
+    const [{ error: ckErr }, { error: logErr }] = await Promise.all([
       supabase.from("checkins").update({ screenshot_url: path }).eq("id", args.checkinId),
       supabase.from("paid_order_logs").upsert(
         {
@@ -240,8 +270,14 @@ async function recordSeatScreenshot(
         { onConflict: "slot_id,day_n" },
       ),
     ]);
+    if (ckErr || logErr) {
+      console.error("[checkins/POST] evidence record failed", ckErr, logErr);
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error("[checkins/POST] recordSeatScreenshot", err);
+    return false;
   }
 }
 

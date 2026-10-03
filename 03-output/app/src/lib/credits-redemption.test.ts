@@ -23,6 +23,15 @@ describe("redeemableFromRows", () => {
     ).toBe(2000);
   });
 
+  test("보상 몰수(penalty)도 교환 가능액을 줄인다", () => {
+    expect(
+      redeemableFromRows([
+        { type: "earn", amount: 700, ref_type: "paid_seat" },
+        { type: "penalty", amount: -700, ref_type: "paid_seat" },
+      ]),
+    ).toBe(0);
+  });
+
   test("음수로 떨어지지 않는다", () => {
     expect(redeemableFromRows([{ type: "spend", amount: -100, ref_type: "redemption" }])).toBe(0);
   });

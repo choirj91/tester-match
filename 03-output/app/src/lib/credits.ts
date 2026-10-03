@@ -48,43 +48,44 @@ export type AppendLedgerArgs = {
   refType?: string;
   refId?: number | null;
   description?: string;
+  /** true 면 교환 가능액(유료 시트 적립분, 잔액 상한)까지 검증 — 기프티콘 교환용 */
+  capRedeemable?: boolean;
 };
 
 export type AppendLedgerResult =
-  | { ok: true; id: number; balanceAfter: number }
+  | { ok: true; id: number; duplicate: false }
+  | { ok: true; id: null; duplicate: true }
   | { ok: false; message: string };
 
 /**
- * 원장 append (balance_after 는 코드에서 합산 — 저볼륨 전제, 동시 쓰기 경합 시 잔액 표기만 어긋남).
- * 음수 금액(spend 등)은 잔액 부족이면 거부한다.
+ * 원장 append — DB 함수 ledger_append 가 유저별 advisory lock 안에서 잔액 검증 + INSERT.
+ * 같은 ref 로 이미 기록된 경우(부분 unique) null 을 돌려주며 duplicate=true 로 멱등 처리한다.
  */
 export async function appendLedger(
   supabase: SupabaseClient,
   args: AppendLedgerArgs,
 ): Promise<AppendLedgerResult> {
-  const balance = await getBalance(supabase, args.userId);
-  const balanceAfter = balance + args.amount;
-  if (args.amount < 0 && balanceAfter < 0) {
-    return { ok: false, message: "크레딧 잔액이 부족합니다." };
-  }
-  const { data, error } = await supabase
-    .from("credits_ledger")
-    .insert({
-      user_id: args.userId,
-      amount: args.amount,
-      balance_after: balanceAfter,
-      type: args.type,
-      ref_type: args.refType ?? null,
-      ref_id: args.refId ?? null,
-      description: args.description ?? null,
-    })
-    .select("id")
-    .single();
-  if (error || !data) {
-    console.error("[credits] ledger insert failed", error);
+  const { data, error } = await supabase.rpc("ledger_append", {
+    p_user: args.userId,
+    p_amount: args.amount,
+    p_type: args.type,
+    p_ref_type: args.refType ?? null,
+    p_ref_id: args.refId ?? null,
+    p_desc: args.description ?? null,
+    p_cap_redeemable: args.capRedeemable ?? false,
+  });
+  if (error) {
+    if (error.message.includes("INSUFFICIENT")) {
+      return { ok: false, message: "크레딧 잔액이 부족합니다." };
+    }
+    if (error.message.includes("NOT_REDEEMABLE")) {
+      return { ok: false, message: "교환 가능 크레딧이 부족합니다. (유료 시트 완주 적립분만 교환됩니다)" };
+    }
+    console.error("[credits] ledger_append failed", error);
     return { ok: false, message: "크레딧 기록에 실패했습니다." };
   }
-  return { ok: true, id: data.id, balanceAfter };
+  if (data == null) return { ok: true, id: null, duplicate: true };
+  return { ok: true, id: Number(data), duplicate: false };
 }
 
 export type LedgerRowLite = { type: string; amount: number; ref_type: string | null };
@@ -93,17 +94,21 @@ export type LedgerRowLite = { type: string; amount: number; ref_type: string | n
 export function redeemableFromRows(rows: ReadonlyArray<LedgerRowLite>): number {
   let total = 0;
   for (const r of rows) {
-    if (r.ref_type === PAID_SEAT_LEDGER_REF && r.type === "earn") total += r.amount;
-    else if (r.ref_type === REDEMPTION_LEDGER_REF) total += r.amount;
+    // 유료 시트 적립은 타입 무관 합산 — 몰수(penalty/adjust) 도 교환 가능액을 줄인다
+    if (r.ref_type === PAID_SEAT_LEDGER_REF || r.ref_type === REDEMPTION_LEDGER_REF) {
+      total += r.amount;
+    }
   }
   return Math.max(0, total);
 }
 
+/** 교환 가능액 — 유료 시트 적립 기준이되 전체 잔액을 넘지 않는다 */
 export async function getRedeemable(supabase: SupabaseClient, userId: number): Promise<number> {
   const { data } = await supabase
     .from("credits_ledger")
     .select("type, amount, ref_type")
-    .eq("user_id", userId)
-    .in("ref_type", [PAID_SEAT_LEDGER_REF, REDEMPTION_LEDGER_REF]);
-  return redeemableFromRows((data ?? []) as LedgerRowLite[]);
+    .eq("user_id", userId);
+  const rows = (data ?? []) as LedgerRowLite[];
+  const balance = rows.reduce((sum, r) => sum + r.amount, 0);
+  return Math.max(0, Math.min(redeemableFromRows(rows), balance));
 }

@@ -133,12 +133,16 @@ export async function confirmPaidTesterOrder(args: {
 
   // 7) 알림 — 실제 전이가 일어난 호출에서만, 실패해도 주문은 성공 처리
   if (didTransition) {
-    await activatePaidOrder(supabase, {
-      orderId: order.id,
-      appId: order.app_id,
-      appName: summary.appName,
-      seats: order.tester_count,
-    });
+    try {
+      await activatePaidOrder(supabase, {
+        orderId: order.id,
+        appId: order.app_id,
+        appName: summary.appName,
+        seats: order.tester_count,
+      });
+    } catch (err) {
+      console.error("[paid-orders] activate failed", order.order_code, err);
+    }
     await notifyPaidOrder(order, summary);
   }
 
@@ -242,17 +246,44 @@ export async function createCreditsPaidOrder(args: {
     .select("id")
     .maybeSingle();
 
-  await supabase
+  const { data: paidRows, error: paidErr } = await supabase
     .from("paid_tester_orders")
     .update({ status: "paid", payment_id: payment?.id ?? null, paid_at: nowIso })
     .eq("id", order.id)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .select("id");
+  if (paidErr || !paidRows || paidRows.length === 0) {
+    // 차감은 됐는데 주문이 안 열렸다 → 즉시 환급 (멱등 unique) 후 실패 응답
+    console.error("[paid-orders] credits order paid-update failed", order.id, paidErr);
+    const refund = await appendLedger(supabase, {
+      userId: args.buyer.id,
+      amount,
+      type: "refund",
+      refType: "paid_order",
+      refId: order.id,
+      description: "주문 생성 실패 환급",
+    });
+    await supabase
+      .from("paid_tester_orders")
+      .update({ status: "canceled", admin_note: "주문 확정 실패 — 크레딧 자동 환급" })
+      .eq("id", order.id);
+    return {
+      ok: false,
+      message: refund.ok
+        ? "주문 확정에 실패해 크레딧을 환급했습니다. 다시 시도해주세요."
+        : "주문 확정에 실패했습니다. 관리자에게 문의해주세요.",
+    };
+  }
 
-  await activatePaidOrder(supabase, {
-    orderId: order.id,
-    appId: args.app.id,
-    appName: args.app.name,
-    seats: args.testerCount,
-  });
+  try {
+    await activatePaidOrder(supabase, {
+      orderId: order.id,
+      appId: args.app.id,
+      appName: args.app.name,
+      seats: args.testerCount,
+    });
+  } catch (err) {
+    console.error("[paid-orders] activate failed (credits)", orderCode, err);
+  }
   return { ok: true, orderCode };
 }

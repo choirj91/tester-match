@@ -55,7 +55,7 @@ export async function PATCH(req: Request) {
   }
 
   if (payload.action === "reject") {
-    await appendLedger(supabase, {
+    const refund = await appendLedger(supabase, {
       userId: row.user_id,
       amount: row.amount,
       type: "refund",
@@ -63,6 +63,18 @@ export async function PATCH(req: Request) {
       refId: row.id,
       description: `기프티콘 교환 거절 환급${payload.admin_note ? ` — ${payload.admin_note}` : ""}`,
     });
+    if (!refund.ok) {
+      // 환급 실패 → 상태를 되돌려 다시 처리할 수 있게 한다 (크레딧 증발 방지)
+      await supabase
+        .from("credit_redemptions")
+        .update({ status: "requested", processed_at: null, processed_by: null, admin_note: null })
+        .eq("id", row.id)
+        .eq("status", "rejected");
+      return NextResponse.json(
+        { ok: false, message: `환급 기록 실패 — 다시 시도해주세요. (${refund.message})` },
+        { status: 500 },
+      );
+    }
   }
 
   await createNotification({

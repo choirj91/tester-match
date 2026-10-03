@@ -111,11 +111,14 @@ export async function POST(req: Request) {
   // 4) 동시 옵트인 경합 정리 — 시트 초과면 무료 정원으로 강등, 그마저 없으면 취소
   let paidSeat = seatOrder != null;
   if (seatOrder && (await isOrderOverfilled(supabase, seatOrder))) {
-    if (app.required_testers > 0) {
-      await supabase
-        .from("matches")
-        .update({ paid_order_id: null, credit_payout: 0 })
-        .eq("id", match.id);
+    const { error: demoteErr } =
+      app.required_testers > 0
+        ? await supabase
+            .from("matches")
+            .update({ paid_order_id: null, credit_payout: 0 })
+            .eq("id", match.id)
+        : { error: { message: "no free quota" } };
+    if (!demoteErr) {
       paidSeat = false;
     } else {
       await supabase.from("matches").delete().eq("id", match.id);

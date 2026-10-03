@@ -71,7 +71,11 @@ export function CheckInButton({ matchId, alreadyCheckedToday, expired, paidSeat 
           type="file"
           accept="image/png,image/jpeg,image/webp"
           className="hidden"
-          onChange={(e) => void submit(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            const file = e.target.files?.[0] ?? null;
+            e.target.value = "";
+            void submit(file);
+          }}
         />
         <button
           type="button"

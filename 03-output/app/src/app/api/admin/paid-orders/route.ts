@@ -3,6 +3,7 @@ import { z, ZodError } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensureOrderSlots } from "@/lib/console-data";
+import { refundCreditsOrder } from "@/lib/paid-seats";
 
 export const runtime = "edge";
 
@@ -62,9 +63,17 @@ export async function PATCH(req: Request) {
     );
   }
 
-  // 개시 시 콘솔 슬롯(tester_count 개) 준비 — 멱등
+  // 개시(운영자 폴백) 시 콘솔 슬롯 준비 + 커뮤니티 시트 배정 중단 — 멱등
   if (payload.action === "start") {
     await ensureOrderSlots(payload.id);
+    await supabase
+      .from("paid_tester_orders")
+      .update({ seats_closed: true })
+      .eq("id", payload.id);
+  }
+  // 취소 시 크레딧 결제 주문은 자동 환급 (토스 결제는 대시보드에서 수동)
+  if (payload.action === "cancel") {
+    await refundCreditsOrder(supabase, payload.id, "관리자 취소");
   }
 
   return NextResponse.json({ ok: true, status: data[0].status });

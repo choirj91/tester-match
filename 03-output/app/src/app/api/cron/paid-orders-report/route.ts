@@ -85,7 +85,7 @@ export async function GET(request: Request) {
           .from("checkins")
           .select("id", { count: "exact", head: true })
           .in("match_id", matchIds)
-          .gte("created_at", todayStartIso);
+          .gte("checked_in_at", todayStartIso);
         checkedInToday = count ?? 0;
       }
     }
@@ -117,6 +117,26 @@ export async function GET(request: Request) {
     .eq("status", "completed")
     .gte("paid_at", kstYearStartIso(now));
 
+  // 5) 보상 미지급 감시 — 완주한 유료 시트인데 earn 원장이 없는 매칭
+  const { data: completedSeats } = await supabase
+    .from("matches")
+    .select("id")
+    .eq("status", "completed")
+    .not("paid_order_id", "is", null);
+  const completedIds = (completedSeats ?? []).map((m) => m.id);
+  let unpaidRewards = 0;
+  if (completedIds.length > 0) {
+    const { data: earned } = await supabase
+      .from("credits_ledger")
+      .select("ref_id")
+      .eq("type", "earn")
+      .eq("ref_type", "paid_seat")
+      .in("ref_id", completedIds);
+    const earnedIds = new Set((earned ?? []).map((r) => r.ref_id));
+    unpaidRewards = completedIds.filter((id) => !earnedIds.has(id)).length;
+    if (unpaidRewards > 0) console.error("[paid-orders-report] unpaid seat rewards", unpaidRewards);
+  }
+
   const kstNow = new Date(now.getTime() + KST_OFFSET_MS);
   const dateLabel = `${kstNow.getUTCFullYear()}-${String(kstNow.getUTCMonth() + 1).padStart(2, "0")}-${String(kstNow.getUTCDate()).padStart(2, "0")}`;
 
@@ -134,6 +154,7 @@ export async function GET(request: Request) {
     autoCanceledCount,
     yearlyPaidCount: yearlyPaidCount ?? 0,
     emailSent: emailResult.ok,
+    unpaidRewards,
   });
 }
 

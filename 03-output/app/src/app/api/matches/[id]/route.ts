@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { releasePaidSeat } from "@/lib/paid-seats";
 import { ZodError } from "zod";
 import { MatchOptOutSchema } from "@/lib/validators/match";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -65,19 +66,30 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 
   // 옵트아웃 처리
-  const { error: updErr } = await supabase
+  const { data: updRows, error: updErr } = await supabase
     .from("matches")
     .update({
       status: "opted_out",
       opted_out_at: new Date().toISOString(),
       opt_out_reason: payload.reason ?? null,
     })
-    .eq("id", matchId);
+    .eq("id", matchId)
+    .eq("status", "active")
+    .select("id");
 
   if (updErr) {
     console.error("[matches/PATCH] update failed", updErr);
     return NextResponse.json({ ok: false, message: "옵트아웃 실패" }, { status: 500 });
   }
+  if (!updRows || updRows.length === 0) {
+    return NextResponse.json(
+      { ok: false, message: "이미 완주했거나 종료된 매칭입니다." },
+      { status: 409 },
+    );
+  }
+
+  // 유료 시트였다면 슬롯·증빙을 비워 다음 테스터가 이어받게 한다 (정원은 소모하지 않았음)
+  const wasPaidSeat = await releasePaidSeat(supabase, matchId);
 
   // 신뢰도 -3 (자진 중도 포기 — 무단 이탈 -10 보다 가볍게, UI 에 사전 고지)
   await applyTrustDelta(supabase, {
@@ -88,13 +100,13 @@ export async function PATCH(req: Request, { params }: Ctx) {
     refId: matchId,
   });
 
-  // required_testers 복구 (best-effort)
+  // required_testers 복구 (best-effort) — 유료 시트는 제외
   const { data: app } = await supabase
     .from("apps")
     .select("required_testers, status")
     .eq("id", match.app_id)
     .maybeSingle();
-  if (app) {
+  if (app && !wasPaidSeat) {
     await supabase
       .from("apps")
       .update({ required_testers: app.required_testers + 1 })

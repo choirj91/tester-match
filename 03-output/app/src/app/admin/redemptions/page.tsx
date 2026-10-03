@@ -37,10 +37,10 @@ function fmt(iso: string | null): string {
 export default async function AdminRedemptionsPage() {
   const user = await requireAdminUser("/admin/redemptions");
   const supabase = createSupabaseAdminClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("credit_redemptions")
     .select(
-      "id, amount, status, contact, note, admin_note, created_at, processed_at, users(nickname, email)",
+      "id, amount, status, contact, note, admin_note, created_at, processed_at, users!credit_redemptions_user_id_fkey(nickname, email)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -59,7 +59,11 @@ export default async function AdminRedemptionsPage() {
           신청 시 크레딧은 이미 차감돼 있고, 거절하면 자동 환급.
         </p>
 
-        {rows.length === 0 ? (
+        {error ? (
+          <p className="mt-10 text-sm font-medium text-red-600">
+            목록 조회 실패: {error.message}
+          </p>
+        ) : rows.length === 0 ? (
           <p className="mt-10 text-sm text-neutral-500">아직 신청이 없습니다.</p>
         ) : (
           <ul className="mt-6 space-y-3">

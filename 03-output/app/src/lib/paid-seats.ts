@@ -9,6 +9,7 @@ import { ensureOrderSlots } from "@/lib/console-data";
 import { fetchAll } from "@/lib/fetch-all";
 import { createNotificationsBulk } from "@/lib/notifications";
 import { SITE_URL } from "@/lib/site";
+import { appendLedger } from "@/lib/credits";
 
 export const PAID_SEAT_DAILY_REWARD = 50;
 export const PAID_SEAT_TOTAL_DAYS = 14;
@@ -82,7 +83,8 @@ export async function findOpenSeatOrder(
     .from("paid_tester_orders")
     .select("id, app_id, tester_count, created_at")
     .eq("app_id", appId)
-    .in("status", [...SEAT_OPEN_STATUSES]);
+    .in("status", [...SEAT_OPEN_STATUSES])
+    .eq("seats_closed", false);
   const orders = (data ?? []) as SeatOrder[];
   if (orders.length === 0) return null;
   const filled = await filledCounts(
@@ -103,7 +105,8 @@ export async function countOpenSeatsByApp(
     .from("paid_tester_orders")
     .select("id, app_id, tester_count, created_at")
     .in("app_id", appIds)
-    .in("status", [...SEAT_OPEN_STATUSES]);
+    .in("status", [...SEAT_OPEN_STATUSES])
+    .eq("seats_closed", false);
   const orders = (data ?? []) as SeatOrder[];
   if (orders.length === 0) return result;
   const filled = await filledCounts(
@@ -205,9 +208,80 @@ export async function activatePaidOrder(
     users.map((u) => u.id),
     {
       type: "paid_seat_open",
-      title: `💰 유료 시트 오픈 — ${args.appName} ${args.seats}명`,
+      title: `💰 유료 시트 오픈 — ${args.appName.slice(0, 40)} ${args.seats}명`,
       body: `14일 완주 시 ${PAID_SEAT_REWARD.toLocaleString("ko-KR")} 크레딧 (기프티콘 교환 가능). 매일 체크인 + 스크린샷 1장. 선착순.`,
       link,
     },
   );
+}
+
+/**
+ * 이탈·페널티로 비는 유료 시트 해제 — 슬롯 연결·증빙 로그 정리. 무료 매칭이면 false.
+ * 호출자는 true 일 때 required_testers 복구를 건너뛴다 (시트는 정원을 소모하지 않았음).
+ */
+export async function releasePaidSeat(supabase: SupabaseClient, matchId: number): Promise<boolean> {
+  const { data: match } = await supabase
+    .from("matches")
+    .select("paid_order_id")
+    .eq("id", matchId)
+    .maybeSingle();
+  if (!match || match.paid_order_id == null) return false;
+
+  const { data: slot } = await supabase
+    .from("paid_order_slots")
+    .select("id")
+    .eq("match_id", matchId)
+    .maybeSingle();
+  if (slot) {
+    await supabase.from("paid_order_logs").delete().eq("slot_id", slot.id);
+    await supabase
+      .from("paid_order_slots")
+      .update({ match_id: null, label: "" })
+      .eq("id", slot.id);
+  }
+  return true;
+}
+
+/** 크레딧으로 결제된 주문의 환급 (멱등 — 부분 unique). 토스 결제면 false. */
+export async function refundCreditsOrder(
+  supabase: SupabaseClient,
+  orderId: number,
+  reason: string,
+): Promise<boolean> {
+  const { data: order } = await supabase
+    .from("paid_tester_orders")
+    .select("id, buyer_user_id, amount_krw, payment_id, payments(provider)")
+    .eq("id", orderId)
+    .maybeSingle<{
+      id: number;
+      buyer_user_id: number;
+      amount_krw: number;
+      payment_id: number | null;
+      payments: { provider: string } | null;
+    }>();
+  if (!order || order.payments?.provider !== "credits") return false;
+
+  const ledger = await appendLedger(supabase, {
+    userId: order.buyer_user_id,
+    amount: order.amount_krw,
+    type: "refund",
+    refType: "paid_order",
+    refId: order.id,
+    description: `유료 테스터 주문 환급 — ${reason}`,
+  });
+  if (!ledger.ok) {
+    console.error("[paid-seats] credits refund failed", orderId, ledger.message);
+    return false;
+  }
+  if (order.payment_id != null) {
+    await supabase
+      .from("payments")
+      .update({ status: "refunded", refunded_amount: order.amount_krw, refunded_at: new Date().toISOString() })
+      .eq("id", order.payment_id);
+  }
+  await supabase
+    .from("paid_tester_orders")
+    .update({ status: "refunded" })
+    .eq("id", order.id);
+  return true;
 }

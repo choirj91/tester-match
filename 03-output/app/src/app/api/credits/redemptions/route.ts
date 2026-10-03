@@ -7,6 +7,7 @@ import { REDEMPTION_MIN_CREDITS, REDEMPTION_UNIT_CREDITS } from "@/lib/paid-seat
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { redemptionRequestedEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { runAfterResponse } from "@/lib/wait-until";
 
 export const runtime = "edge";
 
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     type: "spend",
     refType: REDEMPTION_LEDGER_REF,
     description: "기프티콘 교환 신청",
+    capRedeemable: true,
   });
   if (!ledger.ok) {
     return NextResponse.json({ ok: false, message: ledger.message }, { status: 409 });
@@ -71,14 +73,19 @@ export async function POST(req: Request) {
     .single();
   if (error || !redemption) {
     console.error("[redemptions/POST] insert failed", error);
-    await appendLedger(supabase, {
+    const refund = await appendLedger(supabase, {
       userId: user.id,
       amount: payload.amount,
       type: "refund",
       refType: REDEMPTION_LEDGER_REF,
       description: "교환 신청 실패 환급",
     });
-    return NextResponse.json({ ok: false, message: "신청에 실패했습니다." }, { status: 500 });
+    if (!refund.ok) console.error("[redemptions/POST] refund after failure failed", refund.message);
+    const message =
+      error?.code === "23505"
+        ? "이미 처리 대기 중인 교환 신청이 있습니다."
+        : "신청에 실패했습니다.";
+    return NextResponse.json({ ok: false, message }, { status: error?.code === "23505" ? 409 : 500 });
   }
 
   const tmpl = redemptionRequestedEmail({
@@ -89,7 +96,7 @@ export async function POST(req: Request) {
     contact: payload.contact,
     note: payload.note,
   });
-  void sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...tmpl });
+  await runAfterResponse(sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...tmpl }));
 
   return NextResponse.json({ ok: true, id: redemption.id });
 }

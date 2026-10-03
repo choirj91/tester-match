@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { releasePaidSeat } from "@/lib/paid-seats";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { PENALTY_TRUST_DELTA, shouldPenalize } from "@/lib/penalty";
@@ -102,13 +103,14 @@ async function applyPenalty(
     });
   }
 
-  // 3) 정원 복구 (required_testers +1)
+  // 3) 유료 시트면 슬롯·증빙 해제, 무료면 정원 복구 (required_testers +1)
+  const wasPaidSeat = await releasePaidSeat(supabase, args.matchId);
   const { data: app } = await supabase
     .from("apps")
     .select("required_testers, name")
     .eq("id", args.appId)
     .maybeSingle();
-  if (app) {
+  if (app && !wasPaidSeat) {
     await supabase
       .from("apps")
       .update({ required_testers: app.required_testers + 1 })
