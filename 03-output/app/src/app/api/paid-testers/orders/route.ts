@@ -73,7 +73,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message: "앱에 테스트 초대 링크가 없습니다. 내 앱 → 수정에서 초대 링크를 먼저 등록해주세요.",
+        message:
+          "앱에 테스트 초대 링크가 없습니다. 내 앱 → 수정에서 초대 링크를 먼저 등록해주세요.",
       },
       { status: 409 },
     );
@@ -92,6 +93,14 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { ok: false, message: "방금 같은 주문이 접수되었습니다. 콘솔에서 확인해주세요." },
       { status: 409 },
+    );
+  }
+
+  // 심사·시험용 주문은 결제창 확인이 목적이다 — 크레딧 결제는 시트를 바로 열어 버리므로 막는다
+  if (reviewOrder && payload.pay_with === "credits") {
+    return NextResponse.json(
+      { ok: false, message: "이 계정은 카드 결제만 이용할 수 있습니다." },
+      { status: 403 },
     );
   }
 

@@ -141,11 +141,22 @@ export function SignupForm() {
           onChange={(e) => setAgreed(e.target.checked)}
         />
         <span>
-          <Link href="/policies/terms" className="underline hover:text-neutral-900">
+          {/* 새 탭으로 연다 — 같은 탭 이동은 입력 중인 가입 정보를 날린다 */}
+          <Link
+            href="/policies/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-neutral-900"
+          >
             이용약관
           </Link>
           과{" "}
-          <Link href="/policies/privacy" className="underline hover:text-neutral-900">
+          <Link
+            href="/policies/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-neutral-900"
+          >
             개인정보처리방침
           </Link>
           에 동의합니다.
