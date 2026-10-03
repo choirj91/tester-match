@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { NotifyGroupUpgradeButton } from "./notify-group-upgrade-button";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 
 export const metadata = { title: "관리자" };
 
@@ -59,7 +59,7 @@ export default async function AdminHomePage() {
             <li key={t.href}>
               <Link
                 href={t.href}
-                className="block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-trust-600"
+                className="hover:border-trust-600 block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition"
               >
                 <h2 className="text-lg font-semibold text-neutral-900">{t.title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600">{t.desc}</p>

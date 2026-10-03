@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { canOrderPaidTesters } from "@/lib/paid-testers";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 
 export const metadata = { title: "내 앱" };
 
@@ -48,7 +48,7 @@ export default async function AppsPage() {
           </div>
           <Link
             href="/apps/new"
-            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="bg-trust-600 hover:bg-trust-700 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
           >
             + 앱 등록
           </Link>
@@ -57,14 +57,14 @@ export default async function AppsPage() {
         {canOrderPaidTesters(user) && (
           <Link
             href="/paid-testers"
-            className="mt-6 block rounded-2xl border border-trust-500/30 bg-trust-50 px-5 py-4 transition hover:border-trust-500"
+            className="border-trust-500/30 bg-trust-50 hover:border-trust-500 mt-6 block rounded-2xl border px-5 py-4 transition"
           >
             <p className="text-sm font-semibold text-neutral-900">
               테스터가 부족하신가요? — 유료 테스터 투입
             </p>
             <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-              운영팀 테스터가 1명당 1,000원에 14일간 실기기로 매일 체크인합니다. 부족한
-              인원만 채워보세요. →
+              운영팀 테스터가 1명당 1,000원에 14일간 실기기로 매일 체크인합니다. 부족한 인원만
+              채워보세요. →
             </p>
           </Link>
         )}
@@ -74,8 +74,7 @@ export default async function AppsPage() {
             <ul className="space-y-3">
               {apps.map((app) => {
                 const label =
-                  APP_STATUS_LABEL[(app.status as AppStatus) ?? "draft"] ??
-                  APP_STATUS_LABEL.draft;
+                  APP_STATUS_LABEL[(app.status as AppStatus) ?? "draft"] ?? APP_STATUS_LABEL.draft;
                 const activeCount = counts.get(app.id) ?? 0;
                 return (
                   <li
@@ -119,15 +118,13 @@ export default async function AppsPage() {
             </ul>
           ) : (
             <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-              <p className="text-base font-medium text-neutral-700">
-                아직 등록된 앱이 없습니다.
-              </p>
+              <p className="text-base font-medium text-neutral-700">아직 등록된 앱이 없습니다.</p>
               <p className="mt-2 text-sm text-neutral-600">
                 첫 앱을 등록하면 매칭 큐에 진입합니다.
               </p>
               <Link
                 href="/apps/new"
-                className="mt-6 inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="bg-trust-600 hover:bg-trust-700 mt-6 inline-flex rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
               >
                 + 앱 등록
               </Link>

@@ -99,7 +99,10 @@ export async function GET(request: Request) {
 
     const baseIso = order.started_at ?? order.paid_at;
     const dayN = baseIso
-      ? Math.min(14, Math.max(1, Math.floor((now.getTime() - new Date(baseIso).getTime()) / DAY_MS) + 1))
+      ? Math.min(
+          14,
+          Math.max(1, Math.floor((now.getTime() - new Date(baseIso).getTime()) / DAY_MS) + 1),
+        )
       : null;
 
     reportRows.push({

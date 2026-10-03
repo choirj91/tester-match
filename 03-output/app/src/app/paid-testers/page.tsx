@@ -32,8 +32,14 @@ type OrderRow = {
 
 const STEPS = [
   { title: "인원 선택·결제", desc: "부족한 인원만큼 1~10명을 선택해 결제합니다. 1명 = 1,000원." },
-  { title: "운영팀 테스터 참여", desc: "결제 확인 즉시 운영팀이 실제 기기에서 앱을 설치하고 테스트를 시작합니다." },
-  { title: "14일 매일 체크인", desc: "매일 앱을 실행하고 체크인을 남깁니다. 앱 상세의 테스터 모니터링에서 실시간 확인." },
+  {
+    title: "운영팀 테스터 참여",
+    desc: "결제 확인 즉시 운영팀이 실제 기기에서 앱을 설치하고 테스트를 시작합니다.",
+  },
+  {
+    title: "14일 매일 체크인",
+    desc: "매일 앱을 실행하고 체크인을 남깁니다. 앱 상세의 테스터 모니터링에서 실시간 확인.",
+  },
   { title: "완주", desc: "14일을 채우면 프로덕션 액세스 신청 요건의 인원으로 카운트됩니다." },
 ];
 
@@ -74,21 +80,24 @@ export default async function PaidTestersPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <p className="text-xs font-semibold text-trust-600">PAID TESTERS</p>
+        <p className="text-trust-600 text-xs font-semibold">PAID TESTERS</p>
         <h1 className="mt-1 text-3xl font-bold text-neutral-900">
           테스터가 부족할 때, 확실한 {formatKrw(PAID_TESTER_PRICE_KRW)}원
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          품앗이로 못 채운 인원을 운영팀 테스터가 채웁니다. 1명당{" "}
-          {formatKrw(PAID_TESTER_PRICE_KRW)}원, 14일간 매일 실기기 체크인.
+          품앗이로 못 채운 인원을 운영팀 테스터가 채웁니다. 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
+          원, 14일간 매일 실기기 체크인.
         </p>
 
         <section className="mt-10">
           <h2 className="text-lg font-bold text-neutral-900">진행 방식</h2>
           <ol className="mt-4 space-y-3">
             {STEPS.map((s, i) => (
-              <li key={s.title} className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-trust-600 text-xs font-bold text-white">
+              <li
+                key={s.title}
+                className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4"
+              >
+                <span className="bg-trust-600 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
                   {i + 1}
                 </span>
                 <div>
@@ -100,7 +109,7 @@ export default async function PaidTestersPage() {
           </ol>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-trust-500/30 bg-trust-50 p-5">
+        <section className="border-trust-500/30 bg-trust-50 mt-8 rounded-2xl border p-5">
           <h2 className="text-sm font-bold text-neutral-900">약속</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-neutral-700">
             {GUARANTEES.map((g) => (
@@ -116,7 +125,7 @@ export default async function PaidTestersPage() {
               <p className="text-sm text-neutral-600">로그인 후 신청할 수 있습니다.</p>
               <Link
                 href="/auth/login?next=/paid-testers"
-                className="mt-3 inline-block rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-trust-700"
+                className="bg-trust-600 hover:bg-trust-700 mt-3 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
               >
                 로그인
               </Link>
@@ -135,7 +144,7 @@ export default async function PaidTestersPage() {
               </p>
               <Link
                 href="/apps/new"
-                className="mt-3 inline-block rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-trust-700"
+                className="bg-trust-600 hover:bg-trust-700 mt-3 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
               >
                 앱 등록하기
               </Link>
@@ -153,7 +162,7 @@ export default async function PaidTestersPage() {
                 <li key={o.id}>
                   <Link
                     href={`/console/orders/${o.id}`}
-                    className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm transition hover:border-trust-500"
+                    className="hover:border-trust-500 flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm transition"
                   >
                     <div>
                       <p className="font-semibold text-neutral-900">

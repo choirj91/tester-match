@@ -2,10 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import {
-  PAID_ORDER_STATUS_LABEL,
-  type PaidOrderStatus,
-} from "@/lib/paid-testers";
+import { PAID_ORDER_STATUS_LABEL, type PaidOrderStatus } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
 import { OrderActions } from "./order-actions";
 
@@ -75,9 +72,9 @@ export default async function AdminPaidOrdersPage() {
         </p>
 
         <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
-          운영 절차: 결제 확인 → tester 계정 실기기 설치·참여 → [테스트 개시] → 매일 체크인 →
-          14일 후 [완료]. 결제 후 취소 시 환불은 토스페이먼츠 대시보드에서 직접 처리 후
-          [취소]를 누르세요. 리뷰·별점 작성 금지 (ADR-0011).
+          운영 절차: 결제 확인 → tester 계정 실기기 설치·참여 → [테스트 개시] → 매일 체크인 → 14일
+          후 [완료]. 결제 후 취소 시 환불은 토스페이먼츠 대시보드에서 직접 처리 후 [취소]를
+          누르세요. 리뷰·별점 작성 금지 (ADR-0011).
         </div>
 
         {orders.length === 0 ? (
@@ -112,7 +109,7 @@ export default async function AdminPaidOrdersPage() {
                   <div className="flex shrink-0 items-start gap-2">
                     <Link
                       href={`/console/orders/${o.id}`}
-                      className="rounded-lg border border-neutral-300 px-3.5 py-2 text-xs font-semibold text-neutral-700 hover:border-trust-500 hover:text-trust-600"
+                      className="hover:border-trust-500 hover:text-trust-600 rounded-lg border border-neutral-300 px-3.5 py-2 text-xs font-semibold text-neutral-700"
                     >
                       콘솔 ↗
                     </Link>

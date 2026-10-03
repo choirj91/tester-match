@@ -3,11 +3,7 @@ import { ZodError } from "zod";
 import { PaidOrderCreateSchema } from "@/lib/validators/paid-order";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
-import {
-  canOrderPaidTesters,
-  newPaidOrderCode,
-  paidTesterAmountKrw,
-} from "@/lib/paid-testers";
+import { canOrderPaidTesters, newPaidOrderCode, paidTesterAmountKrw } from "@/lib/paid-testers";
 
 export const runtime = "edge";
 
@@ -71,10 +67,7 @@ export async function POST(req: Request) {
 
   if (insertErr) {
     console.error("[paid-testers/orders] insert failed", insertErr);
-    return NextResponse.json(
-      { ok: false, message: "주문 생성에 실패했습니다." },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, message: "주문 생성에 실패했습니다." }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, order_code: orderCode });

@@ -33,9 +33,7 @@ export function paidTesterOrderName(appName: string, testerCount: number): strin
   const suffix = ` 테스터 ${testerCount}명 (14일)`;
   const maxAppNameLength = 100 - suffix.length;
   const name =
-    appName.length > maxAppNameLength
-      ? `${appName.slice(0, maxAppNameLength - 1)}…`
-      : appName;
+    appName.length > maxAppNameLength ? `${appName.slice(0, maxAppNameLength - 1)}…` : appName;
   return `${name}${suffix}`;
 }
 

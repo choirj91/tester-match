@@ -38,9 +38,8 @@ export function SiteFooter() {
             </a>
           </p>
           <p className="pt-2">
-            © {new Date().getFullYear()} {BUSINESS.name}. Tester Match 는 Google Play 비공개
-            테스트 요건을 개발자 품앗이로 해결하는 커뮤니티입니다. Google Play 는 Google LLC 의
-            상표입니다.
+            © {new Date().getFullYear()} {BUSINESS.name}. Tester Match 는 Google Play 비공개 테스트
+            요건을 개발자 품앗이로 해결하는 커뮤니티입니다. Google Play 는 Google LLC 의 상표입니다.
           </p>
         </div>
       </div>

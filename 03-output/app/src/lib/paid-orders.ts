@@ -44,9 +44,7 @@ export async function confirmPaidTesterOrder(args: {
   // 1) 주문 조회 — orderId 는 우리 order_code
   const { data: order, error: orderErr } = await supabase
     .from("paid_tester_orders")
-    .select(
-      "id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, apps(name)",
-    )
+    .select("id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, apps(name)")
     .eq("order_code", args.orderId)
     .maybeSingle<OrderWithApp>();
 
@@ -72,11 +70,10 @@ export async function confirmPaidTesterOrder(args: {
 
   // 3) 금액 검증 — DB 의 주문 금액이 진실. 불일치면 토스 호출 자체를 막는다.
   if (args.amount !== order.amount_krw) {
-    console.error(
-      "[paid-orders] amount mismatch",
-      order.order_code,
-      { expected: order.amount_krw, got: args.amount },
-    );
+    console.error("[paid-orders] amount mismatch", order.order_code, {
+      expected: order.amount_krw,
+      got: args.amount,
+    });
     return { ok: false, message: "결제 금액이 주문 금액과 일치하지 않습니다." };
   }
 
