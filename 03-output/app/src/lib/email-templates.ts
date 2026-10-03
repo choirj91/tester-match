@@ -171,8 +171,9 @@ export function paidOrderReceiptEmail(args: {
       <tr><td style="padding:6px 0;color:#64748b;">주문번호</td><td>${args.orderCode}</td></tr>
     </table>
     <p style="margin:0 0 16px;font-size:13px;color:#64748b;">
-      테스터 참여 현황은 앱 상세의 테스터 모니터링에서 실시간으로 확인할 수 있습니다.
-      테스트 개시 전에는 전액 환불이 가능합니다.
+      테스터 참여 현황과 매일의 스크린샷은 콘솔에서 확인할 수 있습니다. 완주한 시트만 과금되며,
+      결제 후 7일 내 채워지지 않은 시트는 자동 환불됩니다. Play Console 비공개 테스트 트랙에
+      공용 테스터 그룹(tester-match@googlegroups.com)이 등록돼 있는지 꼭 확인해주세요.
     </p>
     <p style="margin:24px 0 0;">
       <a href="${APP_URL}/paid-testers"
@@ -199,8 +200,18 @@ export function paidOrdersDailyReportEmail(args: {
   }>;
   autoCanceledCount: number;
   yearlyPaidCount: number;
+  /** 사람이 처리해야 할 일 — 있으면 제목에 [ACTION] */
+  alerts?: string[];
 }): Email {
-  const subject = `[Tester Match] 유료 테스터 일일 리포트 ${args.dateLabel} — 진행 ${args.orders.length}건`;
+  const alerts = args.alerts ?? [];
+  const subject = `${alerts.length > 0 ? "[ACTION] " : ""}[Tester Match] 유료 테스터 일일 리포트 ${args.dateLabel} — 진행 ${args.orders.length}건${alerts.length > 0 ? ` · 처리 필요 ${alerts.length}건` : ""}`;
+  const alertsHtml =
+    alerts.length === 0
+      ? ""
+      : `<div style="margin:0 0 16px;padding:12px 14px;border:1px solid #fca5a5;background:#fef2f2;border-radius:10px;font-size:13px;line-height:1.6;color:#991b1b;">
+        <strong>처리 필요</strong>
+        <ul style="margin:8px 0 0;padding-left:18px;">${alerts.map((a) => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+      </div>`;
   const rows = args.orders
     .map(
       (o) => `
@@ -208,7 +219,7 @@ export function paidOrdersDailyReportEmail(args: {
         <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;"><strong>${escapeHtml(o.appName)}</strong><br>
           <span style="font-size:12px;color:#94a3b8;">${o.orderCode}</span></td>
         <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;">${o.status}</td>
-        <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;">${o.dayN === null ? "-" : `D+${o.dayN}/14`}</td>
+        <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;">${o.dayN === null ? "-" : `${o.dayN}일째`}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;">${o.activeMatches}/${o.testerCount}</td>
         <td style="padding:8px 6px;border-bottom:1px solid #e2e8f0;text-align:center;">${o.checkedInToday}</td>
       </tr>`,
@@ -220,12 +231,13 @@ export function paidOrdersDailyReportEmail(args: {
       : `
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;">
       <tr style="color:#64748b;text-align:center;">
-        <th style="padding:6px;text-align:left;">주문</th><th>상태</th><th>일차</th><th>투입/신청</th><th>오늘 체크인</th>
+        <th style="padding:6px;text-align:left;">주문</th><th>상태</th><th>결제 후</th><th>충원/시트</th><th>오늘 체크인</th>
       </tr>
       ${rows}
     </table>`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">유료 테스터 일일 리포트 — ${args.dateLabel}</p>
+    ${alertsHtml}
     ${tableHtml}
     <p style="margin:0 0 8px;font-size:13px;color:#64748b;">
       미결제 24시간 경과 자동 취소: ${args.autoCanceledCount}건
@@ -242,6 +254,7 @@ export function paidOrdersDailyReportEmail(args: {
   `);
   const text = [
     `유료 테스터 일일 리포트 ${args.dateLabel}`,
+    ...alerts.map((a) => `[처리 필요] ${a}`),
     ...args.orders.map(
       (o) =>
         `- ${o.appName} [${o.status}] ${o.dayN === null ? "-" : `D+${o.dayN}/14`} 투입 ${o.activeMatches}/${o.testerCount} 오늘 체크인 ${o.checkedInToday}`,
@@ -280,6 +293,59 @@ export function redemptionRequestedEmail(args: {
     </p>
   `);
   const text = `기프티콘 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
+  return { subject, html, text };
+}
+
+/** 유료 시트 보상 이의 제기 — 관리자 알림 (ADR-0012 부록 A) */
+export function seatRewardDisputedEmail(args: {
+  rewardId: number;
+  orderId: number;
+  amount: number;
+  reason: string;
+}): Email {
+  const amount = args.amount.toLocaleString("ko-KR");
+  const subject = `[Tester Match] ⚠️ 시트 보상 이의 제기 — 주문 #${args.orderId} (${amount} 크레딧)`;
+  const html = layoutHtml(`
+    <p style="margin:0 0 16px;font-weight:700;">구매자가 시트 보상에 이의를 제기했습니다.</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+      <tr><td style="padding:6px 0;color:#64748b;">보상</td><td>#${args.rewardId} · ${amount} 크레딧</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">사유</td><td>${escapeHtml(args.reason)}</td></tr>
+    </table>
+    <p style="margin:0 0 16px;font-size:13px;color:#64748b;">
+      콘솔에서 해당 시트의 스크린샷 증빙을 확인한 뒤 지급 또는 몰수를 결정하세요.
+    </p>
+    <p style="margin:24px 0 0;">
+      <a href="${APP_URL}/admin/seat-rewards"
+         style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
+        이의 검토하기
+      </a>
+    </p>
+  `);
+  const text = `시트 보상 이의 제기 — 보상 #${args.rewardId} 주문 #${args.orderId} ${amount} 크레딧\n사유: ${args.reason}\n${APP_URL}/admin/seat-rewards`;
+  return { subject, html, text };
+}
+
+/** 이메일 회원가입 인증 메일 (ADR-0013) */
+export function signupVerifyEmail(args: { nickname: string; link: string }): Email {
+  const subject = "[Tester Match] 이메일 인증을 완료해주세요";
+  const html = layoutHtml(
+    `
+    <p style="margin:0 0 12px;"><strong>${escapeHtml(args.nickname)}</strong> 님, 가입을 환영합니다.</p>
+    <p style="margin:0 0 16px;">아래 버튼을 눌러 이메일 인증을 완료하면 바로 로그인할 수 있습니다.</p>
+    <p style="margin:24px 0 0;">
+      <a href="${args.link}"
+         style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+        이메일 인증하기
+      </a>
+    </p>
+    <p style="margin:20px 0 0;font-size:13px;color:#64748b;">
+      버튼이 동작하지 않으면 아래 주소를 브라우저에 붙여넣어 주세요.<br>
+      <span style="word-break:break-all;">${args.link}</span>
+    </p>
+    `,
+    "본인이 가입하지 않았다면 이 메일을 무시해주세요. 인증하지 않은 계정은 사용할 수 없습니다.",
+  );
+  const text = `${args.nickname} 님, Tester Match 가입을 환영합니다. 아래 링크로 이메일 인증을 완료해주세요.\n${args.link}`;
   return { subject, html, text };
 }
 

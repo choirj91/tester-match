@@ -22,6 +22,10 @@ type Row = {
   started_at: string | null;
   admin_note: string | null;
   created_at: string;
+  seats_closed: boolean;
+  fulfillment: "community" | "operator";
+  refund_due_krw: number;
+  refunded_krw: number;
   apps: { id: number; name: string } | null;
   users: { nickname: string; email: string } | null;
 };
@@ -53,7 +57,7 @@ export default async function AdminPaidOrdersPage() {
   const { data } = await supabase
     .from("paid_tester_orders")
     .select(
-      "id, order_code, tester_count, amount_krw, status, paid_at, started_at, admin_note, created_at, apps(id, name), users(nickname, email)",
+      "id, order_code, tester_count, amount_krw, status, paid_at, started_at, admin_note, created_at, seats_closed, fulfillment, refund_due_krw, refunded_krw, apps(id, name), users(nickname, email)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -91,9 +95,8 @@ export default async function AdminPaidOrdersPage() {
 
         <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
           운영 절차 (ADR-0012): 결제 확정 시 급구 노출 + 전 회원 알림 자동. [공지 복사] → 오픈채팅
-          붙여넣기. 커뮤니티 테스터가 시트를 채우면 자동 진행(스샷 체크인은 콘솔에서 확인). 7일 내
-          미충원 시트는 환불 또는 운영자 계정 투입(폴백) 후 [테스트 개시]. 결제 취소 환불은 토스
-          대시보드에서 처리 후 [취소].
+          붙여넣기. 완주한 시트만 과금 — 결제 7일 후 빈 시트는 자동 마감·환불(토스 결제는 환불 대기로 표시 → 토스 대시보드 부분취소 후 [환불 완료]). 매일 08:30 메일의 [ACTION] 항목을
+          처리하면 됩니다.
         </div>
 
         {orders.length === 0 ? (
@@ -125,6 +128,9 @@ export default async function AdminPaidOrdersPage() {
                     </p>
                     <p className="mt-0.5 text-xs text-neutral-400">
                       {o.order_code}
+                      {o.fulfillment === "operator" ? " · 운영자 처리" : o.seats_closed ? " · 시트 마감" : ""}
+                      {o.refund_due_krw > 0 ? ` · 환불 대기 ${formatKrw(o.refund_due_krw)}원` : ""}
+                      {o.refunded_krw > 0 ? ` · 환불 완료 ${formatKrw(o.refunded_krw)}원` : ""}
                       {o.admin_note ? ` · ${o.admin_note}` : ""}
                     </p>
                   </div>
@@ -135,10 +141,16 @@ export default async function AdminPaidOrdersPage() {
                     >
                       콘솔 ↗
                     </Link>
-                    <OrderActions orderId={o.id} status={o.status} />
+                    <OrderActions
+                      orderId={o.id}
+                      status={o.status}
+                      seatsClosed={o.seats_closed}
+                      refundDueKrw={o.refund_due_krw}
+                      fulfillment={o.fulfillment}
+                    />
                   </div>
                 </div>
-                {o.apps && ["paid", "in_progress"].includes(o.status) && (
+                {o.apps && ["paid", "in_progress"].includes(o.status) && !o.seats_closed && (
                   <div className="mt-3 border-t border-neutral-100 pt-3">
                     <DigestActions
                       message={seatNoticeText({

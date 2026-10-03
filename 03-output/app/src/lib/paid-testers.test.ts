@@ -58,3 +58,20 @@ describe("newPaidOrderCode", () => {
     expect(newPaidOrderCode()).not.toBe(newPaidOrderCode());
   });
 });
+
+describe("주문 허용목록", () => {
+  test("허용목록 이메일은 관리자가 아니어도 주문할 수 있고 심사 주문으로 분류된다", async () => {
+    const prev = process.env.PAID_TESTERS_ORDER_ALLOWLIST;
+    process.env.PAID_TESTERS_ORDER_ALLOWLIST = "Review@Example.com, other@example.com";
+    try {
+      const mod = await import("./paid-testers");
+      const reviewer = { role: "user", email: "review@example.com" };
+      expect(mod.canOrderPaidTesters(reviewer)).toBe(true);
+      expect(mod.isReviewOrderer(reviewer)).toBe(!mod.PAID_TESTERS_PUBLIC_ORDERING);
+      expect(mod.isReviewOrderer({ role: "admin", email: "review@example.com" })).toBe(false);
+      expect(mod.isOrderAllowlisted("stranger@example.com")).toBe(false);
+    } finally {
+      process.env.PAID_TESTERS_ORDER_ALLOWLIST = prev;
+    }
+  });
+});

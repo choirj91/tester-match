@@ -29,6 +29,13 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: false, message }, { status: 400 });
   }
 
+  if (payload.action === "done" && payload.admin_note.length < 5) {
+    return NextResponse.json(
+      { ok: false, message: "발송 내역(브랜드·금액·주문번호 등)을 5자 이상 적어주세요 — 발송 증빙입니다." },
+      { status: 400 },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("credit_redemptions")
@@ -40,7 +47,7 @@ export async function PATCH(req: Request) {
     })
     .eq("id", payload.id)
     .eq("status", "requested")
-    .select("id, user_id, amount");
+    .select("id, user_id, amount, contact");
 
   if (error) {
     console.error("[admin/redemptions] update failed", error);
@@ -75,6 +82,14 @@ export async function PATCH(req: Request) {
         { status: 500 },
       );
     }
+  }
+
+  // 발송이 끝난 연락처는 뒤 4자리만 남긴다 (계정 간 중복 검사는 신청 시점에 이미 수행)
+  if (payload.action === "done" && row.contact.length > 4) {
+    await supabase
+      .from("credit_redemptions")
+      .update({ contact: `${"*".repeat(row.contact.length - 4)}${row.contact.slice(-4)}` })
+      .eq("id", row.id);
   }
 
   await createNotification({

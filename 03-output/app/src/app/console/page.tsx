@@ -29,7 +29,7 @@ export default async function ConsoleHomePage() {
       <div className="mt-5 grid grid-cols-3 gap-3">
         {[
           { label: "진행 중", value: active },
-          { label: "투입 대기", value: waiting },
+          { label: "충원 대기", value: waiting },
           { label: "완료", value: done },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-neutral-200 bg-white px-4 py-3">

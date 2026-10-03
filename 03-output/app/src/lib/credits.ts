@@ -38,6 +38,8 @@ export type LedgerType =
 
 /** 유료 시트 완주 적립 — 기프티콘 교환 가능 크레딧의 유일한 원천 (ADR-0012) */
 export const PAID_SEAT_LEDGER_REF = "paid_seat";
+/** 앱 정식 출시 보너스 — 유료 시트에서 파생된 적립이라 교환 가능 */
+export const PAID_SEAT_LAUNCH_LEDGER_REF = "paid_seat_launch";
 /** 기프티콘 교환 차감/환급 */
 export const REDEMPTION_LEDGER_REF = "redemption";
 
@@ -95,7 +97,11 @@ export function redeemableFromRows(rows: ReadonlyArray<LedgerRowLite>): number {
   let total = 0;
   for (const r of rows) {
     // 유료 시트 적립은 타입 무관 합산 — 몰수(penalty/adjust) 도 교환 가능액을 줄인다
-    if (r.ref_type === PAID_SEAT_LEDGER_REF || r.ref_type === REDEMPTION_LEDGER_REF) {
+    if (
+      r.ref_type === PAID_SEAT_LEDGER_REF ||
+      r.ref_type === PAID_SEAT_LAUNCH_LEDGER_REF ||
+      r.ref_type === REDEMPTION_LEDGER_REF
+    ) {
       total += r.amount;
     }
   }

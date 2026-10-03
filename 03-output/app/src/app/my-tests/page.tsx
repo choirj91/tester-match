@@ -7,6 +7,12 @@ import { currentDayN } from "@/lib/checkin";
 import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 import { OptOutButton } from "./opt-out-button";
+import { InstallBlockedButton } from "./install-blocked-button";
+import {
+  SEAT_REWARD_SUMMARY,
+  SEAT_STREAK_DAYS,
+  computeSeatReward,
+} from "@/lib/seat-reward-rules";
 import { CheckInButton } from "./check-in-button";
 import { InstalledButton } from "./installed-button";
 
@@ -41,7 +47,7 @@ export default async function MyTestsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">내 테스트</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 💰 유료 시트는 매일 스크린샷 체크인 → 완주 시 700 크레딧.
+            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 💰 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 구매자 확정 후 지급.
           </p>
         </header>
 
@@ -57,6 +63,7 @@ export default async function MyTestsPage() {
                 const checkins = (m.checkins ?? []) as Array<{ id: number; day_n: number }>;
                 const checkedDays = new Set(checkins.map((c) => c.day_n));
                 const checkedCount = checkedDays.size;
+                const seatProgress = computeSeatReward([...checkedDays]);
                 const todayDayN = m.opted_in_at ? currentDayN(m.opted_in_at) : 0;
                 const alreadyCheckedToday = todayDayN > 0 && checkedDays.has(todayDayN);
                 const expired = todayDayN === 0;
@@ -93,7 +100,11 @@ export default async function MyTestsPage() {
                           </span>
                           <span>
                             {m.paid_order_id != null && (
-                              <strong className="text-amber-600">💰 유료 시트 · 완주 700크레딧 · </strong>
+                              <strong className="text-amber-600">
+                                💰 유료 시트 · 지금까지 {seatProgress.total} 크레딧 (7일 연속{" "}
+                                {Math.min(seatProgress.longestStreak, SEAT_STREAK_DAYS)}/{SEAT_STREAK_DAYS} · 12일↑
+                                완주 시 확정 후 지급) ·{" "}
+                              </strong>
                             )}
                             등록자 {owner?.nickname ?? "—"}
                           </span>
@@ -144,11 +155,22 @@ export default async function MyTestsPage() {
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {isActive && (
-                        <CheckInButton paidSeat={m.paid_order_id != null}
+                        <CheckInButton
+                          paidSeat={m.paid_order_id != null}
+                          deadlineIso={
+                            todayDayN > 0 && m.opted_in_at
+                              ? new Date(
+                                  new Date(m.opted_in_at).getTime() + todayDayN * 24 * 60 * 60 * 1000,
+                                ).toISOString()
+                              : null
+                          }
                           matchId={m.id}
                           alreadyCheckedToday={alreadyCheckedToday}
                           expired={expired}
                         />
+                      )}
+                      {isActive && m.paid_order_id != null && checkedCount === 0 && (
+                        <InstallBlockedButton matchId={m.id} />
                       )}
                       {isActive &&
                         (m.installed_at ? (
@@ -188,7 +210,7 @@ export default async function MyTestsPage() {
                       >
                         앱 정보
                       </Link>
-                      {isActive && <OptOutButton matchId={m.id} />}
+                      {isActive && <OptOutButton matchId={m.id} paidSeat={m.paid_order_id != null} />}
                     </div>
                   </li>
                 );

@@ -67,3 +67,34 @@ export async function confirmTossPayment(args: {
     };
   }
 }
+
+export type TossLookup =
+  | { kind: "found"; payment: TossPayment }
+  | { kind: "not_found" }
+  | { kind: "error" };
+
+/**
+ * orderId 로 결제 조회 — 승인은 됐는데 우리 DB 반영이 누락된 주문의 복구·검증용.
+ * "결제 없음"(404·키 미설정)과 "조회 실패"를 구분한다 — 실패를 미결제로 읽으면 결제된 주문을 취소하게 된다.
+ */
+export async function lookupTossPaymentByOrderId(orderId: string): Promise<TossLookup> {
+  const secretKey = process.env.TOSS_SECRET_KEY;
+  if (!secretKey) return { kind: "not_found" };
+  try {
+    const res = await fetch(
+      `https://api.tosspayments.com/v1/payments/orders/${encodeURIComponent(orderId)}`,
+      { headers: { Authorization: `Basic ${btoa(`${secretKey}:`)}` } },
+    );
+    if (res.status === 404) return { kind: "not_found" };
+    if (!res.ok) return { kind: "error" };
+    return { kind: "found", payment: (await res.json()) as TossPayment };
+  } catch (err) {
+    console.error("[toss] lookup exception", err);
+    return { kind: "error" };
+  }
+}
+
+export async function fetchTossPaymentByOrderId(orderId: string): Promise<TossPayment | null> {
+  const result = await lookupTossPaymentByOrderId(orderId);
+  return result.kind === "found" ? result.payment : null;
+}

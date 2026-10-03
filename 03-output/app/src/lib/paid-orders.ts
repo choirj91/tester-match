@@ -13,7 +13,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrderAdminEmail, paidOrderReceiptEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
-import { TOSS_ALREADY_PROCESSED, confirmTossPayment } from "@/lib/toss";
+import {
+  TOSS_ALREADY_PROCESSED,
+  confirmTossPayment,
+  fetchTossPaymentByOrderId,
+} from "@/lib/toss";
 import { appendLedger } from "@/lib/credits";
 import { activatePaidOrder } from "@/lib/paid-seats";
 import { newPaidOrderCode, paidTesterAmountKrw } from "@/lib/paid-testers";
@@ -26,6 +30,7 @@ type OrderWithApp = {
   tester_count: number;
   amount_krw: number;
   status: string;
+  seats_closed?: boolean;
   apps: { name: string } | null;
 };
 
@@ -47,7 +52,7 @@ export async function confirmPaidTesterOrder(args: {
   // 1) 주문 조회 — orderId 는 우리 order_code
   const { data: order, error: orderErr } = await supabase
     .from("paid_tester_orders")
-    .select("id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, apps(name)")
+    .select("id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, seats_closed, apps(name)")
     .eq("order_code", args.orderId)
     .maybeSingle<OrderWithApp>();
 
@@ -82,9 +87,22 @@ export async function confirmPaidTesterOrder(args: {
 
   // 4) 토스 승인
   const confirm = await confirmTossPayment(args);
-  if (!confirm.ok && confirm.code !== TOSS_ALREADY_PROCESSED) {
-    console.error("[paid-orders] toss confirm failed", order.order_code, confirm);
-    return { ok: false, message: confirm.message };
+  if (!confirm.ok) {
+    if (confirm.code !== TOSS_ALREADY_PROCESSED) {
+      console.error("[paid-orders] toss confirm failed", order.order_code, confirm);
+      return { ok: false, message: confirm.message };
+    }
+    // 이미 승인된 결제라는 응답은 그 결제가 "이 주문의 것"인지 토스에 다시 물어 확인한다
+    const existing = await fetchTossPaymentByOrderId(args.orderId);
+    if (
+      !existing ||
+      existing.status !== "DONE" ||
+      existing.paymentKey !== args.paymentKey ||
+      existing.totalAmount !== order.amount_krw
+    ) {
+      console.error("[paid-orders] already-processed mismatch", order.order_code);
+      return { ok: false, message: "결제 정보를 확인할 수 없습니다. 관리자에게 문의해주세요." };
+    }
   }
 
   const nowIso = new Date().toISOString();
@@ -134,7 +152,8 @@ export async function confirmPaidTesterOrder(args: {
   // 7) 알림 — 실제 전이가 일어난 호출에서만, 실패해도 주문은 성공 처리
   if (didTransition) {
     try {
-      await activatePaidOrder(supabase, {
+      // 결제 전에 이미 시트가 닫힌 주문(심사·시험용)은 급구·전 회원 알림을 보내지 않는다
+      if (!order.seats_closed) await activatePaidOrder(supabase, {
         orderId: order.id,
         appId: order.app_id,
         appName: summary.appName,
@@ -193,6 +212,7 @@ export async function createCreditsPaidOrder(args: {
   buyer: { id: number; nickname: string };
   app: { id: number; name: string };
   testerCount: number;
+  consentedAt: string;
 }): Promise<CreditsOrderResult> {
   const supabase = createSupabaseAdminClient();
   const amount = paidTesterAmountKrw(args.testerCount);
@@ -206,6 +226,7 @@ export async function createCreditsPaidOrder(args: {
       buyer_user_id: args.buyer.id,
       tester_count: args.testerCount,
       amount_krw: amount,
+      consented_at: args.consentedAt,
     })
     .select("id")
     .single();
@@ -285,5 +306,19 @@ export async function createCreditsPaidOrder(args: {
   } catch (err) {
     console.error("[paid-orders] activate failed (credits)", orderCode, err);
   }
+  // 크레딧 결제도 관리자 메일·구매자 영수 안내를 보낸다 (오픈채팅 공지 누락 방지)
+  await notifyPaidOrder(
+    {
+      id: order.id,
+      order_code: orderCode,
+      app_id: args.app.id,
+      buyer_user_id: args.buyer.id,
+      tester_count: args.testerCount,
+      amount_krw: amount,
+      status: "paid",
+      apps: { name: args.app.name },
+    },
+    { orderCode, appName: args.app.name, testerCount: args.testerCount, amountKrw: amount },
+  );
   return { ok: true, orderCode };
 }

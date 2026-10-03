@@ -16,6 +16,15 @@ type Props = {
 
 type PayWith = "toss" | "credits";
 
+/** 구매 전 유의사항 — 전부 체크해야 결제 가능 (서버도 agreed=true 검증, 주문에 동의 시각 기록) */
+const NOTICES = [
+  "Play Console 비공개 테스트 트랙에 공용 테스터 그룹(tester-match@googlegroups.com)을 등록했고, 앱의 초대 링크가 정상 동작합니다. 미등록 시 테스터가 설치할 수 없습니다.",
+  "테스터는 커뮤니티 실사용자입니다. 시트 충원 시점과 Google의 프로덕션 승인은 보장되지 않습니다.",
+  "테스터는 14일 중 12일 이상 스크린샷 체크인 시 완주로 인정됩니다. 결석 3일째 테스터는 자동 교체되며, 교체 테스터는 1일차부터 시작합니다 (충원 기간은 결제 후 7일).",
+  "완주한 테스터의 보상은 내가 [확정]하거나 3일간 응답하지 않으면 자동 확정됩니다. 이의는 스크린샷으로 확인되는 사유(내 앱 화면 아님·재사용·금지 행위)만 인정되며, 사용량 부족이나 Google 심사 결과는 사유가 아닙니다.",
+  "테스터에게 리뷰·별점을 요청하지 않습니다. 완주한 시트만 과금됩니다 — 결제 7일 내 못 채운 시트, 충원 마감 후 이탈한 시트, 이의가 인용된 시트는 환불됩니다.",
+];
+
 export function OrderForm({ apps, balance }: Props) {
   const router = useRouter();
   const [appId, setAppId] = useState<number>(apps[0]?.id ?? 0);
@@ -23,15 +32,18 @@ export function OrderForm({ apps, balance }: Props) {
   const [payWith, setPayWith] = useState<PayWith>("toss");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checked, setChecked] = useState<boolean[]>(() => NOTICES.map(() => false));
+  const allAgreed = checked.every(Boolean);
 
   const amount = paidTesterAmountKrw(count);
   const canUseCredits = balance >= amount;
   const effectivePayWith: PayWith = canUseCredits ? payWith : "toss";
 
-  const counts = Array.from(
-    { length: PAID_TESTER_MAX_COUNT - PAID_TESTER_MIN_COUNT + 1 },
-    (_, i) => PAID_TESTER_MIN_COUNT + i,
+  const presets = [1, 3, 5, 10, 12, 20, 50, PAID_TESTER_MAX_COUNT].filter(
+    (n, i, all) => n <= PAID_TESTER_MAX_COUNT && all.indexOf(n) === i,
   );
+  const clampCount = (n: number) =>
+    Math.min(PAID_TESTER_MAX_COUNT, Math.max(PAID_TESTER_MIN_COUNT, Math.floor(n) || PAID_TESTER_MIN_COUNT));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +53,12 @@ export function OrderForm({ apps, balance }: Props) {
       const res = await fetch("/api/paid-testers/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ app_id: appId, tester_count: count, pay_with: effectivePayWith }),
+        body: JSON.stringify({
+          app_id: appId,
+          tester_count: count,
+          pay_with: effectivePayWith,
+          agreed: allAgreed,
+        }),
       });
       const data = (await res.json()) as {
         ok: boolean;
@@ -90,13 +107,28 @@ export function OrderForm({ apps, balance }: Props) {
 
       <div>
         <p className="text-sm font-semibold text-neutral-900">테스터 인원 (시트)</p>
-        <div className="mt-2 grid grid-cols-5 gap-2">
-          {counts.map((n) => (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={PAID_TESTER_MIN_COUNT}
+            max={PAID_TESTER_MAX_COUNT}
+            value={count}
+            onChange={(e) => setCount(clampCount(Number(e.target.value)))}
+            className="w-24 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-semibold"
+            aria-label="테스터 인원"
+          />
+          <span className="text-sm text-neutral-600">
+            명 ({PAID_TESTER_MIN_COUNT}~{PAID_TESTER_MAX_COUNT})
+          </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {presets.map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setCount(n)}
-              className={`rounded-lg border px-0 py-2.5 text-sm font-semibold transition ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                 count === n
                   ? "border-trust-600 bg-trust-600 text-white"
                   : "border-neutral-300 bg-white text-neutral-700 hover:border-trust-500"
@@ -106,6 +138,9 @@ export function OrderForm({ apps, balance }: Props) {
             </button>
           ))}
         </div>
+        <p className="mt-1.5 text-xs text-neutral-500">
+          Google 요건은 12명입니다. 이탈에 대비해 여유 있게 잡아도 완주한 시트만 과금됩니다.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -142,11 +177,28 @@ export function OrderForm({ apps, balance }: Props) {
         </span>
       </div>
 
+      <fieldset className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4">
+        <legend className="px-1 text-sm font-bold text-amber-900">구매 전 유의사항 (모두 확인 필요)</legend>
+        {NOTICES.map((text, i) => (
+          <label key={i} className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-amber-900">
+            <input
+              type="checkbox"
+              className="mt-0.5 shrink-0"
+              checked={checked[i]}
+              onChange={(e) =>
+                setChecked((prev) => prev.map((v, idx) => (idx === i ? e.target.checked : v)))
+              }
+            />
+            <span>{text}</span>
+          </label>
+        ))}
+      </fieldset>
+
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       <button
         type="submit"
-        disabled={submitting || !appId}
+        disabled={submitting || !appId || !allAgreed}
         className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
       >
         {submitting ? "주문 생성 중…" : effectivePayWith === "credits" ? "크레딧으로 시트 열기" : "결제하기"}

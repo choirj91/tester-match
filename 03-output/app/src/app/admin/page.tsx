@@ -19,14 +19,14 @@ const TILES = [
     desc: "앱 등록 순위, 테스트 참여 순위, 완주 순위 등 사용자별 활동 통계와 전체 현황을 확인합니다.",
   },
   {
-    href: "/admin/ranking-rewards" as const,
-    title: "월간 랭킹 보상",
-    desc: "지난달 완주 랭킹 1~3위 크레딧 지급 (3,000/2,000/1,000). 미리보기 확인 후 수동 지급, 멱등 처리.",
-  },
-  {
     href: "/admin/digest" as const,
     title: "오픈채팅 다이제스트",
     desc: "이야기 글로 오픈채팅 공지 메시지를 생성합니다. 복사 → 오픈 카톡방 열기 → 붙여넣기. ?ids=17,18,19 로 글 지정.",
+  },
+  {
+    href: "/admin/seat-rewards" as const,
+    title: "시트 보상 정산",
+    desc: "완주한 유료 시트 보상의 보류·확정 현황. 구매자 이의 건을 스크린샷 증빙으로 판정해 지급/몰수 (ADR-0012 부록 A).",
   },
   {
     href: "/admin/redemptions" as const,

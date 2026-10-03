@@ -16,8 +16,9 @@ describe("PaidOrderCreateSchema", () => {
     expect(() => PaidOrderCreateSchema.parse({ app_id: 1, tester_count: 0 })).toThrow();
   });
 
-  test("11명은 거부한다", () => {
-    expect(() => PaidOrderCreateSchema.parse({ app_id: 1, tester_count: 11 })).toThrow();
+  test("상한(30명)까지 허용하고 31명은 거부한다", () => {
+    expect(PaidOrderCreateSchema.parse({ app_id: 1, tester_count: 30 }).tester_count).toBe(30);
+    expect(() => PaidOrderCreateSchema.parse({ app_id: 1, tester_count: 31 })).toThrow();
   });
 
   test("소수 인원은 거부한다", () => {

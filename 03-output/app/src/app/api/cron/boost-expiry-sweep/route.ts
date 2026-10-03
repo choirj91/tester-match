@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { countOpenSeatsByApp } from "@/lib/paid-seats";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { createNotification } from "@/lib/notifications";
@@ -34,8 +35,15 @@ export async function GET(request: Request) {
     .eq("is_boost", true)
     .lte("boost_deadline_at", now.toISOString());
 
+  // 유료 시트가 열려 있는 앱은 급구를 유지한다 (일일 스윕이 마감을 다시 연장)
+  const openSeats = await countOpenSeatsByApp(
+    supabase,
+    (expired ?? []).map((a) => a.id),
+  );
+
   let cleared = 0;
   for (const app of expired ?? []) {
+    if ((openSeats.get(app.id) ?? 0) > 0) continue;
     const { error } = await supabase
       .from("apps")
       .update({ is_boost: false, boost_deadline_at: null })

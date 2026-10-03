@@ -11,12 +11,12 @@ on:
     - cron: "0 */6 * * *"
     # 매일 KST 09:00 (UTC 00:00) — 급구 자동 만료 sweep + D-1 알림
     - cron: "0 0 * * *"
-    # 매월 1~3일 KST 09:30 (UTC 00:30) — 지난달 랭킹 보상 지급 (멱등, 3일 재시도)
-    - cron: "30 0 1-3 * *"
     # 매주 월요일 KST 10:00 (UTC 01:00) — 주간 인기글 전 회원 알림 (멱등)
     - cron: "0 1 * * 1"
-    # 매일 KST 08:30 (UTC 23:30 전날) — 유료 테스터 일일 리포트 + 미결제 자동 취소
+    # 매일 KST 08:30 (UTC 23:30 전날) — 유료 주문 스윕(미결제 복구·7일 충원 마감·종결) + 관리자 리포트
     - cron: "30 23 * * *"
+    # 6시간 간격(매 15분) — 유료 시트 보상 자동 확정(구매자 3일 무응답) + 보류 누락 보정 + 출시 보너스
+    - cron: "15 */6 * * *"
   # 수동 실행 지원 (Dashboard Actions 탭 → Run workflow)
   workflow_dispatch:
     inputs:
@@ -29,9 +29,9 @@ on:
           - penalty-sweep
           - validate-app-urls
           - boost-expiry-sweep
-          - monthly-ranking-rewards
           - weekly-hot-posts
           - paid-orders-report
+          - seat-reward-release
           - all
 
 env:
@@ -92,23 +92,6 @@ jobs:
           echo "HTTP $STATUS"
           [ "$STATUS" -eq 200 ] || exit 1
 
-  # ── 월간 랭킹 보상 지급 (매월 1~3일 KST 09:30) ──────
-  monthly-ranking-rewards:
-    name: 월간 랭킹 보상
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' && (inputs.job == 'monthly-ranking-rewards' || inputs.job == 'all') ||
-      github.event_name == 'schedule' && startsWith(github.event.schedule, '30 0')
-    steps:
-      - name: Call /api/cron/monthly-ranking-rewards
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "$APP_URL/api/cron/monthly-ranking-rewards" \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            -H "Content-Type: application/json")
-          echo "HTTP $STATUS"
-          [ "$STATUS" -eq 200 ] || exit 1
-
   # ── 주간 인기글 알림 (매주 월요일 KST 10:00) ────────
   weekly-hot-posts:
     name: 주간 인기글 알림
@@ -134,14 +117,53 @@ jobs:
       github.event_name == 'workflow_dispatch' && (inputs.job == 'paid-orders-report' || inputs.job == 'all') ||
       github.event_name == 'schedule' && startsWith(github.event.schedule, '30 23')
     steps:
-      - name: Call /api/cron/paid-orders-report
+      - name: Sweep paid orders, then send report
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          # 스윕은 요청당 처리량 상한 때문에 몇 건씩 처리한다 — more=false 까지 반복 (최대 40회)
+          SWEEP_FAILED=0
+          for i in $(seq 1 40); do
+            STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
+              -X POST "$APP_URL/api/cron/paid-orders-report?mode=sweep" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json")
+            echo "sweep #$i HTTP $STATUS"
+            cat /tmp/body.json || true
+            echo
+            if [ "$STATUS" -ne 200 ]; then SWEEP_FAILED=1; break; fi
+            grep -q '"more":true' /tmp/body.json || break
+          done
+          # 스윕이 실패해도 리포트(운영 경보)는 보낸다 — 응답 본문을 로그에 남긴다
+          STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
             -X POST "$APP_URL/api/cron/paid-orders-report" \
             -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json")
-          echo "HTTP $STATUS"
+          echo "report HTTP $STATUS"
+          cat /tmp/body.json || true
           [ "$STATUS" -eq 200 ] || exit 1
+          [ "$SWEEP_FAILED" -eq 0 ] || exit 1
+
+  # ── 유료 시트 보상 자동 확정 (6시간 간격) ────────────
+  seat-reward-release:
+    name: 시트 보상 자동 확정
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (inputs.job == 'seat-reward-release' || inputs.job == 'all') ||
+      github.event_name == 'schedule' && startsWith(github.event.schedule, '15 */6')
+    steps:
+      - name: Call /api/cron/seat-reward-release (repeat until done)
+        run: |
+          # 자동 확정·보정·출시 보너스를 몇 건씩 처리한다 — more=false 까지 반복 (최대 40회)
+          for i in $(seq 1 40); do
+            STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
+              -X POST "$APP_URL/api/cron/seat-reward-release" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json")
+            echo "release #$i HTTP $STATUS"
+            cat /tmp/body.json || true
+            echo
+            [ "$STATUS" -eq 200 ] || exit 1
+            grep -q '"more":true' /tmp/body.json || break
+          done
 
   # ── 앱 링크 검증 (6시간 간격) ────────────────────────
   validate-urls:

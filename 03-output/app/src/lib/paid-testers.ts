@@ -5,7 +5,7 @@
 
 export const PAID_TESTER_PRICE_KRW = 1000;
 export const PAID_TESTER_MIN_COUNT = 1;
-export const PAID_TESTER_MAX_COUNT = 10;
+export const PAID_TESTER_MAX_COUNT = 30;
 
 export type PaidOrderStatus =
   | "pending"
@@ -44,9 +44,33 @@ export function paidTesterOrderName(appName: string, testerCount: number): strin
  */
 export const PAID_TESTERS_PUBLIC_ORDERING = false;
 
-export function canOrderPaidTesters(user: { role: string } | null): boolean {
+type OrderGateUser = { role: string; email?: string | null };
+
+/** 공개 전에도 주문을 허용할 계정 (결제대행사 심사 계정 등) — 서버 환경변수, 쉼표 구분 이메일 */
+export function isOrderAllowlisted(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const list = (process.env.PAID_TESTERS_ORDER_ALLOWLIST ?? "")
+    .split(",")
+    .map((v) => v.trim().toLowerCase())
+    .filter(Boolean);
+  return list.includes(email.trim().toLowerCase());
+}
+
+export function canOrderPaidTesters(user: OrderGateUser | null): boolean {
   if (!user) return false;
-  return PAID_TESTERS_PUBLIC_ORDERING || user.role === "admin";
+  return (
+    PAID_TESTERS_PUBLIC_ORDERING || user.role === "admin" || isOrderAllowlisted(user.email)
+  );
+}
+
+/**
+ * 심사·시험용 주문 여부. 공개 전 허용목록 계정의 주문은 결제 흐름만 통과시키고
+ * 시트를 열지 않으며(급구·전 회원 알림 없음) 매칭 중이 아닌 앱에도 허용한다.
+ */
+export function isReviewOrderer(user: OrderGateUser): boolean {
+  return (
+    !PAID_TESTERS_PUBLIC_ORDERING && user.role !== "admin" && isOrderAllowlisted(user.email)
+  );
 }
 
 /** 토스 orderId 규칙: 6~64자, [A-Za-z0-9_-] 만 허용. */

@@ -10,7 +10,9 @@ export function RedemptionActions({ id }: { id: number }) {
 
   async function run(action: "done" | "reject") {
     const note = window.prompt(
-      action === "done" ? "발송 메모 (예: 스타벅스 5천원권 카톡 발송) — 선택" : "거절 사유 (사용자에게 표시)",
+      action === "done"
+        ? "발송 내역 — 필수 (예: 스타벅스 5천원권, 주문번호 1234)"
+        : "거절 사유 (사용자에게 표시)",
       "",
     );
     if (note === null) return;

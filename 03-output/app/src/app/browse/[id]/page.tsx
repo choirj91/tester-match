@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { OptInButton } from "./opt-in-button";
+import { countOpenSeatsByApp } from "@/lib/paid-seats";
 import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
@@ -94,6 +95,10 @@ export default async function BrowseDetailPage({ params }: Props) {
     ]);
 
   if (!app || app.status === "deleted") notFound();
+
+  // 유료 시트 (ADR-0012) — 열린 시트가 있으면 참여 시 시트로 우선 배정된다
+  const openSeats =
+    app.status === "matching" ? ((await countOpenSeatsByApp(supabase, [appId])).get(appId) ?? 0) : 0;
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]
@@ -313,7 +318,10 @@ export default async function BrowseDetailPage({ params }: Props) {
                   ? "그룹 가입 후 참여 신청하면 초대 링크가 공개됩니다."
                   : "초대 링크는 참여 신청 후 공개됩니다."}
               </p>
-              <p className="mt-1 text-xs text-neutral-500">정식 출시 후 보상 안내 예정입니다.</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                💰 유료 시트가 열린 앱은 시트당 최대 700 크레딧(구매자 확정 후 지급), 그 외 품앗이 참여는
+                신뢰도가 쌓입니다.
+              </p>
             </div>
           )}
 
@@ -324,6 +332,7 @@ export default async function BrowseDetailPage({ params }: Props) {
                 alreadyJoined={joined}
                 isOwn={false}
                 isFull={false}
+                openSeats={openSeats}
               />
             </div>
           )}

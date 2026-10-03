@@ -9,6 +9,7 @@ import {
   REDEMPTION_MIN_CREDITS,
   REDEMPTION_UNIT_CREDITS,
 } from "@/lib/paid-seats";
+import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 import { RedemptionForm } from "./redemption-form";
 
 export const runtime = "edge";
@@ -20,7 +21,7 @@ export default async function CreditsPage() {
   if (!user) redirect("/auth/login?next=/credits");
 
   const supabase = createSupabaseAdminClient();
-  const [{ data: rows }, redeemable, { data: redemptions }] = await Promise.all([
+  const [{ data: rows }, redeemable, { data: pendingRewards }, { data: redemptions }] = await Promise.all([
     supabase
       .from("credits_ledger")
       .select("id, amount, balance_after, type, ref_type, ref_id, description, created_at")
@@ -29,12 +30,20 @@ export default async function CreditsPage() {
       .limit(100),
     getRedeemable(supabase, user.id),
     supabase
+      .from("seat_rewards")
+      .select("amount, status")
+      .eq("tester_user_id", user.id)
+      .in("status", ["held", "disputed"]),
+    supabase
       .from("credit_redemptions")
       .select("id, amount, status, created_at, processed_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10),
   ]);
+
+  const pendingTotal = (pendingRewards ?? []).reduce((sum, r) => sum + r.amount, 0);
+  const disputedCount = (pendingRewards ?? []).filter((r) => r.status === "disputed").length;
 
   const REDEMPTION_LABEL: Record<string, string> = {
     requested: "처리 대기",
@@ -49,10 +58,19 @@ export default async function CreditsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">크레딧</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            💰 유료 시트 14일 완주 시 {PAID_SEAT_REWARD} 크레딧. 내 앱 테스터 구매(1,000 = 1명) 또는{" "}
+            💰 크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 구매자 확정 후 지급. 내 앱
+            테스터 구매(1,000 = 1명) 또는{" "}
             {REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")} 이상 모아 기프티콘 교환.
           </p>
         </header>
+
+        {pendingTotal > 0 && (
+          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            ⏳ <strong>확정 대기 {formatKrw(pendingTotal)} 크레딧</strong> — 구매자가 확인하면 바로,
+            응답이 없으면 완주 3일 뒤 자동 지급됩니다.
+            {disputedCount > 0 && ` (이의 검토 중 ${disputedCount}건 — 운영팀이 증빙 확인 후 판정)`}
+          </div>
+        )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-neutral-200 bg-gradient-to-br from-trust-50 to-white p-6 shadow-sm">
@@ -148,7 +166,7 @@ export default async function CreditsPage() {
                   <Link href="/browse" className="underline underline-offset-2">
                     💰 시트가 열린 앱
                   </Link>
-                  에 참여해 14일 완주하면 {PAID_SEAT_REWARD} 크레딧이 적립됩니다.
+                  에 참여해 12일 이상 출석하면 최대 {PAID_SEAT_REWARD} 크레딧이 적립됩니다.
                 </p>
               </div>
             )}

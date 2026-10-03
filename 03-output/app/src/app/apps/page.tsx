@@ -63,8 +63,8 @@ export default async function AppsPage() {
               테스터가 부족하신가요? — 유료 테스터 투입
             </p>
             <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-              운영팀 테스터가 1명당 1,000원에 14일간 실기기로 매일 체크인합니다. 부족한 인원만
-              채워보세요. →
+              커뮤니티 테스터가 1명당 1,000원에 14일간 매일 스크린샷 체크인. 완주한 시트만
+              과금됩니다. →
             </p>
           </Link>
         )}

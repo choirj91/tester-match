@@ -3,12 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchAll } from "@/lib/fetch-all";
-import {
-  getMonthlyCompletions,
-  kstCurrentMonth,
-  REWARD_START_MONTH,
-  REWARD_TABLE,
-} from "@/lib/ranking-rewards";
+import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 
 export const runtime = "edge";
 export const metadata = {
@@ -213,13 +208,6 @@ export default async function PublicStatsPage() {
     )
     .slice(0, 20);
 
-  // ── 월간 완주 랭킹 (크레딧 보상) ──────────────────────────────────────
-  const currentMonth = kstCurrentMonth();
-  const rewardActive = currentMonth >= REWARD_START_MONTH;
-  const monthlyCompletions = rewardActive
-    ? (await getMonthlyCompletions(supabase, currentMonth)).slice(0, 5)
-    : [];
-
   return (
     <>
       <SiteHeader user={user} />
@@ -229,56 +217,19 @@ export default async function PublicStatsPage() {
           Tester Match 커뮤니티의 활동 통계입니다. 닉네임을 클릭하면 등록한 앱을 볼 수 있습니다.
         </p>
 
-        {/* 월간 완주 랭킹 크레딧 보상 */}
-        <div className="mt-6 rounded-2xl border border-spark-500/30 bg-spark-50 p-5">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">🏆</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-neutral-900">
-                매월 완주 랭킹 1~3위에 크레딧을 드립니다 —{" "}
-                {REWARD_TABLE.map((v) => v.toLocaleString()).join(" / ")} 크레딧
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-                {REWARD_START_MONTH.slice(0, 7).replace("-", "년 ")}월 실적부터 집계하며, 다음 달
-                초에 지급됩니다. 순위는 <strong>해당 월의 14일 완주 수</strong> 기준 (1위는 완주
-                2회 이상, 신뢰도 50 이상, 본인 앱 완주 제외). 동점은 신뢰도가 높은 분이
-                우선합니다.
-              </p>
-              {rewardActive && monthlyCompletions.length > 0 && (
-                <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-3">
-                  <p className="text-xs font-bold text-neutral-800">
-                    이번 달({Number(currentMonth.slice(5, 7))}월) 완주 랭킹
-                  </p>
-                  <ul className="mt-1.5 space-y-1 text-xs text-neutral-700">
-                    {monthlyCompletions.map((c, i) => (
-                      <li key={c.userId} className="tabular">
-                        {["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}{" "}
-                        <Link
-                          href={`/u/${c.userId}`}
-                          className="font-semibold hover:underline"
-                        >
-                          {c.nickname}
-                        </Link>{" "}
-                        — 완주 {c.completed}회 · 신뢰도 {c.trustScore}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {rewardActive && monthlyCompletions.length === 0 && (
-                <p className="mt-2 text-xs text-neutral-500">
-                  이번 달 완주자가 아직 없습니다. 첫 완주의 주인공이 되어보세요!
-                </p>
-              )}
-              {!rewardActive && (
-                <p className="mt-2 text-xs font-semibold text-spark-600">
-                  ⏳ {REWARD_START_MONTH.slice(0, 7).replace("-", "년 ")}월 1일부터 집계가
-                  시작됩니다. 지금 진행 중인 테스트도 9월에 완주하면 반영돼요!
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* 크레딧은 유료 시트 참여로만 적립된다 (ADR-0014) */}
+        <Link
+          href="/browse"
+          className="mt-6 block rounded-2xl border border-amber-300 bg-amber-50 p-5 transition hover:border-amber-400"
+        >
+          <p className="text-sm font-bold text-neutral-900">
+            💰 크레딧은 유료 시트 테스트로 적립됩니다
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+            {SEAT_REWARD_SUMMARY}. 매칭 목록에서 💰 배지가 붙은 앱에 참여하세요. 이 랭킹은 활동
+            기록이며 별도 크레딧 보상은 없습니다. →
+          </p>
+        </Link>
 
         {/* 전체 현황 */}
         <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">

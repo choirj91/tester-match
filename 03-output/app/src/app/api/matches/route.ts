@@ -11,7 +11,9 @@ import {
   PAID_SEAT_REWARD,
   assignSeatSlot,
   countTesterActivePaidSeats,
+  PAID_SEAT_REQUIRES_GOOGLE,
   findOpenSeatOrder,
+  hasPriorPaidSeat,
   isOrderOverfilled,
 } from "@/lib/paid-seats";
 
@@ -61,7 +63,19 @@ export async function POST(req: Request) {
     );
   }
   // 2) 유료 시트 우선 배정 (ADR-0012) — 시트가 없으면 무료 정원
-  const seatOrder = await findOpenSeatOrder(supabase, app.id);
+  // 같은 앱의 유료 시트를 잡았던 테스터는 다시 시트를 받을 수 없다 (반복 점유·재적립 방지)
+  let seatOrder = await findOpenSeatOrder(supabase, app.id);
+  if (seatOrder && (await hasPriorPaidSeat(supabase, app.id, user.id))) seatOrder = null;
+  if (seatOrder && PAID_SEAT_REQUIRES_GOOGLE && !user.hasGoogle) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "이 앱은 유료 시트 모집 중입니다. 유료 시트는 Google 계정으로 로그인한 회원만 참여할 수 있어요 (Play 스토어 계정 확인용).",
+      },
+      { status: 403 },
+    );
+  }
   if (!seatOrder && app.required_testers <= 0) {
     return NextResponse.json(
       { ok: false, message: "이미 정원이 마감되었습니다." },
@@ -131,11 +145,19 @@ export async function POST(req: Request) {
 
   let newRemaining = app.required_testers;
   if (paidSeat && seatOrder) {
-    await assignSeatSlot(supabase, {
+    const slot = await assignSeatSlot(supabase, {
       orderId: seatOrder.id,
       matchId: match.id,
       label: user.nickname,
     });
+    if (!slot) {
+      // 슬롯 없이는 스크린샷 증빙을 남길 수 없다 → 참여 자체를 되돌린다
+      await supabase.from("matches").delete().eq("id", match.id);
+      return NextResponse.json(
+        { ok: false, message: "시트 배정에 실패했습니다. 잠시 후 다시 시도해주세요." },
+        { status: 409 },
+      );
+    }
     await supabase
       .from("paid_tester_orders")
       .update({ status: "in_progress", started_at: now })

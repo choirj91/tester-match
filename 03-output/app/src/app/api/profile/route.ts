@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { releasePaidSeat } from "@/lib/paid-seats";
 import { ZodError } from "zod";
 import { ProfileUpdateSchema } from "@/lib/validators/profile";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -29,7 +30,12 @@ export async function PATCH(req: Request) {
   const supabase = createSupabaseAdminClient();
   const { error } = await supabase
     .from("users")
-    .update({ nickname: payload.nickname })
+    .update({
+      nickname: payload.nickname,
+      ...(payload.kakao_nickname !== undefined
+        ? { kakao_nickname: payload.kakao_nickname === "" ? null : payload.kakao_nickname }
+        : {}),
+    })
     .eq("id", user.id);
 
   if (error) {
@@ -59,10 +65,42 @@ export async function DELETE() {
   const now = new Date().toISOString();
   const anonEmail = `withdrawn-${user.id}@deleted.local`;
 
+  // 0) 유료 테스터 정산이 걸려 있으면 탈퇴 불가 — 테스터 보상·구매자 환불이 끊기지 않도록
+  const [{ count: openOrders }, { count: pendingRewards }] = await Promise.all([
+    admin
+      .from("paid_tester_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("buyer_user_id", user.id)
+      .in("status", ["paid", "in_progress"]),
+    admin
+      .from("seat_rewards")
+      .select("id", { count: "exact", head: true })
+      .eq("tester_user_id", user.id)
+      .in("status", ["held", "disputed"]),
+  ]);
+  if ((openOrders ?? 0) > 0 || (pendingRewards ?? 0) > 0) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          (openOrders ?? 0) > 0
+            ? "진행 중인 유료 테스터 주문이 있어 탈퇴할 수 없습니다. 주문 종료 후 다시 시도하거나 문의해주세요."
+            : "확정 대기 중인 보상이 있어 탈퇴할 수 없습니다. 지급(최대 3일) 후 다시 시도해주세요.",
+      },
+      { status: 409 },
+    );
+  }
+
   // 1) 본인 앱 → 'deleted'
   await admin.from("apps").update({ status: "deleted" }).eq("owner_user_id", user.id);
 
-  // 2) 진행중 본인 매칭 → 'opted_out' (테스터 측)
+  // 2) 진행중 본인 매칭 → 'opted_out' (테스터 측). 유료 시트는 슬롯을 비워 교체 테스터가 받게 한다
+  const { data: paidSeatMatches } = await admin
+    .from("matches")
+    .select("id")
+    .eq("tester_user_id", user.id)
+    .in("status", ["pending", "active"])
+    .not("paid_order_id", "is", null);
   await admin
     .from("matches")
     .update({
@@ -72,6 +110,9 @@ export async function DELETE() {
     })
     .eq("tester_user_id", user.id)
     .in("status", ["pending", "active"]);
+  for (const m of paidSeatMatches ?? []) {
+    await releasePaidSeat(admin, m.id);
+  }
 
   // 3) public.users 익명화 + 탈퇴 표시
   await admin

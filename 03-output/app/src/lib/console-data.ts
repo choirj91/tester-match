@@ -28,6 +28,7 @@ export type ConsoleOrder = {
   completed_at: string | null;
   admin_note: string | null;
   created_at: string;
+  seats_closed: boolean;
   apps: { id: number; name: string } | null;
   users: { nickname: string; email: string } | null;
 };
@@ -41,7 +42,7 @@ export type ConsoleOrderSummary = ConsoleOrder & {
 };
 
 const ORDER_SELECT =
-  "id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, paid_at, started_at, completed_at, admin_note, created_at, apps(id, name), users(nickname, email)";
+  "id, order_code, app_id, buyer_user_id, tester_count, amount_krw, status, paid_at, started_at, completed_at, admin_note, created_at, seats_closed, apps(id, name), users(nickname, email)";
 
 export function canAccessOrder(user: AppUser, order: Pick<ConsoleOrder, "buyer_user_id">): boolean {
   return user.role === "admin" || order.buyer_user_id === user.id;

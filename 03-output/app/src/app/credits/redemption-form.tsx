@@ -11,7 +11,7 @@ type Props = {
 
 export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
   const router = useRouter();
-  const maxUnits = Math.floor(redeemable / unitCredits);
+  const maxUnits = Math.min(10, Math.floor(redeemable / unitCredits));
   const [units, setUnits] = useState(1);
   const [contact, setContact] = useState("");
   const [note, setNote] = useState("");
@@ -77,10 +77,11 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
       <input
         value={contact}
         onChange={(e) => setContact(e.target.value)}
-        placeholder="기프티콘 받을 휴대폰 번호 또는 카카오톡 ID"
+        placeholder="기프티콘 받을 휴대폰 번호 (010-1234-5678)"
         required
-        minLength={5}
-        maxLength={80}
+        inputMode="tel"
+        pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}"
+        maxLength={13}
         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
       />
       <input
@@ -99,7 +100,8 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
         {busy ? "신청 중…" : "기프티콘 교환 신청"}
       </button>
       <p className="text-xs text-neutral-500">
-        신청 즉시 크레딧이 차감되고, 관리자가 확인 후 수동 발송합니다. 거절 시 전액 환급.
+        신청 즉시 크레딧이 차감되고, 관리자가 확인 후 영업일 3일 내 문자로 발송합니다. 거절 시 전액 환급. 한
+        번호는 한 계정에서만 쓸 수 있고, 처리 중에는 추가 신청이 안 됩니다.
       </p>
     </form>
   );

@@ -15,16 +15,25 @@ export default async function PrivacyPage() {
           <tr><th>구분</th><th>항목</th><th>수집 시점</th></tr>
         </thead>
         <tbody>
-          <tr><td>필수</td><td>이메일, Google 프로필(이름·사진)</td><td>회원가입</td></tr>
+          <tr><td>필수</td><td>이메일, Google 프로필(이름·사진)</td><td>Google 계정으로 회원가입</td></tr>
+          <tr><td>필수</td><td>이메일, 비밀번호(암호화 저장), 닉네임, 카카오톡 닉네임</td><td>이메일로 회원가입</td></tr>
           <tr><td>자동</td><td>IP, 브라우저, 디바이스 정보</td><td>서비스 이용 중</td></tr>
           <tr><td>결제</td><td>결제 수단 식별값(PG 거래 ID)</td><td>결제 시</td></tr>
-          <tr><td>선택</td><td>닉네임, 타임존, 관심 카테고리</td><td>프로필 설정</td></tr>
+          <tr><td>선택</td><td>닉네임, 카카오톡 닉네임(커뮤니티 오픈채팅 회원 확인·안내용, 비공개), 타임존, 관심 카테고리</td><td>프로필 설정</td></tr>
           <tr><td>선택</td><td>디바이스 모델·OS·Play Integrity 결과</td><td>디바이스 등록</td></tr>
         </tbody>
       </table>
       <p>
         <strong>수집하지 않는 항목:</strong> 주민등록번호, 본인인증 정보, 카드번호 원본(전부 PG 위탁)
       </p>
+      <p>
+        <strong>유료 테스터 시트 관련 추가 수집:</strong> 시트 참여 테스터가 체크인 시 업로드하는
+        앱 실행 화면 스크린샷(비공개 저장소 보관, 해당 앱 등록자와 운영자에게만 공개, 중도 이탈 시
+        삭제·주문 종료 후 1년 보관), 기프티콘 교환 신청 시 입력하는 수신 연락처(휴대폰 번호 또는
+        메신저 ID — 발송 목적 외 사용하지 않으며 처리 완료 후 1년 보관), 구매 전 유의사항 동의 시각.
+        스크린샷에 본인 또는 타인의 개인정보가 포함되지 않도록 주의해 주세요.
+      </p>
+
 
       <h2>제2조 (수집·이용 목적)</h2>
       <ul>
@@ -86,8 +95,8 @@ export default async function PrivacyPage() {
           <tr><th>구분</th><th>내용</th></tr>
         </thead>
         <tbody>
-          <tr><td>책임자</td><td>○○○ (대표)</td></tr>
-          <tr><td>연락처</td><td>privacy@testermatch.com</td></tr>
+          <tr><td>책임자</td><td>낰낰컴퍼니 대표</td></tr>
+          <tr><td>연락처</td><td>admin@knockknock.company</td></tr>
         </tbody>
       </table>
 

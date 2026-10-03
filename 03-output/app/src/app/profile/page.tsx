@@ -54,7 +54,10 @@ export default async function ProfilePage() {
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">닉네임 변경</h2>
           <div className="mt-4">
-            <ProfileForm initialNickname={user.nickname} />
+            <ProfileForm
+              initialNickname={user.nickname}
+              initialKakaoNickname={user.kakaoNickname ?? ""}
+            />
           </div>
         </section>
 

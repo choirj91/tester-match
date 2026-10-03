@@ -47,18 +47,17 @@ export default async function RequestTestersPage({ params }: Props) {
   // 제외 ID (본인 + 이미 매칭)
   const excludeIds = Array.from(new Set([user.id, ...matchedIds]));
 
-  // 후보자 조회 (최근 가입 순, 이메일 포함)
+  // 후보자 조회 (최근 가입 순). 이메일은 조회하지 않는다 — 등록자에게 회원 연락처를 넘기지 않음
   type CandidateRow = {
     id: number;
     nickname: string;
     trust_score: number;
-    email: string;
     created_at: string;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query: any = supabase
     .from("users")
-    .select("id, nickname, trust_score, email, created_at")
+    .select("id, nickname, trust_score, created_at")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(200);
@@ -80,7 +79,7 @@ export default async function RequestTestersPage({ params }: Props) {
         <div className="mt-4">
           <h1 className="text-2xl font-bold text-neutral-900">테스터 요청하기</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            <span className="font-medium">{app.name}</span> · 이메일 주소를 복사하거나 Gmail로 바로 열어 테스트 참여 요청을 보낼 수 있습니다.
+            <span className="font-medium">{app.name}</span> · 선택한 회원에게 사이트 알림으로 테스트 참여 요청을 보냅니다 (앱당 하루 1회, 최대 50명).
           </p>
         </div>
 
@@ -94,7 +93,6 @@ export default async function RequestTestersPage({ params }: Props) {
               id: c.id,
               nickname: c.nickname,
               trust_score: c.trust_score,
-              email: c.email,
             }))}
           />
         </div>

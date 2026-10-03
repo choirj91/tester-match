@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { currentDayN } from "@/lib/checkin";
-import { sendEmail } from "@/lib/email";
-import { matchCompletedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
 import { applyTrustDelta, CHECKIN_TRUST_DELTA } from "@/lib/trust";
-import { PAID_SEAT_LEDGER_REF, appendLedger } from "@/lib/credits";
 import { runAfterResponse } from "@/lib/wait-until";
-import { PAID_SEAT_REWARD, assignSeatSlot } from "@/lib/paid-seats";
+import { assignSeatSlot } from "@/lib/paid-seats";
+import { completePaidSeat, paidSeatVerdict } from "@/lib/seat-rewards";
 import {
   SCREENSHOT_BUCKET,
   SCREENSHOT_MAX_BYTES,
@@ -27,7 +25,9 @@ const MAX_BODY_BYTES = 6 * 1024 * 1024;
 /**
  * 일일 체크인. 유료 시트(paid_order_id) 매칭은 스크린샷 1장이 필수이며,
  * 콘솔 슬롯 로그로도 기록되어 구매자가 증빙을 열람한다 (ADR-0012).
- * 완주 보상: 유료 시트 700 크레딧(기프티콘 교환 가능), 무료 품앗이는 신뢰도만.
+ *
+ * 완주: 무료 품앗이는 14/14 (신뢰도만). 유료 시트는 14일차 체크인 시 12일 이상이면 완주 →
+ * 보상(50 × 일수)은 에스크로에 보류되고 구매자 확정 또는 3일 후 자동 확정으로 지급된다.
  */
 export async function POST(req: Request, { params }: Ctx) {
   const user = await getCurrentUser();
@@ -76,6 +76,8 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // 유료 시트: 스크린샷 필수 — INSERT 전에 검증해 실패 시 체크인 자체가 남지 않게 한다
   let screenshot: File | null = null;
+  let screenshotHash: string | null = null;
+  let comment = "";
   if (isPaidSeat) {
     const contentLength = Number(req.headers.get("content-length") ?? 0);
     if (contentLength > MAX_BODY_BYTES) {
@@ -86,6 +88,8 @@ export async function POST(req: Request, { params }: Ctx) {
     }
     const form = await req.formData().catch(() => null);
     const file = form?.get("screenshot");
+    const rawComment = form?.get("comment");
+    comment = typeof rawComment === "string" ? rawComment.trim().slice(0, 200) : "";
     if (!(file instanceof File) || file.size === 0) {
       return NextResponse.json(
         { ok: false, message: "유료 시트는 앱 실행 화면 스크린샷 1장이 필요합니다." },
@@ -105,6 +109,20 @@ export async function POST(req: Request, { params }: Ctx) {
       );
     }
     screenshot = file;
+
+    // 같은 이미지를 날마다 재사용하는 것을 막는다 (매칭 내 SHA-256 중복 거부)
+    screenshotHash = await sha256Hex(file);
+    const { count: dup } = await supabase
+      .from("checkins")
+      .select("id", { count: "exact", head: true })
+      .eq("match_id", matchId)
+      .eq("screenshot_hash", screenshotHash);
+    if ((dup ?? 0) > 0) {
+      return NextResponse.json(
+        { ok: false, message: "이전에 올린 것과 같은 이미지입니다. 오늘 앱을 실행한 화면을 새로 찍어주세요." },
+        { status: 400 },
+      );
+    }
   }
 
   // 오늘의 체크인 INSERT (UNIQUE: match_id + day_n)
@@ -133,6 +151,8 @@ export async function POST(req: Request, { params }: Ctx) {
       checkinId: checkin.id,
       dayN,
       file: screenshot,
+      hash: screenshotHash,
+      comment,
       userId: user.id,
       nickname: user.nickname,
     });
@@ -158,58 +178,49 @@ export async function POST(req: Request, { params }: Ctx) {
     .from("checkins")
     .select("id", { count: "exact", head: true })
     .eq("match_id", matchId);
+  const checkedDays = count ?? 0;
 
-  if (count === TOTAL_DAYS) {
-    const { data: completedRows } = await supabase
+  let completed = false;
+  let heldAmount = 0;
+
+  if (isPaidSeat && match.paid_order_id != null) {
+    // 방금 체크인했으므로 lastCheckinDay = dayN
+    if (paidSeatVerdict(dayN, checkedDays, dayN) === "complete") {
+      const result = await completePaidSeat(supabase, {
+        matchId,
+        orderId: match.paid_order_id,
+        testerUserId: user.id,
+      });
+      completed = result.completed;
+      heldAmount = result.heldAmount;
+    }
+  } else if (checkedDays === TOTAL_DAYS) {
+    const { data: rows } = await supabase
       .from("matches")
       .update({ status: "completed", day_count: TOTAL_DAYS })
       .eq("id", matchId)
       .eq("status", "active")
       .select("id");
-    const justCompleted = (completedRows ?? []).length > 0;
-
-    // 유료 시트 보상: 14일 전부 스크린샷 증빙이 있어야 지급. 부분 unique 로 이중 지급 불가.
-    let reward = 0;
-    if (justCompleted && isPaidSeat) {
-      const { count: evidenced } = await supabase
-        .from("checkins")
-        .select("id", { count: "exact", head: true })
-        .eq("match_id", matchId)
-        .not("screenshot_url", "is", null);
-      if ((evidenced ?? 0) >= TOTAL_DAYS) {
-        const ledger = await appendLedger(supabase, {
-          userId: user.id,
-          amount: PAID_SEAT_REWARD,
-          type: "earn",
-          refType: PAID_SEAT_LEDGER_REF,
-          refId: matchId,
-          description: "유료 시트 14일 완주 보상",
-        });
-        if (ledger.ok) reward = PAID_SEAT_REWARD;
-        else console.error("[checkins/POST] reward failed", ledger.message);
-      } else {
-        console.error("[checkins/POST] reward withheld — missing evidence", matchId, evidenced);
-      }
+    completed = (rows ?? []).length > 0;
+    if (completed) {
+      await runAfterResponse(notifyFreeCompletion(supabase, match.app_id, user.id));
     }
-    if (match.paid_order_id != null) {
-      await completeOrderIfAllSeatsDone(supabase, match.paid_order_id);
-    }
+  }
 
-    await runAfterResponse(notifyCompletion(supabase, {
-      appId: match.app_id,
-      userId: user.id,
-      nickname: user.nickname,
-      email: user.email,
-      reward,
-    }));
-  } else {
+  if (!completed) {
     await supabase
       .from("matches")
-      .update({ day_count: count ?? dayN })
+      .update({ day_count: Math.min(checkedDays || dayN, TOTAL_DAYS) })
       .eq("id", matchId);
   }
 
-  return NextResponse.json({ ok: true, day_n: dayN, total_checkins: count });
+  return NextResponse.json({
+    ok: true,
+    day_n: dayN,
+    total_checkins: checkedDays,
+    completed,
+    held_amount: heldAmount,
+  });
 }
 
 type Supabase = ReturnType<typeof createSupabaseAdminClient>;
@@ -222,6 +233,8 @@ async function recordSeatScreenshot(
     checkinId: number;
     dayN: number;
     file: File;
+    hash: string | null;
+    comment: string;
     userId: number;
     nickname: string;
   },
@@ -255,14 +268,17 @@ async function recordSeatScreenshot(
     }
 
     const [{ error: ckErr }, { error: logErr }] = await Promise.all([
-      supabase.from("checkins").update({ screenshot_url: path }).eq("id", args.checkinId),
+      supabase
+        .from("checkins")
+        .update({ screenshot_url: path, screenshot_hash: args.hash })
+        .eq("id", args.checkinId),
       supabase.from("paid_order_logs").upsert(
         {
           order_id: args.orderId,
           slot_id: slot.id,
           day_n: args.dayN,
           status: "done",
-          comment: "",
+          comment: args.comment,
           screenshot_path: path,
           logged_by: args.userId,
           updated_at: new Date().toISOString(),
@@ -281,54 +297,18 @@ async function recordSeatScreenshot(
   }
 }
 
-/** 주문의 모든 시트가 완주하면 주문도 완료 처리 (멱등) */
-async function completeOrderIfAllSeatsDone(supabase: Supabase, orderId: number): Promise<void> {
-  const [{ data: order }, { count }] = await Promise.all([
-    supabase.from("paid_tester_orders").select("tester_count").eq("id", orderId).maybeSingle(),
-    supabase
-      .from("matches")
-      .select("id", { count: "exact", head: true })
-      .eq("paid_order_id", orderId)
-      .eq("status", "completed"),
-  ]);
-  if (!order || (count ?? 0) < order.tester_count) return;
-  await supabase
-    .from("paid_tester_orders")
-    .update({ status: "completed", completed_at: new Date().toISOString() })
-    .eq("id", orderId)
-    .in("status", ["paid", "in_progress"]);
+async function sha256Hex(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function notifyCompletion(
-  supabase: Supabase,
-  args: { appId: number; userId: number; nickname: string; email: string; reward: number },
-): Promise<void> {
-  try {
-    const { data: appRow } = await supabase
-      .from("apps")
-      .select("name")
-      .eq("id", args.appId)
-      .maybeSingle();
-    const appName = appRow?.name ?? "앱";
-    if (args.reward > 0) {
-      const tmpl = matchCompletedEmail({
-        testerNickname: args.nickname,
-        appName,
-        reward: args.reward,
-      });
-      await sendEmail({ to: args.email, ...tmpl });
-    }
-    await createNotification({
-      userId: args.userId,
-      type: "match_completed",
-      title: "14일 완주를 달성했습니다!",
-      body:
-        args.reward > 0
-          ? `"${appName}" 유료 시트 완주 — ${args.reward.toLocaleString("ko-KR")} 크레딧 적립 (기프티콘 교환 가능).`
-          : `"${appName}" 테스트 14일 완주 완료. 신뢰도 +14 반영. 수고하셨습니다!`,
-      link: args.reward > 0 ? "/credits" : "/my-tests",
-    });
-  } catch (err) {
-    console.error("[checkins/POST] completion notify failed", err);
-  }
+async function notifyFreeCompletion(supabase: Supabase, appId: number, userId: number): Promise<void> {
+  const { data: appRow } = await supabase.from("apps").select("name").eq("id", appId).maybeSingle();
+  await createNotification({
+    userId,
+    type: "match_completed",
+    title: "14일 완주를 달성했습니다!",
+    body: `"${appRow?.name ?? "앱"}" 테스트 14일 완주 완료. 신뢰도 +14 반영. 수고하셨습니다!`,
+    link: "/my-tests",
+  });
 }

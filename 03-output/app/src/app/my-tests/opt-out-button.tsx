@@ -3,14 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function OptOutButton({ matchId }: { matchId: number }) {
+export function OptOutButton({ matchId, paidSeat = false }: { matchId: number; paidSeat?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
     if (
       !confirm(
-        "테스트를 중도 포기하면 신뢰도가 3점 차감됩니다.\n(무단 이탈 시에는 10점 차감 — 포기하실 거라면 옵트아웃이 유리합니다.)\n\n계속하시겠습니까?",
+        `테스트를 중도 포기하면 신뢰도가 3점 차감됩니다.\n(무단 이탈 시에는 10점 차감 — 포기하실 거라면 옵트아웃이 유리합니다.)${
+          paidSeat
+            ? "\n\n💰 유료 시트: 지금까지 쌓인 적립 예정 크레딧은 모두 사라지고, 올린 스크린샷은 삭제됩니다."
+            : ""
+        }\n\n계속하시겠습니까?`,
       )
     )
       return;

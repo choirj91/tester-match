@@ -11,6 +11,10 @@ export type AppUser = {
   trustScore: number;
   role: "user" | "admin";
   balance: number;
+  /** 카카오톡 오픈채팅 닉네임 (운영자 식별용, 공개 페이지 비노출) */
+  kakaoNickname?: string | null;
+  /** Google 계정으로 인증한 적이 있는가 — 유료 시트 참여 요건 (ADR-0013) */
+  hasGoogle?: boolean;
 };
 
 /**
@@ -35,7 +39,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   const admin = createSupabaseAdminClient();
   const { data, error } = await admin
     .from("users")
-    .select("id, auth_user_id, email, nickname, trust_score, role, groups_joined_at, last_seen_at")
+    .select("id, auth_user_id, email, nickname, kakao_nickname, trust_score, role, groups_joined_at, last_seen_at")
     .eq("auth_user_id", authUser.id)
     .maybeSingle();
 
@@ -89,5 +93,12 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     trustScore: data.trust_score,
     role: data.role,
     balance,
+    kakaoNickname: data.kakao_nickname ?? null,
+    hasGoogle: authProviders(authUser.app_metadata).includes("google"),
   };
+}
+
+function authProviders(appMetadata: { provider?: string; providers?: string[] } | undefined): string[] {
+  if (!appMetadata) return [];
+  return appMetadata.providers ?? (appMetadata.provider ? [appMetadata.provider] : []);
 }

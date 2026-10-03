@@ -18,7 +18,10 @@ export type NotificationType =
   | "reward_granted"
   | "weekly_hot"
   | "paid_seat_open"
-  | "redemption_done";
+  | "redemption_done"
+  | "seat_reward"
+  | "seat_issue"
+  | "tester_request";
 
 type Args = {
   userId: number;
