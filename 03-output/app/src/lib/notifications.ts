@@ -16,7 +16,9 @@ export type NotificationType =
   | "boost_expired"
   | "group_upgrade"
   | "reward_granted"
-  | "weekly_hot";
+  | "weekly_hot"
+  | "paid_seat_open"
+  | "redemption_done";
 
 type Args = {
   userId: number;

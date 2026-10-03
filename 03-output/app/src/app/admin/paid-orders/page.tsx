@@ -5,6 +5,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { PAID_ORDER_STATUS_LABEL, type PaidOrderStatus } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
 import { OrderActions } from "./order-actions";
+import { DigestActions } from "@/app/admin/digest/digest-actions";
+import { OPEN_CHAT_URL } from "@/lib/site";
+import { SEAT_FILLED_MATCH_STATUSES, seatNoticeText } from "@/lib/paid-seats";
 
 export const runtime = "edge";
 export const metadata = { title: "유료 테스터 주문" };
@@ -56,6 +59,21 @@ export default async function AdminPaidOrdersPage() {
     .limit(200);
   const orders = (data ?? []) as unknown as Row[];
 
+  const filled = new Map<number, number>();
+  if (orders.length > 0) {
+    const { data: seatRows } = await supabase
+      .from("matches")
+      .select("paid_order_id")
+      .in(
+        "paid_order_id",
+        orders.map((o) => o.id),
+      )
+      .in("status", [...SEAT_FILLED_MATCH_STATUSES]);
+    for (const m of seatRows ?? []) {
+      if (m.paid_order_id != null) filled.set(m.paid_order_id, (filled.get(m.paid_order_id) ?? 0) + 1);
+    }
+  }
+
   const totalPaidKrw = orders
     .filter((o) => ["paid", "in_progress", "completed"].includes(o.status))
     .reduce((sum, o) => sum + o.amount_krw, 0);
@@ -72,9 +90,10 @@ export default async function AdminPaidOrdersPage() {
         </p>
 
         <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
-          운영 절차: 결제 확인 → tester 계정 실기기 설치·참여 → [테스트 개시] → 매일 체크인 → 14일
-          후 [완료]. 결제 후 취소 시 환불은 토스페이먼츠 대시보드에서 직접 처리 후 [취소]를
-          누르세요. 리뷰·별점 작성 금지 (ADR-0011).
+          운영 절차 (ADR-0012): 결제 확정 시 급구 노출 + 전 회원 알림 자동. [공지 복사] → 오픈채팅
+          붙여넣기. 커뮤니티 테스터가 시트를 채우면 자동 진행(스샷 체크인은 콘솔에서 확인). 7일 내
+          미충원 시트는 환불 또는 운영자 계정 투입(폴백) 후 [테스트 개시]. 결제 취소 환불은 토스
+          대시보드에서 처리 후 [취소].
         </div>
 
         {orders.length === 0 ? (
@@ -92,8 +111,11 @@ export default async function AdminPaidOrdersPage() {
                         {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
                       </span>
                       <p className="font-semibold text-neutral-900">
-                        {o.apps?.name ?? "삭제된 앱"} — {o.tester_count}명 ·{" "}
-                        {formatKrw(o.amount_krw)}원
+                        {o.apps?.name ?? "삭제된 앱"} — 시트{" "}
+                        <span className="text-amber-700">
+                          {filled.get(o.id) ?? 0}/{o.tester_count}
+                        </span>{" "}
+                        · {formatKrw(o.amount_krw)}원
                       </p>
                     </div>
                     <p className="mt-1.5 text-xs text-neutral-500">
@@ -115,6 +137,20 @@ export default async function AdminPaidOrdersPage() {
                     </Link>
                     <OrderActions orderId={o.id} status={o.status} />
                   </div>
+                </div>
+                {o.apps && ["paid", "in_progress"].includes(o.status) && (
+                  <div className="mt-3 border-t border-neutral-100 pt-3">
+                    <DigestActions
+                      message={seatNoticeText({
+                        appName: o.apps.name,
+                        appId: o.apps.id,
+                        seats: Math.max(0, o.tester_count - (filled.get(o.id) ?? 0)),
+                      })}
+                      openChatUrl={OPEN_CHAT_URL}
+                    />
+                  </div>
+                )}
+                <div className="hidden">
                 </div>
               </li>
             ))}

@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { PaidOrderCreateSchema } from "@/lib/validators/paid-order";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
-import { canOrderPaidTesters, newPaidOrderCode, paidTesterAmountKrw } from "@/lib/paid-testers";
+import {
+  canOrderPaidTesters,
+  newPaidOrderCode,
+  paidTesterAmountKrw,
+} from "@/lib/paid-testers";
+import { createCreditsPaidOrder } from "@/lib/paid-orders";
 
 export const runtime = "edge";
+
+const BodySchema = PaidOrderCreateSchema.extend({
+  pay_with: z.enum(["toss", "credits"]).default("toss"),
+});
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -21,7 +30,7 @@ export async function POST(req: Request) {
 
   let payload;
   try {
-    payload = PaidOrderCreateSchema.parse(await req.json());
+    payload = BodySchema.parse(await req.json());
   } catch (err) {
     if (err instanceof ZodError) {
       return NextResponse.json(
@@ -49,11 +58,23 @@ export async function POST(req: Request) {
       { status: 403 },
     );
   }
-  if (app.status === "deleted") {
+  if (app.status !== "matching") {
     return NextResponse.json(
-      { ok: false, message: "삭제된 앱에는 신청할 수 없습니다." },
+      { ok: false, message: "매칭 중 상태의 앱만 신청할 수 있습니다." },
       { status: 409 },
     );
+  }
+
+  if (payload.pay_with === "credits") {
+    const result = await createCreditsPaidOrder({
+      buyer: { id: user.id, nickname: user.nickname },
+      app: { id: app.id, name: app.name },
+      testerCount: payload.tester_count,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ ok: false, message: result.message }, { status: 409 });
+    }
+    return NextResponse.json({ ok: true, order_code: result.orderCode, paid: true });
   }
 
   const orderCode = newPaidOrderCode();
@@ -70,5 +91,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: "주문 생성에 실패했습니다." }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, order_code: orderCode });
+  return NextResponse.json({ ok: true, order_code: orderCode, paid: false });
 }

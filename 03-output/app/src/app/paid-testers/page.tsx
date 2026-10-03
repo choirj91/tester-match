@@ -17,7 +17,7 @@ export const metadata = {
   alternates: { canonical: "/paid-testers" },
   title: "유료 테스터",
   description:
-    "Google Play 비공개 테스트 12명이 부족할 때 — 운영팀 테스터가 1명당 1,000원에 14일간 실기기로 매일 체크인합니다.",
+    "Google Play 비공개 테스트 12명이 부족할 때 — 검증된 커뮤니티 테스터가 1명당 1,000원에 14일간 실기기로 매일 스크린샷 체크인합니다.",
 };
 
 type OrderRow = {
@@ -31,23 +31,23 @@ type OrderRow = {
 };
 
 const STEPS = [
-  { title: "인원 선택·결제", desc: "부족한 인원만큼 1~10명을 선택해 결제합니다. 1명 = 1,000원." },
+  { title: "인원 선택·결제", desc: "부족한 인원만큼 1~10명(시트)을 선택해 결제합니다. 1명 = 1,000원. 보유 크레딧으로도 결제 가능." },
   {
-    title: "운영팀 테스터 참여",
-    desc: "결제 확인 즉시 운영팀이 실제 기기에서 앱을 설치하고 테스트를 시작합니다.",
+    title: "급구 노출 + 전 회원 알림",
+    desc: "결제 즉시 매칭 목록 상단 급구에 노출되고 전 회원에게 알림이 갑니다. 검증된 커뮤니티 테스터가 시트를 선착순으로 채웁니다.",
   },
   {
-    title: "14일 매일 체크인",
-    desc: "매일 앱을 실행하고 체크인을 남깁니다. 앱 상세의 테스터 모니터링에서 실시간 확인.",
+    title: "14일 매일 체크인 + 스크린샷",
+    desc: "시트 테스터는 매일 앱을 실행하고 스크린샷 1장과 함께 체크인합니다. 콘솔에서 테스터별 증빙을 날짜별로 확인.",
   },
-  { title: "완주", desc: "14일을 채우면 프로덕션 액세스 신청 요건의 인원으로 카운트됩니다." },
+  { title: "완주", desc: "14일을 채우면 프로덕션 액세스 신청 요건의 인원으로 카운트됩니다. 테스터는 700 크레딧을 받습니다." },
 ];
 
 const GUARANTEES = [
-  "실제 안드로이드 기기에서 실사용 — 봇·에뮬레이터를 쓰지 않습니다",
-  "리뷰·별점은 절대 남기지 않습니다 (Google Play 정책 준수)",
-  "테스트 개시 전에는 전액 환불",
-  "동시 진행 물량 제한 — 품질을 지킬 수 있는 만큼만 판매",
+  "실제 안드로이드 기기를 쓰는 실사용자 — 봇·에뮬레이터·계정 농장 없음",
+  "리뷰·별점은 절대 유도하지 않습니다 (위반 시 테스터 보상 몰수, Google Play 정책 준수)",
+  "매일 스크린샷 증빙 — 완주해야 보상이 지급되므로 중도 이탈 유인이 낮음",
+  "7일 내 시트가 안 채워지면 해당 인원 전액 환불",
 ];
 
 export default async function PaidTestersPage() {
@@ -85,7 +85,7 @@ export default async function PaidTestersPage() {
           테스터가 부족할 때, 확실한 {formatKrw(PAID_TESTER_PRICE_KRW)}원
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          품앗이로 못 채운 인원을 운영팀 테스터가 채웁니다. 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
+          품앗이로 못 채운 인원을 검증된 커뮤니티 테스터가 채웁니다. 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
           원, 14일간 매일 실기기 체크인.
         </p>
 
@@ -150,7 +150,7 @@ export default async function PaidTestersPage() {
               </Link>
             </div>
           ) : (
-            <OrderForm apps={apps} />
+            <OrderForm apps={apps} balance={user?.balance ?? 0} />
           )}
         </section>
 
@@ -184,8 +184,8 @@ export default async function PaidTestersPage() {
         )}
 
         <p className="mt-10 text-xs leading-relaxed text-neutral-400">
-          유료 테스터는 실사용 기반으로 진행되며, 리뷰·평점 작성이나 인위적 참여는 제공하지
-          않습니다. 환불 기준은{" "}
+          유료 테스터는 커뮤니티 실사용자가 참여하며(완주 시 700 크레딧), 리뷰·평점 작성이나 인위적 참여는
+          제공하지 않습니다. 환불 기준은{" "}
           <Link href="/policies/refund" className="underline underline-offset-2">
             환불 정책
           </Link>

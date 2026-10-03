@@ -10,14 +10,23 @@ import {
 
 type Props = {
   apps: Array<{ id: number; name: string }>;
+  /** 보유 크레딧 — 결제 금액 이상이면 크레딧 결제 선택지 노출 */
+  balance: number;
 };
 
-export function OrderForm({ apps }: Props) {
+type PayWith = "toss" | "credits";
+
+export function OrderForm({ apps, balance }: Props) {
   const router = useRouter();
   const [appId, setAppId] = useState<number>(apps[0]?.id ?? 0);
   const [count, setCount] = useState<number>(PAID_TESTER_MIN_COUNT);
+  const [payWith, setPayWith] = useState<PayWith>("toss");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const amount = paidTesterAmountKrw(count);
+  const canUseCredits = balance >= amount;
+  const effectivePayWith: PayWith = canUseCredits ? payWith : "toss";
 
   const counts = Array.from(
     { length: PAID_TESTER_MAX_COUNT - PAID_TESTER_MIN_COUNT + 1 },
@@ -32,15 +41,24 @@ export function OrderForm({ apps }: Props) {
       const res = await fetch("/api/paid-testers/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ app_id: appId, tester_count: count }),
+        body: JSON.stringify({ app_id: appId, tester_count: count, pay_with: effectivePayWith }),
       });
-      const data = (await res.json()) as { ok: boolean; order_code?: string; message?: string };
+      const data = (await res.json()) as {
+        ok: boolean;
+        order_code?: string;
+        paid?: boolean;
+        message?: string;
+      };
       if (!data.ok || !data.order_code) {
         setError(data.message ?? "주문 생성에 실패했습니다.");
         setSubmitting(false);
         return;
       }
-      router.push(`/paid-testers/checkout?order=${data.order_code}`);
+      router.push(
+        data.paid
+          ? `/paid-testers/success?orderId=${data.order_code}&credits=1`
+          : `/paid-testers/checkout?order=${data.order_code}`,
+      );
     } catch {
       setError("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       setSubmitting(false);
@@ -71,7 +89,7 @@ export function OrderForm({ apps }: Props) {
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-neutral-900">테스터 인원</p>
+        <p className="text-sm font-semibold text-neutral-900">테스터 인원 (시트)</p>
         <div className="mt-2 grid grid-cols-5 gap-2">
           {counts.map((n) => (
             <button
@@ -90,10 +108,37 @@ export function OrderForm({ apps }: Props) {
         </div>
       </div>
 
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-neutral-900">결제 수단</p>
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="radio"
+            name="pay_with"
+            checked={effectivePayWith === "toss"}
+            onChange={() => setPayWith("toss")}
+          />
+          카드·간편결제 (토스페이먼츠)
+        </label>
+        <label
+          className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-neutral-400"}`}
+        >
+          <input
+            type="radio"
+            name="pay_with"
+            disabled={!canUseCredits}
+            checked={effectivePayWith === "credits"}
+            onChange={() => setPayWith("credits")}
+          />
+          보유 크레딧 사용 (잔액 {balance.toLocaleString("ko-KR")})
+          {!canUseCredits && " — 잔액 부족"}
+        </label>
+      </div>
+
       <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-4 py-3">
         <span className="text-sm text-neutral-600">결제 금액</span>
         <span className="text-lg font-bold text-neutral-900">
-          {paidTesterAmountKrw(count).toLocaleString("ko-KR")}원
+          {amount.toLocaleString("ko-KR")}
+          {effectivePayWith === "credits" ? " 크레딧" : "원"}
         </span>
       </div>
 
@@ -104,7 +149,7 @@ export function OrderForm({ apps }: Props) {
         disabled={submitting || !appId}
         className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
       >
-        {submitting ? "주문 생성 중…" : "결제하기"}
+        {submitting ? "주문 생성 중…" : effectivePayWith === "credits" ? "크레딧으로 시트 열기" : "결제하기"}
       </button>
     </form>
   );

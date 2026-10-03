@@ -29,7 +29,7 @@ export default async function MyTestsPage() {
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, status, matched_at, opted_in_at, installed_at, app_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, google_group_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
+      "id, status, matched_at, opted_in_at, installed_at, app_id, paid_order_id, apps!inner(id, name, short_description, store_invite_url, web_invite_url, google_group_url, owner_user_id, users_public_profile!inner(nickname, trust_score)), checkins(id, day_n)",
     )
     .eq("tester_user_id", user.id)
     .order("opted_in_at", { ascending: false });
@@ -41,7 +41,7 @@ export default async function MyTestsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">내 테스트</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 보상 제도는 정식 출시 후 안내 예정입니다.
+            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 💰 유료 시트는 매일 스크린샷 체크인 → 완주 시 700 크레딧.
           </p>
         </header>
 
@@ -91,7 +91,12 @@ export default async function MyTestsPage() {
                             체크인 <strong className="text-trust-600">{checkedCount}</strong>일
                             {" / 14일"}
                           </span>
-                          <span>등록자 {owner?.nickname ?? "—"}</span>
+                          <span>
+                            {m.paid_order_id != null && (
+                              <strong className="text-amber-600">💰 유료 시트 · 완주 700크레딧 · </strong>
+                            )}
+                            등록자 {owner?.nickname ?? "—"}
+                          </span>
                         </div>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100">
                           <div
@@ -139,7 +144,7 @@ export default async function MyTestsPage() {
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {isActive && (
-                        <CheckInButton
+                        <CheckInButton paidSeat={m.paid_order_id != null}
                           matchId={m.id}
                           alreadyCheckedToday={alreadyCheckedToday}
                           expired={expired}

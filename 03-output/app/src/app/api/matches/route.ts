@@ -6,6 +6,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { matchOptInEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
+import {
+  PAID_SEAT_MAX_CONCURRENT,
+  PAID_SEAT_REWARD,
+  assignSeatSlot,
+  countTesterActivePaidSeats,
+  findOpenSeatOrder,
+  isOrderOverfilled,
+} from "@/lib/paid-seats";
 
 export const runtime = "edge";
 
@@ -52,14 +60,28 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (app.required_testers <= 0) {
+  // 2) 유료 시트 우선 배정 (ADR-0012) — 시트가 없으면 무료 정원
+  const seatOrder = await findOpenSeatOrder(supabase, app.id);
+  if (!seatOrder && app.required_testers <= 0) {
     return NextResponse.json(
       { ok: false, message: "이미 정원이 마감되었습니다." },
       { status: 409 },
     );
   }
+  if (seatOrder) {
+    const activeSeats = await countTesterActivePaidSeats(supabase, user.id);
+    if (activeSeats >= PAID_SEAT_MAX_CONCURRENT) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: `유료 시트는 동시에 최대 ${PAID_SEAT_MAX_CONCURRENT}개까지 참여할 수 있습니다.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
 
-  // 2) matches insert. 부분 unique index 가 중복 active 매칭 차단(23505).
+  // 3) matches insert. 부분 unique index 가 중복 active 매칭 차단(23505).
   const now = new Date().toISOString();
   const { data: match, error: matchErr } = await supabase
     .from("matches")
@@ -69,6 +91,8 @@ export async function POST(req: Request) {
       status: "active",
       matched_at: now,
       opted_in_at: now,
+      paid_order_id: seatOrder?.id ?? null,
+      credit_payout: seatOrder ? PAID_SEAT_REWARD : 0,
     })
     .select("id")
     .single();
@@ -84,14 +108,46 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, message: "참여에 실패했습니다." }, { status: 500 });
   }
 
-  // 3) required_testers decrement
-  const newRemaining = app.required_testers - 1;
-  await supabase
-    .from("apps")
-    .update({ required_testers: newRemaining })
-    .eq("id", payload.app_id);
+  // 4) 동시 옵트인 경합 정리 — 시트 초과면 무료 정원으로 강등, 그마저 없으면 취소
+  let paidSeat = seatOrder != null;
+  if (seatOrder && (await isOrderOverfilled(supabase, seatOrder))) {
+    if (app.required_testers > 0) {
+      await supabase
+        .from("matches")
+        .update({ paid_order_id: null, credit_payout: 0 })
+        .eq("id", match.id);
+      paidSeat = false;
+    } else {
+      await supabase.from("matches").delete().eq("id", match.id);
+      return NextResponse.json(
+        { ok: false, message: "방금 시트가 마감되었습니다. 다른 앱을 확인해주세요." },
+        { status: 409 },
+      );
+    }
+  }
 
-  // 4) 앱 등록자에게 매칭 알림 (F-MATCH-06). 실패해도 응답은 성공.
+  let newRemaining = app.required_testers;
+  if (paidSeat && seatOrder) {
+    await assignSeatSlot(supabase, {
+      orderId: seatOrder.id,
+      matchId: match.id,
+      label: user.nickname,
+    });
+    await supabase
+      .from("paid_tester_orders")
+      .update({ status: "in_progress", started_at: now })
+      .eq("id", seatOrder.id)
+      .eq("status", "paid");
+  } else {
+    // 5) 무료 정원 decrement
+    newRemaining = app.required_testers - 1;
+    await supabase
+      .from("apps")
+      .update({ required_testers: newRemaining })
+      .eq("id", payload.app_id);
+  }
+
+  // 6) 앱 등록자에게 매칭 알림 (F-MATCH-06). 실패해도 응답은 성공.
   void notifyOwner({
     ownerUserId: app.owner_user_id,
     appName: app.name,
@@ -101,7 +157,7 @@ export async function POST(req: Request) {
     remainingCount: newRemaining,
   });
 
-  return NextResponse.json({ ok: true, match_id: match.id });
+  return NextResponse.json({ ok: true, match_id: match.id, paid_seat: paidSeat });
 }
 
 async function notifyOwner(args: {

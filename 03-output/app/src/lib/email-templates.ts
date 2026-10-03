@@ -163,7 +163,7 @@ export function paidOrderReceiptEmail(args: {
     <p style="margin:0 0 12px;"><strong>${escapeHtml(args.buyerNickname)}</strong> 님,</p>
     <p style="margin:0 0 16px;">
       <strong>${escapeHtml(args.appName)}</strong> 유료 테스터 신청이 완료되었습니다.
-      운영팀 테스터가 곧 참여를 시작하고, 14일간 매일 실기기에서 체크인합니다.
+      급구 노출과 전 회원 알림이 나갔고, 커뮤니티 테스터가 시트를 채우면 14일간 매일 스크린샷 체크인합니다.
     </p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
       <tr><td style="padding:6px 0;color:#64748b;">인원</td><td>${args.testerCount}명</td></tr>
@@ -249,6 +249,37 @@ export function paidOrdersDailyReportEmail(args: {
     `자동 취소 ${args.autoCanceledCount}건 / 올해 누적 결제 ${args.yearlyPaidCount}건`,
     `${APP_URL}/admin/paid-orders`,
   ].join("\n");
+  return { subject, html, text };
+}
+
+/** 기프티콘 교환 신청 — 관리자 알림 (ADR-0012) */
+export function redemptionRequestedEmail(args: {
+  redemptionId: number;
+  nickname: string;
+  email: string;
+  amount: number;
+  contact: string;
+  note: string;
+}): Email {
+  const amount = args.amount.toLocaleString("ko-KR");
+  const subject = `[Tester Match] 🎁 기프티콘 교환 신청 — ${args.nickname} ${amount} 크레딧`;
+  const html = layoutHtml(`
+    <p style="margin:0 0 16px;font-weight:700;">기프티콘 교환 신청이 들어왔습니다.</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+      <tr><td style="padding:6px 0;color:#64748b;">신청자</td><td>${escapeHtml(args.nickname)} (${escapeHtml(args.email)})</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">금액</td><td><strong>${amount} 크레딧</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">수신 연락처</td><td>${escapeHtml(args.contact)}</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">메모</td><td>${escapeHtml(args.note || "-")}</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">신청번호</td><td>#${args.redemptionId}</td></tr>
+    </table>
+    <p style="margin:24px 0 0;">
+      <a href="${APP_URL}/admin/redemptions"
+         style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
+        교환 처리하기
+      </a>
+    </p>
+  `);
+  const text = `기프티콘 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
   return { subject, html, text };
 }
 

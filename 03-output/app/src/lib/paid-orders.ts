@@ -14,6 +14,9 @@ import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrderAdminEmail, paidOrderReceiptEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { TOSS_ALREADY_PROCESSED, confirmTossPayment } from "@/lib/toss";
+import { appendLedger } from "@/lib/credits";
+import { activatePaidOrder } from "@/lib/paid-seats";
+import { newPaidOrderCode, paidTesterAmountKrw } from "@/lib/paid-testers";
 
 type OrderWithApp = {
   id: number;
@@ -130,6 +133,12 @@ export async function confirmPaidTesterOrder(args: {
 
   // 7) 알림 — 실제 전이가 일어난 호출에서만, 실패해도 주문은 성공 처리
   if (didTransition) {
+    await activatePaidOrder(supabase, {
+      orderId: order.id,
+      appId: order.app_id,
+      appName: summary.appName,
+      seats: order.tester_count,
+    });
     await notifyPaidOrder(order, summary);
   }
 
@@ -166,4 +175,84 @@ async function notifyPaidOrder(
   } catch (err) {
     console.error("[paid-orders] notify failed", err);
   }
+}
+
+export type CreditsOrderResult =
+  | { ok: true; orderCode: string }
+  | { ok: false; message: string };
+
+/**
+ * 보유 크레딧으로 시트 구매 — 토스 없이 즉시 paid. 원장 spend → payments(credits) → 주문 → 활성화.
+ * 잔액 검증은 appendLedger 가 수행한다.
+ */
+export async function createCreditsPaidOrder(args: {
+  buyer: { id: number; nickname: string };
+  app: { id: number; name: string };
+  testerCount: number;
+}): Promise<CreditsOrderResult> {
+  const supabase = createSupabaseAdminClient();
+  const amount = paidTesterAmountKrw(args.testerCount);
+  const orderCode = newPaidOrderCode();
+
+  const { data: order, error: orderErr } = await supabase
+    .from("paid_tester_orders")
+    .insert({
+      order_code: orderCode,
+      app_id: args.app.id,
+      buyer_user_id: args.buyer.id,
+      tester_count: args.testerCount,
+      amount_krw: amount,
+    })
+    .select("id")
+    .single();
+  if (orderErr || !order) {
+    console.error("[paid-orders] credits order insert failed", orderErr);
+    return { ok: false, message: "주문 생성에 실패했습니다." };
+  }
+
+  const ledger = await appendLedger(supabase, {
+    userId: args.buyer.id,
+    amount: -amount,
+    type: "spend",
+    refType: "paid_order",
+    refId: order.id,
+    description: `유료 테스터 ${args.testerCount}명 — ${args.app.name}`,
+  });
+  if (!ledger.ok) {
+    await supabase
+      .from("paid_tester_orders")
+      .update({ status: "canceled", admin_note: "크레딧 잔액 부족으로 자동 취소" })
+      .eq("id", order.id);
+    return { ok: false, message: ledger.message };
+  }
+
+  const nowIso = new Date().toISOString();
+  const { data: payment } = await supabase
+    .from("payments")
+    .insert({
+      user_id: args.buyer.id,
+      provider: "credits",
+      provider_tx_id: `credits_${orderCode}`,
+      amount_krw: amount,
+      purpose: "paid_testers",
+      ref_app_id: args.app.id,
+      status: "completed",
+      paid_at: nowIso,
+    })
+    .select("id")
+    .maybeSingle();
+
+  await supabase
+    .from("paid_tester_orders")
+    .update({ status: "paid", payment_id: payment?.id ?? null, paid_at: nowIso })
+    .eq("id", order.id)
+    .eq("status", "pending");
+
+  await activatePaidOrder(supabase, {
+    orderId: order.id,
+    appId: args.app.id,
+    appName: args.app.name,
+    seats: args.testerCount,
+  });
+  return { ok: true, orderCode };
 }

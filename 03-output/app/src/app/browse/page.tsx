@@ -7,6 +7,7 @@ import { APP_STATUS_LABEL, APP_STATUS_ORDER, BROWSE_STATUSES } from "@/lib/app-s
 import type { AppStatus } from "@/lib/app-status";
 import { BrowseControls } from "./browse-controls";
 import type { SortKey } from "./browse-controls";
+import { PAID_SEAT_REWARD, countOpenSeatsByApp } from "@/lib/paid-seats";
 
 export const runtime = "edge";
 export const metadata = { title: "매칭 가능 앱" };
@@ -50,6 +51,18 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+function SeatBadge({ n }: { n: number }) {
+  if (n <= 0) return null;
+  return (
+    <span
+      title={`유료 시트 ${n}명 · 14일 완주 시 ${PAID_SEAT_REWARD} 크레딧`}
+      className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white"
+    >
+      💰 {n}시트
+    </span>
+  );
+}
+
 function getPageNumbers(current: number, total: number): (number | "...")[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const nums: (number | "...")[] = [1];
@@ -80,7 +93,7 @@ function StatusBadge({ status }: { status: string }) {
 
 // ── 카드 뷰 ──────────────────────────────────────────────────────────
 
-function CardGrid({ apps }: { apps: BrowseApp[] }) {
+function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, number> }) {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {apps.map((app) => {
@@ -94,6 +107,7 @@ function CardGrid({ apps }: { apps: BrowseApp[] }) {
               <div className="flex items-start justify-between gap-3">
                 <h2 className="truncate text-base font-semibold text-neutral-900">{app.name}</h2>
                 <div className="flex shrink-0 items-center gap-1.5">
+                  <SeatBadge n={seats.get(app.id) ?? 0} />
                   {app.is_boost && (
                     <span className="rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                       BOOST
@@ -126,7 +140,7 @@ function CardGrid({ apps }: { apps: BrowseApp[] }) {
 
 // ── 리스트 뷰 ─────────────────────────────────────────────────────────
 
-function ListView({ apps }: { apps: BrowseApp[] }) {
+function ListView({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, number> }) {
   return (
     <ul className="divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-white shadow-sm">
       {apps.map((app) => {
@@ -144,6 +158,7 @@ function ListView({ apps }: { apps: BrowseApp[] }) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-sm font-semibold text-neutral-900">{app.name}</span>
+                  <SeatBadge n={seats.get(app.id) ?? 0} />
                   {app.is_boost && (
                     <span className="shrink-0 rounded-full bg-spark-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
                       BOOST
@@ -314,6 +329,11 @@ export default async function BrowsePage({
     apps = (data as BrowseApp[] | null) ?? [];
   }
 
+  const seats = await countOpenSeatsByApp(
+    supabase,
+    [...boostApps, ...apps].map((a) => a.id),
+  );
+
   const total = nonBoostTotal + boostApps.length;
 
   const totalPages = Math.max(1, Math.ceil(nonBoostTotal / PAGE_SIZE));
@@ -346,11 +366,11 @@ export default async function BrowsePage({
                   </h2>
                   <span className="text-[11px] text-neutral-400">매번 랜덤 순서</span>
                 </div>
-                {view === "card" ? <CardGrid apps={boostApps} /> : <ListView apps={boostApps} />}
+                {view === "card" ? <CardGrid apps={boostApps} seats={seats} /> : <ListView apps={boostApps} seats={seats} />}
               </section>
             )}
             <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
-            {view === "card" ? <CardGrid apps={apps} /> : <ListView apps={apps} />}
+            {view === "card" ? <CardGrid apps={apps} seats={seats} /> : <ListView apps={apps} seats={seats} />}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
           </>
         ) : (

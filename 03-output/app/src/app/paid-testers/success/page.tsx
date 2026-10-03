@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
-import { confirmPaidTesterOrder } from "@/lib/paid-orders";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { confirmPaidTesterOrder, type ConfirmPaidOrderResult } from "@/lib/paid-orders";
 
 export const runtime = "edge";
 export const metadata = {
@@ -9,26 +10,63 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
+/** 크레딧 결제 주문 — 토스 confirm 없이 DB 상태만 보여준다 */
+async function loadCreditsOrder(orderCode: string, userId: number): Promise<ConfirmPaidOrderResult> {
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase
+    .from("paid_tester_orders")
+    .select("order_code, tester_count, amount_krw, status, buyer_user_id, apps(name)")
+    .eq("order_code", orderCode)
+    .maybeSingle<{
+      order_code: string;
+      tester_count: number;
+      amount_krw: number;
+      status: string;
+      buyer_user_id: number;
+      apps: { name: string } | null;
+    }>();
+  if (!data || data.buyer_user_id !== userId || !["paid", "in_progress", "completed"].includes(data.status)) {
+    return { ok: false, message: "주문을 찾을 수 없습니다." };
+  }
+  return {
+    ok: true,
+    alreadyPaid: true,
+    order: {
+      orderCode: data.order_code,
+      appName: data.apps?.name ?? "앱",
+      testerCount: data.tester_count,
+      amountKrw: data.amount_krw,
+    },
+  };
+}
+
 export default async function PaymentSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ paymentKey?: string; orderId?: string; amount?: string }>;
+  searchParams: Promise<{ paymentKey?: string; orderId?: string; amount?: string; credits?: string }>;
 }) {
-  const { paymentKey, orderId, amount } = await searchParams;
+  const { paymentKey, orderId, amount, credits } = await searchParams;
   const user = await getCurrentUser();
 
-  const amountNumber = Number(amount);
-  const valid =
-    typeof paymentKey === "string" &&
-    paymentKey.length > 0 &&
-    typeof orderId === "string" &&
-    orderId.length > 0 &&
-    Number.isInteger(amountNumber) &&
-    amountNumber > 0;
-
-  const result = valid
-    ? await confirmPaidTesterOrder({ paymentKey, orderId, amount: amountNumber })
-    : ({ ok: false, message: "결제 정보가 올바르지 않습니다." } as const);
+  let result: ConfirmPaidOrderResult;
+  if (credits === "1") {
+    result =
+      user && orderId
+        ? await loadCreditsOrder(orderId, user.id)
+        : { ok: false, message: "로그인이 필요합니다." };
+  } else {
+    const amountNumber = Number(amount);
+    const valid =
+      typeof paymentKey === "string" &&
+      paymentKey.length > 0 &&
+      typeof orderId === "string" &&
+      orderId.length > 0 &&
+      Number.isInteger(amountNumber) &&
+      amountNumber > 0;
+    result = valid
+      ? await confirmPaidTesterOrder({ paymentKey, orderId, amount: amountNumber })
+      : { ok: false, message: "결제 정보가 올바르지 않습니다." };
+  }
 
   return (
     <>
@@ -37,18 +75,19 @@ export default async function PaymentSuccessPage({
         {result.ok ? (
           <>
             <p className="text-4xl">✅</p>
-            <h1 className="mt-4 text-2xl font-bold text-neutral-900">결제가 완료되었습니다</h1>
+            <h1 className="mt-4 text-2xl font-bold text-neutral-900">시트가 열렸습니다</h1>
             <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 text-left text-sm">
               <p className="font-semibold text-neutral-900">{result.order.appName}</p>
               <p className="mt-2 text-neutral-600">
-                유료 테스터 {result.order.testerCount}명 ·{" "}
-                {result.order.amountKrw.toLocaleString("ko-KR")}원
+                유료 시트 {result.order.testerCount}명 ·{" "}
+                {result.order.amountKrw.toLocaleString("ko-KR")}
+                {credits === "1" ? " 크레딧" : "원"}
               </p>
               <p className="mt-1 text-xs text-neutral-400">주문번호 {result.order.orderCode}</p>
             </div>
             <p className="mt-6 text-sm leading-relaxed text-neutral-600">
-              운영팀이 확인 후 곧 테스트를 시작합니다. 진행 상황은 앱 상세의 테스터
-              모니터링에서 확인할 수 있고, 신청 완료 메일도 함께 발송되었습니다.
+              앱이 급구 상단에 노출되고 전 회원에게 알림이 발송되었습니다. 테스터가 시트를 채우면
+              콘솔에서 매일 스크린샷 증빙을 확인할 수 있습니다.
             </p>
           </>
         ) : (
@@ -64,10 +103,10 @@ export default async function PaymentSuccessPage({
         )}
         <div className="mt-8 flex justify-center gap-3">
           <Link
-            href="/paid-testers"
+            href="/console"
             className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-trust-700"
           >
-            주문 현황 보기
+            콘솔에서 보기
           </Link>
           <Link
             href="/apps"

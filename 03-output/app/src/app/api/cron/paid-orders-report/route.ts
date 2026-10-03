@@ -7,7 +7,6 @@ import { CONTACT_EMAIL } from "@/lib/site";
 
 export const runtime = "edge";
 
-const OPERATOR_EMAIL_PATTERN = "tester%@knockknock.company";
 const PENDING_EXPIRY_HOURS = 24;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -63,12 +62,6 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
   const orders = (orderData ?? []) as unknown as OrderRow[];
 
-  // 3) 운영자 테스터 계정
-  const { data: operators } = await supabase
-    .from("users")
-    .select("id")
-    .like("email", OPERATOR_EMAIL_PATTERN);
-  const operatorIds = (operators ?? []).map((u) => u.id);
 
   const todayStartIso = kstDayStartIso(now);
   const reportRows = [];
@@ -77,12 +70,12 @@ export async function GET(request: Request) {
     let activeMatches = 0;
     let checkedInToday = 0;
 
-    if (operatorIds.length > 0) {
+    {
       const { data: matches } = await supabase
         .from("matches")
         .select("id")
         .eq("app_id", order.app_id)
-        .in("tester_user_id", operatorIds)
+        .eq("paid_order_id", order.id)
         .in("status", ["active", "completed"]);
       const matchIds = (matches ?? []).map((m) => m.id);
       activeMatches = matchIds.length;
