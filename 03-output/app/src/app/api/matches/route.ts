@@ -124,7 +124,16 @@ export async function POST(req: Request) {
 
   // 4) 동시 옵트인 경합 정리 — 시트 초과면 무료 정원으로 강등, 그마저 없으면 취소
   let paidSeat = seatOrder != null;
-  if (seatOrder && (await isOrderOverfilled(supabase, seatOrder))) {
+  const overfilled = seatOrder ? await isOrderOverfilled(supabase, seatOrder) : false;
+  if (overfilled === null) {
+    // 시트 점유를 확인하지 못했다 — 방금 만든 참여를 지우고 다시 시도하게 한다
+    await supabase.from("matches").delete().eq("id", match.id);
+    return NextResponse.json(
+      { ok: false, message: "시트 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요." },
+      { status: 500 },
+    );
+  }
+  if (seatOrder && overfilled) {
     const { error: demoteErr } =
       app.required_testers > 0
         ? await supabase

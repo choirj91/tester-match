@@ -16,10 +16,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { appendLedger } from "@/lib/credits";
 import { confirmPaidTesterOrder } from "@/lib/paid-orders";
 import {
+  AUTO_CANCEL_NOTE_PREFIX,
+  REFUND_FAILED_NOTE_PREFIX,
   attentionNote,
   decidePendingOrder,
   hasAttentionNote,
   resweepFilter,
+  won,
 } from "@/lib/paid-order-sweep-rules";
 import {
   SEAT_OPEN_STATUSES,
@@ -73,8 +76,6 @@ export type QueryResult<T> = { data: T[] | null; error: unknown };
 
 export const OPEN_ORDER_SELECT =
   "id, order_code, app_id, tester_count, status, paid_at, seats_closed, fulfillment, admin_note, apps(name, status)";
-
-export const won = (n: number): string => n.toLocaleString("ko-KR");
 
 /** 스윕 대상 조회 — 실패를 "대상 없음"으로 읽으면 마감·환불이 조용히 멈춘다 → 예외 */
 function rowsOrThrow<T>(result: QueryResult<T>, label: string): T[] {
@@ -169,7 +170,7 @@ async function cancelPending(
       .from("paid_tester_orders")
       .update({
         status: "canceled",
-        admin_note: "자동 취소 — 24시간 미결제",
+        admin_note: `${AUTO_CANCEL_NOTE_PREFIX} — 24시간 미결제`,
         swept_at: now.toISOString(),
       })
       .eq("id", order.id)
@@ -252,10 +253,20 @@ async function sweepOneOpen(
     }
     if (result.refund && !result.refund.ok) {
       alerts.push(
-        `환불 기록 실패: "${appName}" (${order.order_code}) — 미충원 ${result.unfilled}시트. 다음 스윕에서 재시도.`,
+        result.reverted
+          ? `시트 마감 실패: "${appName}" (${order.order_code}) — 마감을 끝내지 못해 되돌렸습니다. 다음 스윕에서 재시도.`
+          : `환불 기록 실패: "${appName}" (${order.order_code}) — 마감됐지만 미충원 시트 환불이 빠졌습니다. 수동 조정 필요.`,
       );
-      // closeOrderSeats 가 남긴 "환불 실패" 메모가 있으면 그대로 둔다
-      return { closed: false, note: undefined };
+      // 되돌린 경우: 성공하면 지워지는 "확인 필요" 메모로 매일 리포트에 올린다.
+      // 되돌리지 못한 경우: closeOrderSeats 가 남긴 "환불 실패" 메모를 그대로 둔다
+      const keepExisting = order.admin_note?.startsWith(REFUND_FAILED_NOTE_PREFIX) ?? false;
+      return {
+        closed: false,
+        note:
+          result.reverted && !keepExisting
+            ? attentionNote("시트 마감 실패 — 다음 스윕 재시도")
+            : undefined,
+      };
     }
     if (result.unfilled > 0 && result.refund) {
       alerts.push(
@@ -305,7 +316,8 @@ async function sweepOpenOrders(
     if (error) console.error("[paid-order-sweep] swept_at update failed", order.id, error);
     else stamped++;
   }
-  // 기록에 실패한 주문은 다음 호출에 또 잡힌다 — 진전이 없으면 반복을 멈춘다
+  // 기록에 실패한 주문은 다음 호출에 또 잡힌다 — 하나도 기록하지 못했으면 잡을 실패시켜 사람이 보게 한다
+  if (orders.length > 0 && stamped === 0) throw new Error("스윕 시각(swept_at) 기록 실패");
   return {
     handled: orders.length,
     closed,

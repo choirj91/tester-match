@@ -126,13 +126,38 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   // 오늘의 체크인 INSERT (UNIQUE: match_id + day_n)
-  const { data: checkin, error: insErr } = await supabase
+  const { data: inserted, error: insErr } = await supabase
     .from("checkins")
     .insert({ match_id: matchId, day_n: dayN })
     .select("id")
     .single();
 
-  if (insErr || !checkin) {
+  // 유료 시트: 이전 요청이 체크인 행만 남기고 스크린샷 저장 전에 끊겼다면 그 행에 증빙을 이어 붙인다.
+  // 방금 만들어진 행은 아직 처리 중일 수 있으므로(동시 제출) 일정 시간이 지난 행만 이어 붙인다.
+  let resumed = false;
+  let checkin: { id: number } | null = inserted;
+  if (!checkin && insErr?.code === "23505" && isPaidSeat) {
+    const { data: orphan } = await supabase
+      .from("checkins")
+      .select("id, checked_in_at")
+      .eq("match_id", matchId)
+      .eq("day_n", dayN)
+      .is("screenshot_url", null)
+      .maybeSingle();
+    if (orphan) {
+      const ageMs = Date.now() - new Date(orphan.checked_in_at).getTime();
+      if (ageMs < ORPHAN_RESUME_AFTER_MS) {
+        return NextResponse.json(
+          { ok: false, message: "방금 보낸 체크인을 처리 중입니다. 잠시 후 다시 시도해주세요." },
+          { status: 409 },
+        );
+      }
+      checkin = { id: orphan.id };
+      resumed = true;
+    }
+  }
+
+  if (!checkin) {
     if (insErr?.code === "23505") {
       return NextResponse.json(
         { ok: false, message: "오늘은 이미 체크인했습니다." },
@@ -149,6 +174,7 @@ export async function POST(req: Request, { params }: Ctx) {
       orderId: match.paid_order_id,
       matchId,
       checkinId: checkin.id,
+      resumed,
       dayN,
       file: screenshot,
       hash: screenshotHash,
@@ -156,16 +182,22 @@ export async function POST(req: Request, { params }: Ctx) {
       userId: user.id,
       nickname: user.nickname,
     });
-    if (!stored) {
-      await supabase.from("checkins").delete().eq("id", checkin.id);
+    if (stored === "taken") {
+      // 다른 요청이 같은 행에 먼저 증빙을 붙였다 — 오늘 체크인은 이미 끝났다
+      return NextResponse.json({ ok: false, message: "오늘은 이미 체크인했습니다." }, { status: 409 });
+    }
+    if (stored === "failed") {
+      // 새로 만든 행만 지운다 — 이어 붙이던 행은 남겨 다시 시도할 수 있게 한다
+      if (!resumed) await supabase.from("checkins").delete().eq("id", checkin.id);
       return NextResponse.json(
         { ok: false, message: "스크린샷 저장에 실패했습니다. 잠시 후 다시 시도해주세요." },
-        { status: 502 },
+        // 502 는 Cloudflare 가 응답 본문을 평문으로 바꿔 안내 문구가 사라진다 → 500
+        { status: 500 },
       );
     }
   }
 
-  // 신뢰도 +1 — UNIQUE(match_id, day_n) 통과 시에만 도달 (하루 1회)
+  // 신뢰도 +1 — 하루 1회. 이어 붙인 체크인은 원래 요청이 증빙 저장 전에 끊긴 것이라 아직 가산되지 않았다
   await applyTrustDelta(supabase, {
     userId: user.id,
     delta: CHECKIN_TRUST_DELTA,
@@ -174,10 +206,12 @@ export async function POST(req: Request, { params }: Ctx) {
     refId: matchId,
   });
 
-  const { count } = await supabase
+  // 유료 시트는 스크린샷 증빙이 있는 날만 출석으로 센다 — 완주 판정과 보상 계산이 같은 기준을 쓴다
+  const countQuery = supabase
     .from("checkins")
     .select("id", { count: "exact", head: true })
     .eq("match_id", matchId);
+  const { count } = await (isPaidSeat ? countQuery.not("screenshot_url", "is", null) : countQuery);
   const checkedDays = count ?? 0;
 
   let completed = false;
@@ -225,12 +259,17 @@ export async function POST(req: Request, { params }: Ctx) {
 
 type Supabase = ReturnType<typeof createSupabaseAdminClient>;
 
+/** 스크린샷 없는 체크인 행을 "끊긴 요청의 잔재"로 보고 이어 붙이기까지 기다리는 시간 */
+const ORPHAN_RESUME_AFTER_MS = 2 * 60 * 1000;
+
 async function recordSeatScreenshot(
   supabase: Supabase,
   args: {
     orderId: number;
     matchId: number;
     checkinId: number;
+    /** 끊긴 요청이 남긴 행에 이어 붙이는 중인지 — 그 행에 아직 증빙이 없을 때만 기록한다 */
+    resumed: boolean;
     dayN: number;
     file: File;
     hash: string | null;
@@ -238,7 +277,7 @@ async function recordSeatScreenshot(
     userId: number;
     nickname: string;
   },
-): Promise<boolean> {
+): Promise<"stored" | "failed" | "taken"> {
   try {
     const { data: existing } = await supabase
       .from("paid_order_slots")
@@ -254,7 +293,7 @@ async function recordSeatScreenshot(
       }).then((s) => (s ? { id: s.slotId, slot_no: s.slotNo } : null)));
     if (!slot) {
       console.error("[checkins/POST] no slot for match", args.matchId);
-      return false;
+      return "failed";
     }
 
     const ext = SCREENSHOT_MIME_TO_EXT[args.file.type];
@@ -264,14 +303,16 @@ async function recordSeatScreenshot(
       .upload(path, args.file, { contentType: args.file.type, upsert: true });
     if (upErr) {
       console.error("[checkins/POST] screenshot upload failed", upErr);
-      return false;
+      return "failed";
     }
 
-    const [{ error: ckErr }, { error: logErr }] = await Promise.all([
-      supabase
-        .from("checkins")
-        .update({ screenshot_url: path, screenshot_hash: args.hash })
-        .eq("id", args.checkinId),
+    const evidence = supabase
+      .from("checkins")
+      .update({ screenshot_url: path, screenshot_hash: args.hash })
+      .eq("id", args.checkinId);
+    const [{ data: ckRows, error: ckErr }, { error: logErr }] = await Promise.all([
+      // 이어 붙이는 행은 아직 증빙이 없을 때만 기록 — 동시에 들어온 재시도 중 하나만 성립한다
+      (args.resumed ? evidence.is("screenshot_url", null) : evidence).select("id"),
       supabase.from("paid_order_logs").upsert(
         {
           order_id: args.orderId,
@@ -288,12 +329,14 @@ async function recordSeatScreenshot(
     ]);
     if (ckErr || logErr) {
       console.error("[checkins/POST] evidence record failed", ckErr, logErr);
-      return false;
+      return "failed";
     }
-    return true;
+    // 0행 갱신: 이어 붙이던 행이면 다른 요청이 먼저 증빙을 붙인 것, 새 행이면 행이 사라진 것
+    if (!ckRows || ckRows.length === 0) return args.resumed ? "taken" : "failed";
+    return "stored";
   } catch (err) {
     console.error("[checkins/POST] recordSeatScreenshot", err);
-    return false;
+    return "failed";
   }
 }
 

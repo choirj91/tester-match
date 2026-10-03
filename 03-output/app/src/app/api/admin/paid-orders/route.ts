@@ -26,6 +26,7 @@ type OrderRow = {
   seats_closed: boolean;
   refund_due_krw: number;
   refunded_krw: number;
+  admin_note: string | null;
 };
 
 const fail = (message: string, status: number) =>
@@ -34,15 +35,20 @@ const fail = (message: string, status: number) =>
 const STALE_STATE = "전이할 수 없는 상태입니다. 새로고침 후 다시 확인해주세요.";
 
 /** 시트 마감: 빈 시트를 닫고 환불 처리 (충원 7일 자동 마감의 수동 버전). 진행 중 테스터는 그대로. */
-async function closeSeats(supabase: SupabaseClient, orderId: number) {
-  const result = await closeOrderSeats(supabase, orderId, "운영자가 시트를 마감했습니다");
+async function closeSeats(supabase: SupabaseClient, order: OrderRow) {
+  const result = await closeOrderSeats(supabase, order.id, "운영자가 시트를 마감했습니다");
   if (!result) {
     // 이미 마감된 주문이면 종결 판정만 다시 돌린다 (종결 갱신이 실패해 열린 채 남은 주문의 복구)
-    await settleOrderIfDone(supabase, orderId);
+    await settleOrderIfDone(supabase, order.id);
     return fail("이미 마감됐거나 마감할 수 없는 상태입니다.", 409);
   }
   if (result.refund && !result.refund.ok) {
-    return fail("미충원 시트 환불 기록에 실패해 마감을 되돌렸습니다. 다시 시도해주세요.", 500);
+    return fail(
+      result.reverted
+        ? "마감을 끝내지 못해 되돌렸습니다. 잠시 후 다시 시도해주세요."
+        : "시트는 마감됐지만 미충원 시트 환불을 기록하지 못했습니다 — 수동 조정이 필요합니다 (주문 메모 참고).",
+      500,
+    );
   }
   return NextResponse.json({ ok: true, unfilled: result.unfilled, refund: result.refund });
 }
@@ -72,6 +78,8 @@ async function startOperator(supabase: SupabaseClient, order: OrderRow) {
     })
     .eq("id", order.id)
     .eq("status", "paid")
+    .eq("fulfillment", "community")
+    .eq("seats_closed", false)
     .select("id, status");
   if (error) {
     console.error("[admin/paid-orders] start failed", error);
@@ -102,17 +110,47 @@ async function completeOrder(supabase: SupabaseClient, order: OrderRow) {
   return NextResponse.json({ ok: true, status: data[0].status });
 }
 
+/** 전액 취소가 가능한 상태 — 운영자 처리 주문은 진행 중에도 취소(환불)할 수 있다 */
+function cancelableStatuses(order: OrderRow): string[] {
+  return order.fulfillment === "operator" ? ["pending", "paid", "in_progress"] : ["pending", "paid"];
+}
+
+/** 환불에 실패한 취소를 되돌린다 (상태·메모). 되돌리기도 실패하면 "환불 실패" 메모를 남긴다 (리포트 경보). */
+async function revertCancel(supabase: SupabaseClient, order: OrderRow): Promise<boolean> {
+  const { error } = await supabase
+    .from("paid_tester_orders")
+    .update({ status: order.status, admin_note: order.admin_note })
+    .eq("id", order.id)
+    .eq("status", "canceled");
+  if (!error) return true;
+  console.error("[admin/paid-orders] cancel revert failed", order.id, error);
+  await supabase
+    .from("paid_tester_orders")
+    .update({
+      admin_note: `${REFUND_FAILED_NOTE_PREFIX} — 수동 조정 필요 (관리자 취소 후 전액 환불 미처리)`,
+    })
+    .eq("id", order.id);
+  return false;
+}
+
 /**
  * 취소 = 전액 환불. 테스터가 참여했거나 시트가 마감된 커뮤니티 주문은 거부한다 (부분 환불이 이미 돌았을 수 있다).
- * 상태를 먼저 바꾸고(조건부 UPDATE 가 동시 실행을 한 번으로 만든다) 환불한다. 환불이 실패하면 상태를 되돌려
- * 다시 누를 수 있게 하고, 되돌리기도 실패하면 "환불 실패" 메모를 남긴다.
+ * 상태를 먼저 바꾸고(읽은 상태 그대로일 때만 — 조건부 UPDATE 가 동시 실행을 한 번으로 만든다) 환불한다.
+ * 환불이 실패하면 되돌려 다시 누를 수 있게 한다.
  */
 async function cancelOrder(supabase: SupabaseClient, order: OrderRow, adminNickname: string) {
-  const { count: filled } = await supabase
+  if (!cancelableStatuses(order).includes(order.status)) return fail(STALE_STATE, 409);
+
+  const { count: filled, error: countErr } = await supabase
     .from("matches")
     .select("id", { count: "exact", head: true })
     .eq("paid_order_id", order.id)
     .in("status", [...SEAT_FILLED_MATCH_STATUSES]);
+  // 참여자 수를 모르면 취소하지 않는다 — 0명으로 읽으면 진행 중인 주문을 전액 환불하게 된다
+  if (countErr) {
+    console.error("[admin/paid-orders] seat count failed", order.id, countErr);
+    return fail("참여 테스터 수를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.", 500);
+  }
   if ((filled ?? 0) > 0) {
     return fail(
       `테스터 ${filled}명이 참여한 주문은 전액 취소할 수 없습니다. [시트 마감]으로 빈 시트만 환불하세요.`,
@@ -120,46 +158,31 @@ async function cancelOrder(supabase: SupabaseClient, order: OrderRow, adminNickn
     );
   }
 
-  const previousStatus = order.status;
   let flip = supabase
     .from("paid_tester_orders")
     .update({ status: "canceled", admin_note: `관리자 취소 (${adminNickname})` })
     .eq("id", order.id)
-    .in("status", ["pending", "paid"]);
+    .eq("status", order.status);
   // 시트 마감(빈 시트 환불)과 동시에 실행돼도 둘 중 하나만 성립하게 한다
   if (order.fulfillment === "community") flip = flip.eq("seats_closed", false);
-  const { data, error } = await flip.select("id, status");
+  const { data, error } = await flip.select("id");
   if (error) {
     console.error("[admin/paid-orders] cancel failed", error);
     return fail("갱신에 실패했습니다.", 500);
   }
   if (!data || data.length === 0) {
-    return fail("취소할 수 없는 상태입니다 (이미 종결됐거나 시트가 마감됨). 새로고침 후 확인해주세요.", 409);
+    return fail("취소할 수 없는 상태입니다 (방금 상태가 바뀌었거나 시트가 마감됨). 새로고침 후 확인해주세요.", 409);
   }
 
   const refund = await refundCreditsOrder(supabase, order.id, "관리자 취소");
   if (refund.ok) return NextResponse.json({ ok: true, status: "canceled", refund: refund.kind });
 
-  const { error: revertErr } = await supabase
-    .from("paid_tester_orders")
-    .update({ status: previousStatus })
-    .eq("id", order.id)
-    .eq("status", "canceled");
-  if (revertErr) {
-    console.error("[admin/paid-orders] cancel revert failed", order.id, revertErr);
-    await supabase
-      .from("paid_tester_orders")
-      .update({
-        admin_note: `${REFUND_FAILED_NOTE_PREFIX} — 수동 조정 필요 (관리자 취소 후 전액 환불 미처리)`,
-      })
-      .eq("id", order.id);
-    return fail(
-      `주문은 취소됐지만 환불에 실패했습니다 — 수동 조정 필요 (${refund.message ?? "원인 미상"})`,
-      500,
-    );
-  }
+  const reverted = await revertCancel(supabase, order);
+  const cause = refund.message ?? "원인 미상";
   return fail(
-    `환불에 실패해 취소를 되돌렸습니다. 잠시 후 다시 시도해주세요 (${refund.message ?? "원인 미상"})`,
+    reverted
+      ? `환불에 실패해 취소를 되돌렸습니다. 잠시 후 다시 시도해주세요 (${cause})`
+      : `주문은 취소됐지만 환불에 실패했습니다 — 수동 조정 필요 (${cause})`,
     500,
   );
 }
@@ -176,16 +199,20 @@ export async function PATCH(req: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  if (payload.action === "close_seats") return closeSeats(supabase, payload.id);
-
-  const { data: order } = await supabase
+  const { data: order, error } = await supabase
     .from("paid_tester_orders")
-    .select("id, status, fulfillment, seats_closed, refund_due_krw, refunded_krw")
+    .select("id, status, fulfillment, seats_closed, refund_due_krw, refunded_krw, admin_note")
     .eq("id", payload.id)
     .maybeSingle<OrderRow>();
+  if (error) {
+    console.error("[admin/paid-orders] order load failed", error);
+    return fail("주문을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", 500);
+  }
   if (!order) return fail("주문을 찾을 수 없습니다.", 404);
 
   switch (payload.action) {
+    case "close_seats":
+      return closeSeats(supabase, order);
     case "mark_refunded":
       return markRefunded(supabase, order);
     case "start":

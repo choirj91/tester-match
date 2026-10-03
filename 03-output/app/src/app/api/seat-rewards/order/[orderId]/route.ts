@@ -7,7 +7,7 @@ export const runtime = "edge";
 
 type Ctx = { params: Promise<{ orderId: string }> };
 
-const CONFIRM_PER_CALL = 6;
+const CONFIRM_PER_CALL = 5;
 
 /** 주문의 확정 대기 보상 전체 확정 — 구매자 "완료" 버튼 (ADR-0012 부록 A). */
 export async function POST(_req: Request, { params }: Ctx) {

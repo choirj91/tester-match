@@ -79,9 +79,10 @@ export async function POST(req: Request) {
   if (!sent.ok) {
     console.error("[auth/signup] verification email failed", sent);
     await admin.auth.admin.deleteUser(data.user.id);
+    // 502 는 Cloudflare 가 본문을 자체 오류 페이지로 바꿔 안내 문구가 사라진다 — 500 으로 내린다
     return NextResponse.json(
       { ok: false, message: "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요." },
-      { status: 502 },
+      { status: 500 },
     );
   }
 

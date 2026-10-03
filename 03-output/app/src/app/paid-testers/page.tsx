@@ -7,6 +7,7 @@ import {
   PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_PRICE_KRW,
   canOrderPaidTesters,
+  isReviewOrderer,
   type PaidOrderStatus,
 } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
@@ -31,7 +32,10 @@ type OrderRow = {
 };
 
 const STEPS = [
-  { title: "인원 선택·결제", desc: "부족한 인원만큼 1~30명(시트)을 선택해 결제합니다. 1명 = 1,000원. 보유 크레딧으로도 결제 가능." },
+  {
+    title: "인원 선택·결제",
+    desc: "부족한 인원만큼 1~30명(시트)을 선택해 결제합니다. 1명 = 1,000원. 보유 크레딧으로도 결제 가능.",
+  },
   {
     title: "급구 노출 + 전 회원 알림",
     desc: "결제 즉시 매칭 목록 상단 급구에 노출되고 전 회원에게 알림이 갑니다. 커뮤니티 테스터가 시트를 선착순으로 채웁니다 (신뢰도는 닉네임 옆 ★로 표시).",
@@ -60,13 +64,13 @@ export default async function PaidTestersPage() {
   let orders: OrderRow[] = [];
   if (user) {
     const supabase = createSupabaseAdminClient();
+    const ownedApps = supabase.from("apps").select("id, name").eq("owner_user_id", user.id);
+    // 심사·시험용 계정은 모집중이 아닌(매칭 목록에 안 보이는) 앱으로도 주문한다 — 주문 API 와 같은 기준
+    const orderableApps = isReviewOrderer(user)
+      ? ownedApps.neq("status", "deleted")
+      : ownedApps.eq("status", "matching");
     const [appsRes, ordersRes] = await Promise.all([
-      supabase
-        .from("apps")
-        .select("id, name")
-        .eq("owner_user_id", user.id)
-        .eq("status", "matching")
-        .order("created_at", { ascending: false }),
+      orderableApps.order("created_at", { ascending: false }),
       supabase
         .from("paid_tester_orders")
         .select("id, order_code, tester_count, amount_krw, status, created_at, apps(name)")
@@ -88,7 +92,8 @@ export default async function PaidTestersPage() {
           테스터가 부족할 때, 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}원
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          품앗이로 못 채운 인원을 커뮤니티 테스터가 채웁니다 (완주한 시트만 과금). 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
+          품앗이로 못 채운 인원을 커뮤니티 테스터가 채웁니다 (완주한 시트만 과금). 1명당{" "}
+          {formatKrw(PAID_TESTER_PRICE_KRW)}
           원, 14일간 매일 실기기 체크인.
         </p>
 
@@ -143,8 +148,8 @@ export default async function PaidTestersPage() {
           ) : apps.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
               <p className="text-sm text-neutral-600">
-                모집중(매칭 중) 상태의 앱이 없습니다. 앱을 등록하거나, 내 앱에서 상태를 모집중으로 바꾼 뒤
-                신청해주세요.
+                모집중(매칭 중) 상태의 앱이 없습니다. 앱을 등록하거나, 내 앱에서 상태를 모집중으로
+                바꾼 뒤 신청해주세요.
               </p>
               <Link
                 href="/apps/new"
@@ -188,8 +193,8 @@ export default async function PaidTestersPage() {
         )}
 
         <p className="mt-10 text-xs leading-relaxed text-neutral-400">
-          유료 테스터는 커뮤니티 실사용자가 참여하며(테스터 보상 시트당 최대 700 크레딧), 리뷰·평점 작성이나 인위적 참여는
-          제공하지 않습니다. 환불 기준은{" "}
+          유료 테스터는 커뮤니티 실사용자가 참여하며(테스터 보상 시트당 최대 700 크레딧), 리뷰·평점
+          작성이나 인위적 참여는 제공하지 않습니다. 환불 기준은{" "}
           <Link href="/policies/refund" className="underline underline-offset-2">
             환불 정책
           </Link>

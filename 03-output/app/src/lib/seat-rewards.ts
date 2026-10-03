@@ -14,7 +14,7 @@ import { PAID_SEAT_LAUNCH_LEDGER_REF, PAID_SEAT_LEDGER_REF, appendLedger } from 
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { seatRewardDisputedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
-import { refundSeats, settleOrderIfDone } from "@/lib/paid-seats";
+import { noteRefundFailure, refundSeats, settleOrderIfDone } from "@/lib/paid-seats";
 import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
 import {
   DISPUTE_CATEGORIES,
@@ -106,6 +106,23 @@ async function evidencedDays(supabase: SupabaseClient, matchId: number): Promise
   return (data ?? []).map((c) => c.day_n);
 }
 
+/** 여러 매칭의 증빙 일차를 한 번에 읽는다 */
+async function evidencedDaysByMatch(
+  supabase: SupabaseClient,
+  matchIds: number[],
+): Promise<Map<number, number[]>> {
+  const { data } = await supabase
+    .from("checkins")
+    .select("match_id, day_n")
+    .in("match_id", matchIds)
+    .not("screenshot_url", "is", null);
+  const daysByMatch = new Map<number, number[]>();
+  for (const c of data ?? []) {
+    daysByMatch.set(c.match_id, [...(daysByMatch.get(c.match_id) ?? []), c.day_n]);
+  }
+  return daysByMatch;
+}
+
 /** 유료 시트 완주 처리: 매칭 completed → 보상 보류 → 주문 종결 검사. 멱등. */
 export async function completePaidSeat(
   supabase: SupabaseClient,
@@ -113,6 +130,11 @@ export async function completePaidSeat(
 ): Promise<{ completed: boolean; heldAmount: number }> {
   const days = await evidencedDays(supabase, args.matchId);
   const breakdown = computeSeatReward(days);
+  // 스크린샷 증빙이 12일 미만이면 완주로 바꾸지 않는다 — 보상 없는 완주(구매자만 과금)를 만들지 않는다
+  if (breakdown.days < SEAT_MIN_CHECKIN_DAYS) {
+    console.error("[seat-rewards] not enough evidence to complete", args.matchId, breakdown.days);
+    return { completed: false, heldAmount: 0 };
+  }
   const { data: rows } = await supabase
     .from("matches")
     .update({ status: "completed", day_count: Math.min(breakdown.days, SEAT_TOTAL_DAYS) })
@@ -121,12 +143,7 @@ export async function completePaidSeat(
     .select("id");
   if (!rows || rows.length === 0) return { completed: false, heldAmount: 0 };
 
-  let heldAmount = 0;
-  if (breakdown.days >= SEAT_MIN_CHECKIN_DAYS) {
-    heldAmount = await holdSeatReward(supabase, { ...args, breakdown });
-  } else {
-    console.error("[seat-rewards] completed without enough evidence", args.matchId, breakdown.days);
-  }
+  const heldAmount = await holdSeatReward(supabase, { ...args, breakdown });
   await settleOrderIfDone(supabase, args.orderId);
   return { completed: true, heldAmount };
 }
@@ -287,8 +304,8 @@ export async function forfeitSeatReward(
     .eq("id", row.order_id)
     .maybeSingle();
   if (!order) {
-    await revertForfeit(supabase, rewardId);
-    return { ok: false, message: "주문을 찾지 못해 몰수를 취소했습니다. 다시 시도해주세요." };
+    const reverted = await revertForfeit(supabase, rewardId, row.order_id, row.match_id);
+    return { ok: false, message: forfeitFailureMessage("주문을 찾지 못해", reverted) };
   }
   const refund = await refundSeats(supabase, {
     orderId: row.order_id,
@@ -299,8 +316,8 @@ export async function forfeitSeatReward(
     reason: "이의 인용",
   });
   if (!refund.ok) {
-    await revertForfeit(supabase, rewardId);
-    return { ok: false, message: "구매자 환불 기록에 실패해 몰수를 취소했습니다. 다시 시도해주세요." };
+    const reverted = await revertForfeit(supabase, rewardId, row.order_id, row.match_id);
+    return { ok: false, message: forfeitFailureMessage("구매자 환불 기록에 실패해", reverted) };
   }
 
   await createNotification({
@@ -323,12 +340,28 @@ export async function forfeitSeatReward(
   return { ok: true };
 }
 
-async function revertForfeit(supabase: SupabaseClient, rewardId: number): Promise<void> {
-  await supabase
+/** 몰수 되돌리기. 실패하면 몰수된 채 환불이 빠지므로 주문에 "환불 실패" 메모를 남긴다. @returns 되돌렸으면 true */
+async function revertForfeit(
+  supabase: SupabaseClient,
+  rewardId: number,
+  orderId: number,
+  matchId: number,
+): Promise<boolean> {
+  const { error } = await supabase
     .from("seat_rewards")
     .update({ status: "disputed", settled_at: null, settled_by: null })
     .eq("id", rewardId)
     .eq("status", "forfeited");
+  if (!error) return true;
+  console.error("[seat-rewards] forfeit revert failed", rewardId, error);
+  await noteRefundFailure(supabase, orderId, `몰수 후 시트 환불 미처리 (match ${matchId}, 1,000)`);
+  return false;
+}
+
+function forfeitFailureMessage(cause: string, reverted: boolean): string {
+  return reverted
+    ? `${cause} 몰수를 취소했습니다. 다시 시도해주세요.`
+    : `${cause} 환불하지 못했고 몰수도 되돌리지 못했습니다 — 주문 관리에서 수동 조정이 필요합니다.`;
 }
 
 /**
@@ -338,7 +371,7 @@ async function revertForfeit(supabase: SupabaseClient, rewardId: number): Promis
 export async function releaseDueRewards(
   supabase: SupabaseClient,
   limit: number,
-): Promise<{ released: number; remaining: number }> {
+): Promise<{ attempted: number; released: number; remaining: number }> {
   const nowIso = new Date().toISOString();
   const disputeCutoff = new Date(Date.now() - DISPUTE_DECISION_DAYS * DAY_MS).toISOString();
   const [held, stale] = await Promise.all([
@@ -370,13 +403,16 @@ export async function releaseDueRewards(
     if (result.ok) released++;
   }
   const total = (held.count ?? 0) + (stale.count ?? 0);
-  return { released, remaining: Math.max(0, total - queue.length) };
+  return { attempted: queue.length, released, remaining: Math.max(0, total - queue.length) };
 }
 
 /**
  * 보정 1: 완주(completed)한 유료 시트인데 보류 레코드가 없는 매칭 → 보류 생성.
  * (완주 전이와 보류 INSERT 사이에서 실패한 경우의 복구)
  */
+/** 한 번에 증빙을 읽을 시트 수 — 시트당 체크인 14행 기준으로 1,000행 상한 안쪽 */
+const REPAIR_SCAN_LIMIT = 50;
+
 export async function repairMissingHolds(supabase: SupabaseClient, limit: number): Promise<number> {
   const { data: seats } = await supabase
     .from("matches")
@@ -401,10 +437,21 @@ export async function repairMissingHolds(supabase: SupabaseClient, limit: number
     );
   const have = new Set((existing ?? []).map((r) => r.match_id));
 
+  // 증빙 일수를 한 번에 읽어 보상 대상만 추린다 — 보상 불가 시트가 처리 한도를 차지하지 않게
+  const missing = candidates.filter((x) => !have.has(x.id)).slice(0, REPAIR_SCAN_LIMIT);
+  if (missing.length === 0) return 0;
+  const daysByMatch = await evidencedDaysByMatch(
+    supabase,
+    missing.map((m) => m.id),
+  );
+
   let repaired = 0;
-  for (const c of candidates.filter((x) => !have.has(x.id)).slice(0, limit)) {
-    const breakdown = computeSeatReward(await evidencedDays(supabase, c.id));
+  let attempts = 0;
+  for (const c of missing) {
+    const breakdown = computeSeatReward(daysByMatch.get(c.id) ?? []);
     if (breakdown.days < SEAT_MIN_CHECKIN_DAYS) continue;
+    if (attempts >= limit) break;
+    attempts++;
     const amount = await holdSeatReward(supabase, {
       matchId: c.id,
       orderId: c.paid_order_id,
@@ -470,32 +517,13 @@ export async function grantLaunchBonuses(
     .from("paid_tester_orders")
     .select("id, apps!inner(name, status)")
     .eq("apps.status", "launched")
+    .order("id", { ascending: true })
     .limit(200);
   const launched = (orders ?? []) as unknown as Array<{ id: number; apps: { name: string } }>;
   if (launched.length === 0) return { granted: 0, remaining: 0 };
   const appNameByOrder = new Map(launched.map((o) => [o.id, o.apps.name]));
 
-  const { data: rewards } = await supabase
-    .from("seat_rewards")
-    .select("match_id, order_id, tester_user_id")
-    .eq("status", "released")
-    .in("order_id", [...appNameByOrder.keys()])
-    .limit(500);
-  const rows = rewards ?? [];
-  if (rows.length === 0) return { granted: 0, remaining: 0 };
-
-  const { data: paid } = await supabase
-    .from("credits_ledger")
-    .select("ref_id")
-    .eq("type", "earn")
-    .eq("ref_type", PAID_SEAT_LAUNCH_LEDGER_REF)
-    .in(
-      "ref_id",
-      rows.map((r) => r.match_id),
-    );
-  const have = new Set((paid ?? []).map((p) => p.ref_id));
-  const pending = rows.filter((r) => !have.has(r.match_id));
-
+  const pending = await findUnpaidLaunchBonuses(supabase, [...appNameByOrder.keys()]);
   let granted = 0;
   for (const r of pending.slice(0, limit)) {
     const ledger = await appendLedger(supabase, {
@@ -517,4 +545,47 @@ export async function grantLaunchBonuses(
     });
   }
   return { granted, remaining: Math.max(0, pending.length - limit) };
+}
+
+type LaunchBonusTarget = { match_id: number; order_id: number; tester_user_id: number };
+
+const LAUNCH_SCAN_PAGE = 500;
+const LAUNCH_SCAN_MAX_PAGES = 4;
+
+/**
+ * 출시된 앱 주문의 지급 확정(released) 시트 중 출시 보너스 원장 행이 없는 것.
+ * 페이지 단위로 훑어 미지급분이 나오는 첫 페이지를 돌려준다 — 이미 지급한 앞쪽 시트가 뒤쪽을 가리지 않게.
+ */
+async function findUnpaidLaunchBonuses(
+  supabase: SupabaseClient,
+  orderIds: number[],
+): Promise<LaunchBonusTarget[]> {
+  for (let page = 0; page < LAUNCH_SCAN_MAX_PAGES; page++) {
+    const from = page * LAUNCH_SCAN_PAGE;
+    const { data: rewards } = await supabase
+      .from("seat_rewards")
+      .select("match_id, order_id, tester_user_id")
+      .eq("status", "released")
+      .in("order_id", orderIds)
+      .order("id", { ascending: true })
+      .range(from, from + LAUNCH_SCAN_PAGE - 1);
+    const rows = (rewards ?? []) as LaunchBonusTarget[];
+    if (rows.length === 0) return [];
+
+    const { data: paid, error } = await supabase
+      .from("credits_ledger")
+      .select("ref_id")
+      .eq("type", "earn")
+      .eq("ref_type", PAID_SEAT_LAUNCH_LEDGER_REF)
+      .in(
+        "ref_id",
+        rows.map((r) => r.match_id),
+      );
+    // 지급 여부를 모르면 이번 실행은 건너뛴다 (원장 unique 가 중복 지급은 막지만 알림이 중복된다)
+    if (error) return [];
+    const have = new Set((paid ?? []).map((p) => p.ref_id));
+    const unpaid = rows.filter((r) => !have.has(r.match_id));
+    if (unpaid.length > 0 || rows.length < LAUNCH_SCAN_PAGE) return unpaid;
+  }
+  return [];
 }

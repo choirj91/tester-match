@@ -2,15 +2,19 @@ import { NextResponse } from "next/server";
 import { releasePaidSeat } from "@/lib/paid-seats";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
-import { PENALTY_TRUST_DELTA, shouldPenalize } from "@/lib/penalty";
+import { PENALTY_TRUST_DELTA } from "@/lib/penalty";
+import { judgeMatch, type SweepCheckin } from "@/lib/penalty-judge";
 import { createNotification } from "@/lib/notifications";
-import { currentDayN } from "@/lib/checkin";
-import { completePaidSeat, paidSeatVerdict } from "@/lib/seat-rewards";
+import { completePaidSeat } from "@/lib/seat-rewards";
 import { TRUST_MAX } from "@/lib/trust";
 
 export const runtime = "edge";
 
-const PAID_SEATS_PER_RUN = 3;
+/**
+ * 요청당 서브리퀘스트 상한(50) 안에서 처리할 예산. 건별 예상 비용은 lib/penalty-judge.ts.
+ * 상한을 넘으면 매칭은 이미 penalized 인데 시트 해제·환불이 빠진 채 끝난다 → 넘기 전에 멈추고 다음 호출로 미룬다.
+ */
+const SUBREQUEST_BUDGET = 44;
 
 /**
  * F-CHK-06 — 미체크인 페널티 sweep.
@@ -36,7 +40,7 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: matches, error } = await supabase
     .from("matches")
-    .select("id, app_id, tester_user_id, opted_in_at, paid_order_id, checkins(day_n)")
+    .select("id, app_id, tester_user_id, opted_in_at, paid_order_id, checkins(day_n, screenshot_url)")
     .eq("status", "active");
 
   if (error) {
@@ -46,31 +50,30 @@ export async function GET(request: Request) {
 
   let penalized = 0;
   let seatsCompleted = 0;
-  let paidHandled = 0;
+  let deferred = 0;
+  let budget = SUBREQUEST_BUDGET;
   for (const m of matches ?? []) {
     if (!m.opted_in_at) continue;
-    const checkins = (m.checkins ?? []) as Array<{ day_n: number }>;
-    const distinctDays = new Set(checkins.map((c) => c.day_n));
-    const distinctCount = distinctDays.size;
-    const lastDay = distinctCount === 0 ? 0 : Math.max(...distinctDays);
+    const { verdict, cost, distinctCount } = judgeMatch({
+      optedInAt: m.opted_in_at,
+      isPaidSeat: m.paid_order_id != null,
+      checkins: (m.checkins ?? []) as SweepCheckin[],
+    });
+    if (verdict === "ok") continue;
 
-    if (m.paid_order_id != null) {
-      // 유료 시트: 12/14 유예 규칙. 결석 3일째에 즉시 해제, 기간 종료 시 12일 이상이면 완주(보상 보류)
-      const verdict = paidSeatVerdict(currentDayN(m.opted_in_at), distinctCount, lastDay);
-      if (verdict === "ok") continue;
-      // 유료 시트 처리(해제·환불·알림)는 서브리퀘스트가 커서 실행당 상한을 둔다 — 나머지는 다음 실행
-      if (paidHandled >= PAID_SEATS_PER_RUN) continue;
-      paidHandled++;
-      if (verdict === "complete") {
-        const done = await completePaidSeat(supabase, {
-          matchId: m.id,
-          orderId: m.paid_order_id,
-          testerUserId: m.tester_user_id,
-        });
-        if (done.completed) seatsCompleted++;
-        continue;
-      }
-    } else if (!shouldPenalize(m.opted_in_at, distinctCount, lastDay)) {
+    if (cost > budget) {
+      deferred++;
+      continue;
+    }
+    budget -= cost;
+
+    if (verdict === "complete" && m.paid_order_id != null) {
+      const done = await completePaidSeat(supabase, {
+        matchId: m.id,
+        orderId: m.paid_order_id,
+        testerUserId: m.tester_user_id,
+      });
+      if (done.completed) seatsCompleted++;
       continue;
     }
 
@@ -88,6 +91,9 @@ export async function GET(request: Request) {
     candidates: matches?.length ?? 0,
     penalized,
     seatsCompleted,
+    deferred,
+    // 미룬 건이 있고 이번 호출에 진전이 있었을 때만 다시 부르게 한다 (막힌 건으로 무한 반복 방지)
+    more: deferred > 0 && penalized + seatsCompleted > 0,
   });
 }
 

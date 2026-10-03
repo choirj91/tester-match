@@ -75,11 +75,12 @@ export type TossLookup =
 
 /**
  * orderId 로 결제 조회 — 승인은 됐는데 우리 DB 반영이 누락된 주문의 복구·검증용.
- * "결제 없음"(404·키 미설정)과 "조회 실패"를 구분한다 — 실패를 미결제로 읽으면 결제된 주문을 취소하게 된다.
+ * "결제 없음"(404)과 "조회 실패"(키 미설정 포함)를 구분한다 — 실패를 미결제로 읽으면 결제된 주문을 취소하게 된다.
  */
 export async function lookupTossPaymentByOrderId(orderId: string): Promise<TossLookup> {
   const secretKey = process.env.TOSS_SECRET_KEY;
-  if (!secretKey) return { kind: "not_found" };
+  // 키가 없으면 결제 여부를 확인할 수 없다 — "결제 없음"으로 읽으면 결제된 주문을 취소하게 된다
+  if (!secretKey) return { kind: "error" };
   try {
     const res = await fetch(
       `https://api.tosspayments.com/v1/payments/orders/${encodeURIComponent(orderId)}`,

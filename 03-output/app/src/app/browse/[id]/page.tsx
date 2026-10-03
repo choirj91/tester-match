@@ -98,7 +98,7 @@ export default async function BrowseDetailPage({ params }: Props) {
 
   // 유료 시트 (ADR-0012) — 열린 시트가 있으면 참여 시 시트로 우선 배정된다
   const openSeats =
-    app.status === "matching" ? ((await countOpenSeatsByApp(supabase, [appId])).get(appId) ?? 0) : 0;
+    app.status === "matching" ? ((await countOpenSeatsByApp(supabase, [appId]))?.get(appId) ?? 0) : 0;
 
   const owner = Array.isArray(app.users_public_profile)
     ? app.users_public_profile[0]

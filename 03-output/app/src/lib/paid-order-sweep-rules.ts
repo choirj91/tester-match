@@ -24,7 +24,10 @@ const TOSS_DEAD_STATUSES: readonly string[] = [
 ];
 const TOSS_PAID_STATUS = "DONE";
 
-const won = (n: number): string => n.toLocaleString("ko-KR");
+/** 스윕이 미결제 주문을 자동 취소할 때 남기는 메모의 접두어 (리포트가 이 접두어로 건수를 센다) */
+export const AUTO_CANCEL_NOTE_PREFIX = "자동 취소";
+
+export const won = (n: number): string => n.toLocaleString("ko-KR");
 
 export function attentionNote(text: string): string {
   return `${ATTENTION_NOTE_PREFIX}: ${text}`.slice(0, NOTE_MAX_LENGTH);
@@ -71,14 +74,14 @@ export type ClosedOrderForReconcile = {
 /**
  * 끝난 주문에 기록돼 있어야 할 환불액.
  * 커뮤니티 주문: 과금 대상이 아닌 시트(= 전체 − 완주 + 몰수) × 단가. 몰수된 시트는 완주 상태지만 환불된다.
- * 운영자 처리 주문: 취소면 전액, 완료면 0.
+ * 운영자 처리 주문: 완료면 0, 그 외(취소·환불)는 전액.
  */
 export function expectedRefundKrw(
   order: ClosedOrderForReconcile,
   seats: { completed: number; forfeited: number },
 ): number {
   if (order.fulfillment === "operator") {
-    return order.status === "canceled" ? order.amount_krw : 0;
+    return order.status === "completed" ? 0 : order.amount_krw;
   }
   const charged = Math.max(0, seats.completed - seats.forfeited);
   return Math.max(0, order.tester_count - charged) * PAID_TESTER_PRICE_KRW;

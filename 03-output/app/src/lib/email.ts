@@ -14,9 +14,24 @@ export type SendEmailArgs = {
 
 export type SendEmailResult =
   | { ok: true; id: string }
-  | { ok: false; reason: "no_api_key" | "http_error" | "exception"; detail?: string };
+  | {
+      ok: false;
+      reason: "no_api_key" | "http_error" | "exception" | "undeliverable";
+      detail?: string;
+    };
 
 const RESEND_API = "https://api.resend.com/emails";
+
+/**
+ * 받을 수 없는 주소 — 탈퇴 익명화(@deleted.local), 봉인된 사전등록 행(.invalid),
+ * 도메인이 없는 값. 반송이 쌓이면 발신 도메인 평판이 떨어지므로 아예 보내지 않는다.
+ */
+export function isUndeliverableAddress(to: string): boolean {
+  const address = to.trim().toLowerCase();
+  return (
+    !address.includes("@") || address.endsWith("@deleted.local") || address.endsWith(".invalid")
+  );
+}
 
 /**
  * 운영 알림 수신 주소. Resend 도메인 검증 전에는 계정 소유자 주소로만 발송되므로
@@ -27,6 +42,8 @@ export function getAdminNotifyEmail(fallback: string): string {
 }
 
 export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
+  if (isUndeliverableAddress(args.to)) return { ok: false, reason: "undeliverable" };
+
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL ?? "Tester Match <noreply@testermatch.local>";
 

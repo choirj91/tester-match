@@ -41,6 +41,27 @@ describe("sendEmail", () => {
     }
   });
 
+  it("skips undeliverable addresses without calling the API", async () => {
+    // Arrange
+    process.env.RESEND_API_KEY = "test_key";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const undeliverable = [
+      "withdrawn-1@deleted.local",
+      "hansangu477@unknown.invalid",
+      "no-domain",
+    ];
+
+    // Act
+    const results = await Promise.all(
+      undeliverable.map((to) => sendEmail({ to, subject: "hi", html: "<p>hi</p>" })),
+    );
+
+    // Assert
+    for (const r of results) expect(r).toEqual({ ok: false, reason: "undeliverable" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("returns ok with id on success", async () => {
     process.env.RESEND_API_KEY = "test_key";
     vi.stubGlobal(

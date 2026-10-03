@@ -102,31 +102,52 @@ export function seatNoticeText(args: { appName: string; appId: number; seats: nu
   ].join("\n");
 }
 
+type SeatCounts = {
+  filled: Map<number, number>;
+  active: Map<number, number>;
+  completed: Map<number, number>;
+};
+
+const emptySeatCounts = (): SeatCounts => ({
+  filled: new Map(),
+  active: new Map(),
+  completed: new Map(),
+});
+
+/**
+ * 주문별 시트 점유 수. 조회 실패는 null —
+ * 0 으로 읽으면 채워진 시트를 빈 시트로 환불하거나 진행 중인 주문을 종결하게 된다.
+ */
 async function seatCounts(
   supabase: SupabaseClient,
   orderIds: number[],
-): Promise<{ filled: Map<number, number>; active: Map<number, number>; completed: Map<number, number> }> {
-  const filled = new Map<number, number>();
-  const active = new Map<number, number>();
-  const completed = new Map<number, number>();
-  if (orderIds.length === 0) return { filled, active, completed };
-  const { data } = await supabase
+): Promise<SeatCounts | null> {
+  const counts = emptySeatCounts();
+  if (orderIds.length === 0) return counts;
+  const { data, error } = await supabase
     .from("matches")
     .select("paid_order_id, status")
     .in("paid_order_id", orderIds)
     .in("status", [...SEAT_FILLED_MATCH_STATUSES]);
+  if (error) {
+    console.error("[paid-seats] seat count query failed", orderIds, error);
+    return null;
+  }
   for (const m of data ?? []) {
     if (m.paid_order_id == null) continue;
-    filled.set(m.paid_order_id, (filled.get(m.paid_order_id) ?? 0) + 1);
-    const bucket = m.status === "active" ? active : completed;
+    counts.filled.set(m.paid_order_id, (counts.filled.get(m.paid_order_id) ?? 0) + 1);
+    const bucket = m.status === "active" ? counts.active : counts.completed;
     bucket.set(m.paid_order_id, (bucket.get(m.paid_order_id) ?? 0) + 1);
   }
-  return { filled, active, completed };
+  return counts;
 }
 
-/** 주문별 채워진/진행 중/완주 시트 수 */
-export async function loadSeatCounts(supabase: SupabaseClient, orderIds: number[]) {
-  return seatCounts(supabase, orderIds);
+/** 화면 표시용 — 조회 실패 시 빈 값 (정산 판단에는 쓰지 않는다) */
+export async function loadSeatCounts(
+  supabase: SupabaseClient,
+  orderIds: number[],
+): Promise<SeatCounts> {
+  return (await seatCounts(supabase, orderIds)) ?? emptySeatCounts();
 }
 
 /** 앱의 열린 시트가 있는 주문 (없으면 null) */
@@ -142,32 +163,40 @@ export async function findOpenSeatOrder(
     .eq("seats_closed", false);
   const orders = (data ?? []) as SeatOrder[];
   if (orders.length === 0) return null;
-  const { filled } = await seatCounts(
+  const counts = await seatCounts(
     supabase,
     orders.map((o) => o.id),
   );
-  return pickOrderWithOpenSeat(orders, filled);
+  // 점유 수를 모르면 유료 시트로 배정하지 않는다 (초과 배정 방지)
+  if (!counts) return null;
+  return pickOrderWithOpenSeat(orders, counts.filled);
 }
 
-/** 앱별 열린 시트 수 (브라우즈 배지용) */
+/** 앱별 열린 유료 시트 수. 조회 실패는 null — "0"으로 읽으면 급구 해제 같은 판단이 틀어진다 */
 export async function countOpenSeatsByApp(
   supabase: SupabaseClient,
   appIds: number[],
-): Promise<Map<number, number>> {
+): Promise<Map<number, number> | null> {
   const result = new Map<number, number>();
   if (appIds.length === 0) return result;
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("paid_tester_orders")
     .select("id, app_id, tester_count, created_at")
     .in("app_id", appIds)
     .in("status", [...SEAT_OPEN_STATUSES])
     .eq("seats_closed", false);
+  if (error) {
+    console.error("[paid-seats] open seat order query failed", error);
+    return null;
+  }
   const orders = (data ?? []) as SeatOrder[];
   if (orders.length === 0) return result;
-  const { filled } = await seatCounts(
+  const counts = await seatCounts(
     supabase,
     orders.map((o) => o.id),
   );
+  if (!counts) return null;
+  const { filled } = counts;
   for (const appId of new Set(orders.map((o) => o.app_id))) {
     result.set(
       appId,
@@ -184,9 +213,11 @@ export async function countOpenSeatsByApp(
 export async function isOrderOverfilled(
   supabase: SupabaseClient,
   order: Pick<SeatOrder, "id" | "tester_count">,
-): Promise<boolean> {
-  const { filled } = await seatCounts(supabase, [order.id]);
-  return (filled.get(order.id) ?? 0) > order.tester_count;
+): Promise<boolean | null> {
+  const counts = await seatCounts(supabase, [order.id]);
+  // 확인할 수 없으면 null — 호출부가 참여를 취소하고 다시 시도하게 한다 (조용한 강등·초과 배정 모두 방지)
+  if (!counts) return null;
+  return (counts.filled.get(order.id) ?? 0) > order.tester_count;
 }
 
 export async function countTesterActivePaidSeats(
@@ -428,7 +459,10 @@ export async function settleOrderIfDone(supabase: SupabaseClient, orderId: numbe
   if (!order || !(SEAT_OPEN_STATUSES as readonly string[]).includes(order.status)) return;
   // 운영자 폴백 주문은 매칭이 없으므로 자동 종결하지 않는다 (관리자가 [완료])
   if (order.fulfillment === "operator") return;
-  const { active, completed } = await seatCounts(supabase, [orderId]);
+  const counts = await seatCounts(supabase, [orderId]);
+  // 점유 수를 모르면 판정하지 않는다 — 0 으로 읽으면 진행 중인 주문을 취소로 종결하게 된다
+  if (!counts) return;
+  const { active, completed } = counts;
   const decision = orderSettlement({
     seatsClosed: order.seats_closed,
     testerCount: order.tester_count,
@@ -454,7 +488,7 @@ export async function settleOrderIfDone(supabase: SupabaseClient, orderId: numbe
 }
 
 /** 수동 처리가 필요한 주문에 남기는 메모 — 리포트가 이 접두어로 매일 경보를 낸다. 기존 메모 뒤에 덧붙인다. */
-async function noteRefundFailure(
+export async function noteRefundFailure(
   supabase: SupabaseClient,
   orderId: number,
   detail: string,
@@ -473,28 +507,66 @@ async function noteRefundFailure(
   if (error) console.error("[paid-seats] refund failure note not saved", orderId, detail, error);
 }
 
+export type CloseSeatsResult = {
+  unfilled: number;
+  refund: SeatRefundResult | null;
+  /** 실패 시에만: 마감을 되돌렸으면 true (다시 시도 가능), false 면 마감된 채 "환불 실패" 메모가 남았다 */
+  reverted?: boolean;
+};
+
+/** 마감 뒤 환불(또는 그 전 조회)에 실패했을 때: 마감을 되돌리고, 되돌리기도 실패하면 메모로 남긴다 */
+async function failClose(
+  supabase: SupabaseClient,
+  orderId: number,
+  unfilled: number,
+  detail: string,
+  refund?: SeatRefundResult,
+): Promise<CloseSeatsResult> {
+  const { error } = await supabase
+    .from("paid_tester_orders")
+    .update({ seats_closed: false })
+    .eq("id", orderId);
+  if (error) {
+    // 마감된 채 환불이 빠진다 — 재시도 경로가 없으므로 메모로 남겨 매일 리포트에 올린다
+    console.error("[paid-seats] close revert failed", orderId, error);
+    await noteRefundFailure(supabase, orderId, detail);
+  }
+  return {
+    unfilled,
+    refund: refund ?? { mode: "credits", amount: unfilled * PAID_TESTER_PRICE_KRW, ok: false },
+    reverted: !error,
+  };
+}
+
 /**
  * 충원 마감: 빈 시트를 닫고 환불한다. 조건부 UPDATE(false→true) 가 1회성을 보장.
- * @returns 마감을 수행했으면 환불 결과, 이미 마감돼 있었으면 null
+ * 마감을 먼저 걸어 새 배정을 막은 뒤 점유 수를 센다 (세는 사이에 시트가 차면 그 시트까지 환불하게 된다).
+ * @returns 마감을 수행했으면 결과(refund.ok=false 면 실패), 이미 마감됐거나 대상이 아니면 null
  */
 export async function closeOrderSeats(
   supabase: SupabaseClient,
   orderId: number,
   reason: string,
-): Promise<{ unfilled: number; refund: SeatRefundResult | null } | null> {
-  const { data: closed } = await supabase
+): Promise<CloseSeatsResult | null> {
+  const { data: closed, error: flipErr } = await supabase
     .from("paid_tester_orders")
     .update({ seats_closed: true })
     .eq("id", orderId)
     .eq("seats_closed", false)
+    .eq("fulfillment", "community")
     .in("status", [...SEAT_OPEN_STATUSES])
     .select("id");
+  if (flipErr) {
+    // 마감 자체가 기록되지 않았다 — "이미 마감됨"과 구분해 실패로 알린다 (바뀐 것이 없으므로 되돌릴 것도 없다)
+    console.error("[paid-seats] close flip failed", orderId, flipErr);
+    return { unfilled: 0, refund: { mode: "credits", amount: 0, ok: false }, reverted: true };
+  }
   if (!closed || closed.length === 0) return null;
 
   const order = await loadOrderForSettle(supabase, orderId);
-  if (!order) return null;
-  const { filled } = await seatCounts(supabase, [orderId]);
-  const unfilled = Math.max(0, order.tester_count - (filled.get(orderId) ?? 0));
+  const counts = order ? await seatCounts(supabase, [orderId]) : null;
+  if (!order || !counts) return failClose(supabase, orderId, 0, "시트 현황 조회 실패로 마감 중단");
+  const unfilled = Math.max(0, order.tester_count - (counts.filled.get(orderId) ?? 0));
 
   let refund: SeatRefundResult | null = null;
   if (unfilled > 0) {
@@ -507,17 +579,7 @@ export async function closeOrderSeats(
       reason,
     });
     if (!refund.ok) {
-      // 환불 기록 실패 → 마감을 되돌려 다음 스윕이 다시 시도하게 한다
-      const { error: revertErr } = await supabase
-        .from("paid_tester_orders")
-        .update({ seats_closed: false })
-        .eq("id", orderId);
-      if (revertErr) {
-        // 되돌리기도 실패하면 마감된 채 환불이 빠진다 — 재시도 경로가 없으므로 메모로 남긴다
-        console.error("[paid-seats] close revert failed", orderId, revertErr);
-        await noteRefundFailure(supabase, orderId, `미충원 ${unfilled}시트 환불 미기록`);
-      }
-      return { unfilled, refund };
+      return failClose(supabase, orderId, unfilled, `미충원 ${unfilled}시트 환불 미기록`, refund);
     }
     await createNotification({
       userId: order.buyer_user_id,
@@ -529,6 +591,14 @@ export async function closeOrderSeats(
           : `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")}원은 영업일 3일 내 결제 수단으로 부분 취소됩니다.`,
       link: `/console/orders/${orderId}`,
     });
+  }
+  // 이전 시도가 남긴 "확인 필요" 메모는 마감이 성공한 지금 해소됐다 — 종결 뒤에는 스윕이 다시 오지 않으므로 여기서 지운다
+  if (order.admin_note?.startsWith(ATTENTION_NOTE_PREFIX)) {
+    await supabase
+      .from("paid_tester_orders")
+      .update({ admin_note: null })
+      .eq("id", orderId)
+      .like("admin_note", `${ATTENTION_NOTE_PREFIX}%`); // 그 사이 다른 메모("환불 실패")로 바뀌었으면 건드리지 않는다
   }
   await settleOrderIfDone(supabase, orderId);
   return { unfilled, refund };
@@ -632,6 +702,30 @@ async function creditsAlreadyRefunded(
   return [...(orderRows.data ?? []), ...(seatRows.data ?? [])].reduce((sum, r) => sum + r.amount, 0);
 }
 
+type OrderForFullRefund = {
+  id: number;
+  amount_krw: number;
+  refunded_krw: number | null;
+  paid_at: string | null;
+};
+
+/** 토스 결제 주문: 이미 환불 완료한 금액을 뺀 나머지를 환불 대기로 올린다 (CHECK: 대기 + 완료 <= 결제 금액) */
+async function markTossRefundDue(
+  supabase: SupabaseClient,
+  order: OrderForFullRefund,
+): Promise<OrderRefundResult> {
+  if (!order.paid_at) return { kind: "toss", ok: true }; // 결제된 적 없음 — 환불할 것이 없다
+  const { error } = await supabase
+    .from("paid_tester_orders")
+    .update({ refund_due_krw: Math.max(0, order.amount_krw - (order.refunded_krw ?? 0)) })
+    .eq("id", order.id);
+  if (error) {
+    console.error("[paid-seats] full refund_due update failed", order.id, error);
+    return { kind: "toss", ok: false, message: "환불 대기 금액을 기록하지 못했습니다." };
+  }
+  return { kind: "toss", ok: true };
+}
+
 /**
  * 주문 전체 환불 (관리자 취소). 이미 환불된 금액을 뺀 나머지만 환불한다.
  * 크레딧 결제는 원장 환급(멱등키 = paid_order + 주문 id), 토스 결제는 refund_due_krw 에 남은 금액을 올려
@@ -654,19 +748,7 @@ export async function refundCreditsOrder(
   if (creditsPaid === null) {
     return { kind: "toss", ok: false, message: "결제 수단을 확인하지 못했습니다. 다시 시도해주세요." };
   }
-  if (!creditsPaid) {
-    if (!order.paid_at) return { kind: "toss", ok: true }; // 결제된 적 없음 — 환불할 것이 없다
-    // 이미 환불 완료한 금액은 빼고 남은 금액만 환불 대기로 (CHECK: 대기 + 완료 <= 결제 금액)
-    const { error } = await supabase
-      .from("paid_tester_orders")
-      .update({ refund_due_krw: Math.max(0, order.amount_krw - (order.refunded_krw ?? 0)) })
-      .eq("id", orderId);
-    if (error) {
-      console.error("[paid-seats] full refund_due update failed", orderId, error);
-      return { kind: "toss", ok: false, message: "환불 대기 금액을 기록하지 못했습니다." };
-    }
-    return { kind: "toss", ok: true };
-  }
+  if (!creditsPaid) return markTossRefundDue(supabase, order);
 
   const already = await creditsAlreadyRefunded(supabase, orderId);
   if (already === null) {

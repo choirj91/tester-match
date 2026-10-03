@@ -40,10 +40,13 @@ export async function GET(request: Request) {
     supabase,
     (expired ?? []).map((a) => a.id),
   );
+  // 열린 시트 수를 확인하지 못했으면 이번 실행에서는 아무것도 해제하지 않는다 (다음 실행에서 다시 판단)
+  const clearable = openSeats ? (expired ?? []) : [];
+  if (!openSeats) console.error("[boost-expiry] open seat lookup failed — skipping expiry this run");
 
   let cleared = 0;
-  for (const app of expired ?? []) {
-    if ((openSeats.get(app.id) ?? 0) > 0) continue;
+  for (const app of clearable) {
+    if ((openSeats?.get(app.id) ?? 0) > 0) continue;
     const { error } = await supabase
       .from("apps")
       .update({ is_boost: false, boost_deadline_at: null })

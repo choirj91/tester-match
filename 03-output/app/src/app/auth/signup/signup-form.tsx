@@ -47,7 +47,7 @@ export function SignupForm() {
 
   if (sentTo) {
     return (
-      <div className="mt-8 rounded-xl border border-trust-500/30 bg-trust-50 p-5 text-sm leading-relaxed text-neutral-700">
+      <div className="border-trust-500/30 bg-trust-50 mt-8 rounded-xl border p-5 text-sm leading-relaxed text-neutral-700">
         <p className="font-semibold text-neutral-900">인증 메일을 보냈습니다</p>
         <p className="mt-1">
           <strong>{sentTo}</strong> 로 보낸 메일의 [이메일 인증하기] 버튼을 누르면 가입이
@@ -55,7 +55,7 @@ export function SignupForm() {
         </p>
         <Link
           href="/auth/login"
-          className="mt-4 inline-block font-semibold text-trust-600 hover:underline"
+          className="text-trust-600 mt-4 inline-block font-semibold hover:underline"
         >
           로그인 화면으로 →
         </Link>
@@ -104,7 +104,8 @@ export function SignupForm() {
         />
       </label>
       <label className="block text-sm font-semibold text-neutral-900">
-        카카오톡 닉네임 <span className="font-normal text-neutral-500">(오픈채팅방에서 쓰는 이름)</span>
+        카카오톡 닉네임{" "}
+        <span className="font-normal text-neutral-500">(오픈채팅방에서 쓰는 이름)</span>
         <input
           type="text"
           required
@@ -141,23 +142,34 @@ export function SignupForm() {
           onChange={(e) => setAgreed(e.target.checked)}
         />
         <span>
-          <Link href="/policies/terms" className="underline hover:text-neutral-900">
+          {/* 새 탭으로 연다 — 같은 탭 이동은 입력 중인 가입 정보를 날린다 */}
+          <Link
+            href="/policies/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-neutral-900"
+          >
             이용약관
           </Link>
           과{" "}
-          <Link href="/policies/privacy" className="underline hover:text-neutral-900">
+          <Link
+            href="/policies/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-neutral-900"
+          >
             개인정보처리방침
           </Link>
           에 동의합니다.
         </span>
       </label>
 
-      {error && <p className="text-sm text-crimson-500">{error}</p>}
+      {error && <p className="text-crimson-500 text-sm">{error}</p>}
 
       <button
         type="submit"
         disabled={loading || !agreed}
-        className="w-full rounded-lg bg-trust-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+        className="bg-trust-600 hover:bg-trust-700 w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
       >
         {loading ? "처리 중..." : "가입하고 인증 메일 받기"}
       </button>
