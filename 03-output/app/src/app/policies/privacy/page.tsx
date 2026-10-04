@@ -55,7 +55,7 @@ export default async function PrivacyPage() {
           <tr><td>회원 정보</td><td>탈퇴 시 즉시 파기</td><td>회원의 동의</td></tr>
           <tr><td>결제 기록</td><td>5년</td><td>전자상거래법 제6조</td></tr>
           <tr><td>표시·광고에 관한 기록</td><td>6개월</td><td>전자상거래법 제6조</td></tr>
-          <tr><td>문의·불만 처리 기록</td><td>3년</td><td>전자상거래법 제6조</td></tr>
+          <tr><td>문의·불만 처리 기록</td><td>3년 이상 (3년이 지난 기록은 회원이 삭제를 요청하면 지체 없이 파기)</td><td>전자상거래법 제6조</td></tr>
           <tr><td>부정 이용 기록</td><td>3년</td><td>부정 이용 방지</td></tr>
         </tbody>
       </table>
