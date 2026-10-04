@@ -1,3 +1,4 @@
+import { screenshotStore } from "@/lib/screenshot-store";
 /**
  * 커뮤니티 테스터 마켓 — 유료 시트 (ADR-0012).
  *
@@ -11,7 +12,6 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureOrderSlots } from "@/lib/console-data";
-import { SCREENSHOT_BUCKET } from "@/lib/console";
 import { appendLedger } from "@/lib/credits";
 import { fetchAll } from "@/lib/fetch-all";
 import { createNotification, createNotificationsBulk } from "@/lib/notifications";
@@ -259,7 +259,7 @@ async function clearSlot(supabase: SupabaseClient, slotId: number): Promise<void
     .map((l) => l.screenshot_path)
     .filter((p): p is string => typeof p === "string" && p.length > 0);
   if (paths.length > 0) {
-    const { error: rmErr } = await supabase.storage.from(SCREENSHOT_BUCKET).remove(paths);
+    const { error: rmErr } = await screenshotStore(supabase).remove(paths);
     if (rmErr) console.error("[paid-seats] screenshot cleanup failed", rmErr);
   }
   await supabase.from("paid_order_logs").delete().eq("slot_id", slotId);

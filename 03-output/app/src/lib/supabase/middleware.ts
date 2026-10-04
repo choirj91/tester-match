@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseGlobalOptions } from "@/lib/supabase/route-fetch";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -11,6 +12,7 @@ export async function updateSupabaseSession(request: NextRequest) {
   if (!url || !key) return response;
 
   const supabase = createServerClient(url, key, {
+    ...supabaseGlobalOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();

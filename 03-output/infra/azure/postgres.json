@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Phase 2 (ADR-0015): Azure Database for PostgreSQL Flexible Server for tester-match. Smallest paid SKU (Burstable B1ms, 32 GB), public endpoint with firewall rules for the App Service outbound IPs and operator IPs. Extensions used by the schema: citext, pgcrypto. Deploy at resource-group scope through 05-harness/scripts/tm-az."
+  },
+  "parameters": {
+    "location": { "type": "string", "defaultValue": "koreacentral" },
+    "serverName": { "type": "string", "defaultValue": "psql-testermatch-prod-krc" },
+    "adminLogin": { "type": "string", "defaultValue": "tmadmin" },
+    "adminPassword": { "type": "securestring" },
+    "allowedIps": { "type": "array", "metadata": { "description": "IPv4 addresses allowed to connect (App Service outbound + operator)." } },
+    "tags": {
+      "type": "object",
+      "defaultValue": { "project": "tester-match", "owner": "knockknock-company", "env": "prod", "managed-by": "tm-az", "cost-center": "azure-credit" }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2024-08-01",
+      "name": "[parameters('serverName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": { "name": "Standard_B1ms", "tier": "Burstable" },
+      "properties": {
+        "version": "17",
+        "administratorLogin": "[parameters('adminLogin')]",
+        "administratorLoginPassword": "[parameters('adminPassword')]",
+        "storage": { "storageSizeGB": 32, "autoGrow": "Enabled" },
+        "backup": { "backupRetentionDays": 7, "geoRedundantBackup": "Disabled" },
+        "highAvailability": { "mode": "Disabled" },
+        "network": { "publicNetworkAccess": "Enabled" },
+        "authConfig": { "passwordAuth": "Enabled", "activeDirectoryAuth": "Disabled" }
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/azure.extensions', parameters('serverName'))]",
+      "dependsOn": [ "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName'))]" ],
+      "properties": { "value": "CITEXT,PGCRYPTO", "source": "user-override" }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/timezone', parameters('serverName'))]",
+      "dependsOn": [ "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers/configurations', parameters('serverName'), 'azure.extensions')]" ],
+      "properties": { "value": "UTC", "source": "user-override" }
+    },
+    {
+      "copy": { "name": "fw", "count": "[length(parameters('allowedIps'))]", "mode": "Serial", "batchSize": 1 },
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+      "apiVersion": "2024-08-01",
+      "name": "[format('{0}/allow-{1}', parameters('serverName'), replace(parameters('allowedIps')[copyIndex()], '.', '-'))]",
+      "dependsOn": [ "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers/configurations', parameters('serverName'), 'timezone')]" ],
+      "properties": { "startIpAddress": "[parameters('allowedIps')[copyIndex()]]", "endIpAddress": "[parameters('allowedIps')[copyIndex()]]" }
+    }
+  ],
+  "outputs": {
+    "fqdn": { "type": "string", "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', parameters('serverName')), '2024-08-01').fullyQualifiedDomainName]" }
+  }
+}

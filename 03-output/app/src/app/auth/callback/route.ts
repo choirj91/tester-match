@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { publicOrigin } from "@/lib/public-origin";
+import { supabaseGlobalOptions } from "@/lib/supabase/route-fetch";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -59,6 +60,7 @@ export async function GET(request: Request) {
   const response = NextResponse.redirect(`${origin}${next}`);
 
   const supabase = createServerClient(url, key, {
+    ...supabaseGlobalOptions(),
     cookies: {
       getAll() {
         return request.headers

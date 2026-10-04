@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { publicOrigin } from "@/lib/public-origin";
+import { supabaseGlobalOptions } from "@/lib/supabase/route-fetch";
 import {
   CONFIRM_COOKIE,
   CONFIRM_COOKIE_MAX_AGE_SECONDS,
@@ -97,6 +98,7 @@ async function confirmSignup(tokenHash: string, input: CompleteSignupInput): Pro
   // 세션을 쿠키에 남기지 않는 클라이언트 — 인증만 확정하고 로그인은 비밀번호로 하게 한다
   const verifier = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    ...supabaseGlobalOptions(),
   });
   const { data, error } = await verifier.auth.verifyOtp({ type: "signup", token_hash: tokenHash });
   if (error || !data.user) {

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": { "description": "Phase 2 (ADR-0015): private Blob container for paid-seat screenshots (replaces the Supabase Storage bucket of the same name)." },
+  "parameters": {
+    "location": { "type": "string", "defaultValue": "koreacentral" },
+    "accountName": { "type": "string", "defaultValue": "sttestermatchprod" },
+    "tags": { "type": "object", "defaultValue": { "project": "tester-match", "owner": "knockknock-company", "env": "prod", "managed-by": "tm-az", "cost-center": "azure-credit" } }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-05-01",
+      "name": "[parameters('accountName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "StorageV2",
+      "sku": { "name": "Standard_LRS" },
+      "properties": {
+        "accessTier": "Hot",
+        "allowBlobPublicAccess": false,
+        "minimumTlsVersion": "TLS1_2",
+        "supportsHttpsTrafficOnly": true,
+        "allowSharedKeyAccess": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}/default/paid-order-screenshots', parameters('accountName'))]",
+      "dependsOn": [ "[resourceId('Microsoft.Storage/storageAccounts', parameters('accountName'))]" ],
+      "properties": { "publicAccess": "None" }
+    }
+  ]
+}

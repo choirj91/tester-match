@@ -1,3 +1,4 @@
+import { screenshotStore } from "@/lib/screenshot-store";
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,7 +9,6 @@ import { runAfterResponse } from "@/lib/wait-until";
 import { assignSeatSlot } from "@/lib/paid-seats";
 import { completePaidSeat, paidSeatVerdict } from "@/lib/seat-rewards";
 import {
-  SCREENSHOT_BUCKET,
   SCREENSHOT_MAX_BYTES,
   SCREENSHOT_MIME_TO_EXT,
   screenshotObjectPath,
@@ -296,9 +296,7 @@ async function recordSeatScreenshot(
 
     const ext = SCREENSHOT_MIME_TO_EXT[args.file.type];
     const path = screenshotObjectPath(args.orderId, slot.slot_no, args.dayN, ext);
-    const { error: upErr } = await supabase.storage
-      .from(SCREENSHOT_BUCKET)
-      .upload(path, args.file, { contentType: args.file.type, upsert: true });
+    const { error: upErr } = await screenshotStore(supabase).upload(path, args.file, args.file.type);
     if (upErr) {
       console.error("[checkins/POST] screenshot upload failed", upErr);
       return "failed";

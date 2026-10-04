@@ -1,3 +1,4 @@
+import { screenshotStore } from "@/lib/screenshot-store";
 /**
  * 유료 테스터 콘솔 — 서버 데이터 로더 (admin client 경유, 접근 제어 포함).
  * 구매자는 본인 주문만, 관리자는 전체.
@@ -6,7 +7,6 @@
 import type { AppUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
-  SCREENSHOT_BUCKET,
   orderDayN,
   type ConsoleLog,
   type ConsoleSlot,
@@ -120,15 +120,10 @@ export async function loadConsoleOrder(
   const logs = (logRows ?? []) as ConsoleLog[];
 
   const paths = logs.map((l) => l.screenshot_path).filter((p): p is string => !!p);
-  const urlByPath = new Map<string, string>();
-  if (paths.length > 0) {
-    const { data: signed } = await supabase.storage
-      .from(SCREENSHOT_BUCKET)
-      .createSignedUrls(paths, SIGNED_URL_TTL_SEC);
-    for (const s of signed ?? []) {
-      if (s.path && s.signedUrl) urlByPath.set(s.path, s.signedUrl);
-    }
-  }
+  const urlByPath =
+    paths.length > 0
+      ? await screenshotStore(supabase).signedUrls(paths, SIGNED_URL_TTL_SEC)
+      : new Map<string, string>();
 
   return {
     order,
