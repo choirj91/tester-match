@@ -46,11 +46,7 @@ describe("sendEmail", () => {
     process.env.RESEND_API_KEY = "test_key";
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const undeliverable = [
-      "withdrawn-1@deleted.local",
-      "hansangu477@unknown.invalid",
-      "no-domain",
-    ];
+    const undeliverable = ["withdrawn-1@deleted.local", "hansangu477@unknown.invalid", "no-domain"];
 
     // Act
     const results = await Promise.all(

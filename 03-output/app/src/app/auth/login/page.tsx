@@ -7,10 +7,17 @@ export const runtime = "edge";
 export const metadata = { title: "로그인" };
 
 const NOTICE: Record<string, string> = {
-  verified: "이메일 인증이 완료되었습니다. 이메일과 비밀번호로 로그인해주세요.",
+  verified: "가입이 완료되었습니다. 방금 정한 비밀번호로 로그인해주세요.",
   exchange_failed:
     "로그인 링크를 확인하지 못했습니다. 이메일로 가입했다면 이메일과 비밀번호로 로그인해주세요.",
+  confirm_failed:
+    "인증 링크가 만료되었거나 이미 사용되었습니다. 이미 가입을 마쳤다면 그대로 로그인하고, 아니라면 회원가입을 다시 진행해 새 인증 메일을 받아주세요.",
+  confirm_password_failed:
+    "비밀번호를 저장하지 못했습니다. 번거롭겠지만 회원가입을 다시 진행해주세요.",
+  confirm_member_failed:
+    "이메일 인증은 완료됐지만 회원 정보를 만들지 못했습니다. 고객센터로 문의해주세요.",
 };
+
 
 export default async function LoginPage({
   searchParams,
@@ -18,7 +25,7 @@ export default async function LoginPage({
   searchParams: Promise<{ verified?: string; error?: string }>;
 }) {
   const { verified, error } = await searchParams;
-  const notice = verified === "1" ? NOTICE.verified : error ? NOTICE[error] : null;
+  const notice = verified === "1" ? NOTICE.verified : error ? (NOTICE[error] ?? null) : null;
   const signupEnabled = isEmailSignupEnabled();
 
   return (

@@ -19,7 +19,8 @@ export default function SignupPage() {
 
         <h1 className="mt-6 text-2xl font-bold text-neutral-900">이메일로 회원가입</h1>
         <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-          가입 후 받은 메일에서 인증을 완료하면 로그인할 수 있습니다. 테스터로 참여하려면 Play
+          이메일 주소로 가입 링크를 보내드립니다. 링크에서 닉네임과 비밀번호를 정하면 가입이
+          완료됩니다. 테스터로 참여하려면 Play
           스토어에서 쓰는 Google 계정이 필요하니,{" "}
           <Link href="/auth/login" className="font-semibold text-trust-600 hover:underline">
             Google 로그인

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { safeInternalPath } from "@/lib/safe-redirect";
 
 const ERROR_MESSAGE: Record<string, string> = {
   "Invalid login credentials": "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -11,7 +12,7 @@ const ERROR_MESSAGE: Record<string, string> = {
 /** 로그인 후 돌아갈 경로 — 외부 URL 로의 오픈 리다이렉트를 막기 위해 내부 경로만 허용 */
 function safeNextPath(): string {
   const next = new URLSearchParams(window.location.search).get("next");
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  return safeInternalPath(next, window.location.origin);
 }
 
 export function EmailSignInForm() {
