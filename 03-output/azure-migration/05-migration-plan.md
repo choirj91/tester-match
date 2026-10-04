@@ -153,7 +153,7 @@
 |---|---|
 | 선행 | `knockknock.company` 영역은 **홈페이지 이전 세션과 공유** — 위치 공용 그룹 `rg-knockknock-shared` **합의 완료**(2026-10-04). 홈페이지 세션이 자기 전환(Cloudflare Pages → Static Web Apps) 완료를 알리기 전에는 영역을 건드리지 않는다 |
 | 홈페이지 몫 | ① 루트 `@` 는 Azure DNS 에서 CNAME 불가 → `swa-knockknock-homepage`(rg-homepage-prod-eas)를 가리키는 **alias A 레코드** (그룹 넘어 참조 가능) ② `@` 의 SWA 도메인 검증 TXT 는 **삭제 금지** — 인증서 갱신(2027-04 전) 때 재검증될 수 있음 ③ `@` 의 google-site-verification TXT 유지 ④ Cloudflare 프록시 기능(관리형 robots.txt 등) 소멸 — 홈페이지는 영향 없음 확인됨 |
-| www | 현재 `www` CNAME → `knockknock.company`, Cloudflare **프록시(주황)** — 홈페이지가 나중에 루트로 301 을 걸 예정. Azure DNS 는 리다이렉트를 못 하므로 3-2 전에 홈페이지 세션이 SWA(커스텀 도메인 `www` + 리다이렉트)로 옮겨야 한다 — 이전 전 그 세션과 확인 |
+| www | 현재 `www` CNAME → `knockknock.company`, Cloudflare **프록시(주황)** — 홈페이지가 나중에 루트로 301 을 걸 예정. Azure DNS 는 리다이렉트를 못 하므로 3-2 전에 홈페이지 세션이 처리 — **합의(2026-10-04)**: `www` 를 SWA 두 번째 커스텀 도메인(CNAME 검증, DNS 전용)으로 추가, 호스트 기준 301 이 안 되면 같은 내용 서비스(canonical 은 이미 루트). 그 세션이 www 레코드를 바꿀 때 통보. Azure DNS 에서는 `www` CNAME → SWA 기본 호스트 (alias 불필요) |
 | SPF | 현재 `v=spf1 include:_spf.google.com ~all`. ACS 추가 시 같은 한 줄에 ACS include 를 더한다 (SPF 레코드는 1개만). MX·DKIM(Google) 은 이전 직전에 직접 조회 |
 | 작업 | Azure DNS 공개 영역 생성 → Cloudflare 의 **모든 레코드 내보내기·복사** (특히 Google Workspace MX·SPF·DKIM — 도메인 Gmail 수신이 여기에 달림, ACS·Resend 인증, 홈페이지, `asuid.*`) → 레코드별 대조 (`dig @<azure-ns>` vs `dig @<cloudflare-ns>`) → GoDaddy 에서 네임서버를 Azure 4개로 변경 (사용자) |
 | 검증 | 48시간 동안 양쪽 응답 일치, 도메인 Gmail 송수신 시험, 사이트·인증 메일 정상 |
