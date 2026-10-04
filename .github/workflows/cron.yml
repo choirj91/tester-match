@@ -3,8 +3,12 @@ name: Cron Jobs
 on:
   schedule:
     # ── KST 기준 (UTC+9) ──────────────────────────────
-    # 매일 KST 20:00 (UTC 11:00) — 체크인 리마인더
-    - cron: "0 11 * * *"
+    # 매일 KST 16:00 (UTC 07:00) — 체크인 리마인더.
+    # GitHub 스케줄이 이 저장소에서 3~6시간 늦게 실행돼(2026-09-30~10-04 실측) 실제 도착은 KST 19~22시
+    - cron: "0 7 * * *"
+    # 전환일(2026-10-04) 하루만: 이전 시각(UTC 11:00)에도 한 번 실행 — 예약을 옮긴 날 리마인더가 빠지지 않게.
+    # 2026-10-05 이후 이 줄은 지워도 된다 (남겨 두면 매년 10월 4일에 한 번 더 실행될 뿐이다).
+    - cron: "0 11 4 10 *"
     # 매일 KST 21:00 (UTC 12:00) — 미체크인 페널티 sweep
     - cron: "0 12 * * *"
     # 6시간 간격 — 앱 초대 링크 HEAD 검증
@@ -41,13 +45,13 @@ env:
   CRON_SECRET: ${{ secrets.CRON_SECRET }}
 
 jobs:
-  # ── 체크인 리마인더 (KST 20:00) ────────────────────
+  # ── 체크인 리마인더 (KST 16:00 예약, 실제 도착 19~22시) ──
   checkin-reminder:
     name: 체크인 리마인더
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' && (inputs.job == 'daily-checkin-reminder' || inputs.job == 'all') ||
-      github.event_name == 'schedule' && startsWith(github.event.schedule, '0 11')
+      github.event_name == 'schedule' && (github.event.schedule == '0 7 * * *' || github.event.schedule == '0 11 4 10 *')
     steps:
       - name: Call /api/cron/daily-checkin-reminder
         run: |

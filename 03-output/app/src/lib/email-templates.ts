@@ -1,3 +1,5 @@
+import { paidSeatNudgeLines, type ReminderItem } from "@/lib/checkin-reminder";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const layoutHtml = (innerHtml: string, footerNote = "") => `
@@ -30,12 +32,12 @@ export function matchOptInEmail(args: {
 }): Email {
   const subject = `[Tester Match] "${args.appName}" 새 테스터 — ${args.testerNickname}`;
   const html = layoutHtml(`
-    <p style="margin:0 0 12px;"><strong>${args.ownerNickname}</strong> 님,</p>
+    <p style="margin:0 0 12px;"><strong>${escapeHtml(args.ownerNickname)}</strong> 님,</p>
     <p style="margin:0 0 16px;">
-      등록한 앱 <strong>${args.appName}</strong> 에 테스터 한 명이 새로 참여했습니다.
+      등록한 앱 <strong>${escapeHtml(args.appName)}</strong> 에 테스터 한 명이 새로 참여했습니다.
     </p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
-      <tr><td style="padding:6px 0;color:#64748b;">테스터</td><td>${args.testerNickname}</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">테스터</td><td>${escapeHtml(args.testerNickname)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">신뢰 점수</td><td>${args.testerTrustScore}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">남은 정원</td><td>${args.remainingCount}명</td></tr>
     </table>
@@ -52,30 +54,64 @@ export function matchOptInEmail(args: {
 
 export function dailyCheckinReminderEmail(args: {
   testerNickname: string;
-  apps: Array<{ name: string; appId: number; dayN: number }>;
+  items: ReminderItem[];
 }): Email {
-  const list = args.apps
-    .map(
-      (a) =>
-        `<li style="margin:6px 0;"><strong>${a.name}</strong> — ${a.dayN}일차</li>`,
-    )
+  const paid = args.items.filter((i) => i.paidSeat);
+  const free = args.items.filter((i) => !i.paidSeat);
+  const urgent = paid.some((i) => i.paidSeat?.lastChance);
+  const subject = urgent
+    ? "[Tester Match] ⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
+    : paid.length > 0
+      ? `[Tester Match] 💰 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
+      : `[Tester Match] 오늘 체크인할 앱 ${args.items.length}개`;
+
+  const paidHtml = paid
+    .map((i) => {
+      const tone = i.paidSeat?.lastChance
+        ? "border:1px solid #f87171;background:#fef2f2;"
+        : "border:1px solid #fcd34d;background:#fffbeb;";
+      const lines = paidSeatNudgeLines(i)
+        .map((l) => `<p style="margin:3px 0;font-size:14px;">${escapeHtml(l)}</p>`)
+        .join("");
+      return `<div style="margin:0 0 12px;padding:14px 16px;border-radius:12px;${tone}">
+        <p style="margin:0 0 6px;font-weight:700;">💰 ${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
+      </div>`;
+    })
     .join("");
-  const subject = `[Tester Match] 오늘 체크인할 앱 ${args.apps.length}개`;
+  const freeHtml =
+    free.length === 0
+      ? ""
+      : `<p style="margin:16px 0 8px;">품앗이 체크인 ${free.length}개</p>
+    <ul style="margin:0 0 16px;padding-left:20px;">${free
+      .map((a) => `<li style="margin:6px 0;"><strong>${escapeHtml(a.name)}</strong> — ${a.dayN}일차</li>`)
+      .join("")}</ul>`;
+  const notes = [
+    paid.length > 0
+      ? "유료 시트는 앱 실행 화면 스크린샷 1장과 함께 체크인해야 출석으로 인정됩니다. 결석이 3일이 되면 시트가 해제됩니다."
+      : "",
+    free.length > 0 ? "품앗이 체크인을 5일 연속 놓치면 페널티가 부과됩니다." : "",
+  ].filter(Boolean);
+
   const html = layoutHtml(`
-    <p style="margin:0 0 12px;"><strong>${args.testerNickname}</strong> 님,</p>
-    <p style="margin:0 0 16px;">오늘 체크인이 필요한 앱 ${args.apps.length}개가 있습니다.</p>
-    <ul style="margin:0 0 16px;padding-left:20px;">${list}</ul>
+    <p style="margin:0 0 12px;"><strong>${escapeHtml(args.testerNickname)}</strong> 님,</p>
+    <p style="margin:0 0 16px;">오늘 체크인이 필요한 앱 ${args.items.length}개가 있습니다.</p>
+    ${paidHtml}${freeHtml}
     <p style="margin:24px 0 0;">
       <a href="${APP_URL}/my-tests"
          style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
         지금 체크인하기
       </a>
     </p>
-    <p style="margin:16px 0 0;font-size:13px;color:#64748b;">
-      체크인을 5일 연속 놓치면 페널티가 부과됩니다.
-    </p>
+    ${notes.map((n) => `<p style="margin:16px 0 0;font-size:13px;color:#64748b;">${n}</p>`).join("")}
   `);
-  const text = `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.apps.length}개:\n${args.apps.map((a) => `- ${a.name} (${a.dayN}일차)`).join("\n")}\n\n체크인: ${APP_URL}/my-tests`;
+  const text = [
+    `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.items.length}개:`,
+    ...paid.map((i) => `💰 ${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
+    ...free.map((a) => `- ${a.name} (${a.dayN}일차)`),
+    "",
+    `체크인: ${APP_URL}/my-tests`,
+    ...notes,
+  ].join("\n");
   return { subject, html, text };
 }
 
@@ -94,7 +130,7 @@ export function testerRequestEmail(args: {
     .join("");
   const html = layoutHtml(
     `
-    <p style="margin:0 0 16px;"><strong>${args.recipientNickname}</strong> 님,</p>
+    <p style="margin:0 0 16px;"><strong>${escapeHtml(args.recipientNickname)}</strong> 님,</p>
     ${lines}
     <p style="margin:28px 0 0;">
       <a href="${APP_URL}/browse/${args.appId}"
@@ -103,7 +139,7 @@ export function testerRequestEmail(args: {
       </a>
     </p>
     `,
-    `이 메일은 Tester Match 회원 <strong>${args.senderNickname}</strong>님의 테스터 요청입니다. 원치 않으시면 무시하셔도 됩니다.`,
+    `이 메일은 Tester Match 회원 <strong>${escapeHtml(args.senderNickname)}</strong>님의 테스터 요청입니다. 원치 않으시면 무시하셔도 됩니다.`,
   );
   const text = `${args.recipientNickname} 님,\n\n${args.message}\n\n테스트 참여: ${APP_URL}/browse/${args.appId}`;
   return { subject: args.subject, html, text };
@@ -326,12 +362,12 @@ export function seatRewardDisputedEmail(args: {
 }
 
 /** 이메일 회원가입 인증 메일 (ADR-0013) */
-export function signupVerifyEmail(args: { nickname: string; link: string }): Email {
+export function signupVerifyEmail(args: { link: string }): Email {
   const subject = "[Tester Match] 이메일 인증을 완료해주세요";
   const html = layoutHtml(
     `
-    <p style="margin:0 0 12px;"><strong>${escapeHtml(args.nickname)}</strong> 님, 가입을 환영합니다.</p>
-    <p style="margin:0 0 16px;">아래 버튼을 눌러 이메일 인증을 완료하면 바로 로그인할 수 있습니다.</p>
+    <p style="margin:0 0 12px;">Tester Match 가입을 신청하셨습니다.</p>
+    <p style="margin:0 0 16px;">아래 버튼을 누른 뒤, 열리는 화면에서 <strong>닉네임과 비밀번호를 정하면</strong> 가입이 완료됩니다.</p>
     <p style="margin:24px 0 0;">
       <a href="${args.link}"
          style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
@@ -343,33 +379,8 @@ export function signupVerifyEmail(args: { nickname: string; link: string }): Ema
       <span style="word-break:break-all;">${args.link}</span>
     </p>
     `,
-    "본인이 가입하지 않았다면 이 메일을 무시해주세요. 인증하지 않은 계정은 사용할 수 없습니다.",
+    "본인이 가입을 신청하지 않았다면 이 메일을 무시해주세요. 버튼을 누르지 않으면 계정은 만들어지지 않습니다.",
   );
-  const text = `${args.nickname} 님, Tester Match 가입을 환영합니다. 아래 링크로 이메일 인증을 완료해주세요.\n${args.link}`;
-  return { subject, html, text };
-}
-
-export function matchCompletedEmail(args: {
-  testerNickname: string;
-  appName: string;
-  reward: number;
-}): Email {
-  const subject = `[Tester Match] "${args.appName}" 14일 완주! +${args.reward} 크레딧`;
-  const html = layoutHtml(`
-    <p style="margin:0 0 12px;"><strong>${args.testerNickname}</strong> 님,</p>
-    <p style="margin:0 0 16px;">
-      <strong>${args.appName}</strong> 14일 테스트를 무사히 완주하셨습니다. 🎉
-    </p>
-    <p style="margin:16px 0;">
-      <strong>+${args.reward.toLocaleString("ko-KR")} 크레딧</strong> 적립이 완료되었습니다.
-    </p>
-    <p style="margin:24px 0 0;">
-      <a href="${APP_URL}/credits"
-         style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
-        크레딧 내역 보기
-      </a>
-    </p>
-  `);
-  const text = `${args.testerNickname} 님, "${args.appName}" 14일 완주! +${args.reward} 크레딧 적립됨.\n${APP_URL}/credits`;
+  const text = `Tester Match 가입을 신청하셨습니다. 아래 링크를 연 뒤 화면에서 닉네임과 비밀번호를 정하면 가입이 완료됩니다.\n${args.link}`;
   return { subject, html, text };
 }

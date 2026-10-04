@@ -3,24 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 
-type Fields = { email: string; password: string; nickname: string; kakao_nickname: string };
-
 export function SignupForm() {
-  const [fields, setFields] = useState<Fields>({
-    email: "",
-    password: "",
-    nickname: "",
-    kakao_nickname: "",
-  });
-  const [agreed, setAgreed] = useState(false);
+  const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
-
-  function update(key: keyof Fields, value: string) {
-    setFields((prev) => ({ ...prev, [key]: value }));
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,14 +18,14 @@ export function SignupForm() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...fields, agreed, website }),
+        body: JSON.stringify({ email, website }),
       });
       const data = (await res.json()) as { ok: boolean; message?: string };
       if (!data.ok) {
         setError(data.message ?? "가입에 실패했습니다.");
         return;
       }
-      setSentTo(fields.email.trim());
+      setSentTo(email.trim());
     } catch {
       setError("네트워크 오류. 잠시 후 다시 시도해주세요.");
     } finally {
@@ -48,10 +36,11 @@ export function SignupForm() {
   if (sentTo) {
     return (
       <div className="border-trust-500/30 bg-trust-50 mt-8 rounded-xl border p-5 text-sm leading-relaxed text-neutral-700">
-        <p className="font-semibold text-neutral-900">인증 메일을 보냈습니다</p>
+        <p className="font-semibold text-neutral-900">가입 링크를 보냈습니다</p>
         <p className="mt-1">
-          <strong>{sentTo}</strong> 로 보낸 메일의 [이메일 인증하기] 버튼을 누르면 가입이
-          완료됩니다. 메일이 안 보이면 스팸함을 확인해주세요.
+          <strong>{sentTo}</strong> 로 보낸 메일의 [이메일 인증하기] 버튼을 누른 뒤, 열리는
+          화면에서 닉네임과 비밀번호를 정하면 가입이 완료됩니다. 메일이 안 보이면 스팸함을
+          확인해주세요.
         </p>
         <Link
           href="/auth/login"
@@ -63,9 +52,6 @@ export function SignupForm() {
     );
   }
 
-  const inputClass =
-    "mt-1.5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
-
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-4">
       <label className="block text-sm font-semibold text-neutral-900">
@@ -74,48 +60,12 @@ export function SignupForm() {
           type="email"
           autoComplete="email"
           required
-          value={fields.email}
-          onChange={(e) => update("email", e.target.value)}
-          className={inputClass}
-        />
-      </label>
-      <label className="block text-sm font-semibold text-neutral-900">
-        비밀번호 <span className="font-normal text-neutral-500">(8자 이상)</span>
-        <input
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          maxLength={72}
-          value={fields.password}
-          onChange={(e) => update("password", e.target.value)}
-          className={inputClass}
-        />
-      </label>
-      <label className="block text-sm font-semibold text-neutral-900">
-        닉네임 <span className="font-normal text-neutral-500">(사이트에 표시)</span>
-        <input
-          type="text"
-          required
-          maxLength={32}
-          value={fields.nickname}
-          onChange={(e) => update("nickname", e.target.value)}
-          className={inputClass}
-        />
-      </label>
-      <label className="block text-sm font-semibold text-neutral-900">
-        카카오톡 닉네임{" "}
-        <span className="font-normal text-neutral-500">(오픈채팅방에서 쓰는 이름)</span>
-        <input
-          type="text"
-          required
-          maxLength={40}
-          value={fields.kakao_nickname}
-          onChange={(e) => update("kakao_nickname", e.target.value)}
-          className={inputClass}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="focus:border-trust-600 focus:ring-trust-500/20 mt-1.5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:outline-none"
         />
         <span className="mt-1 block text-xs font-normal text-neutral-500">
-          커뮤니티 회원 확인과 안내에만 쓰이며 공개되지 않습니다.
+          닉네임과 비밀번호는 메일의 링크를 연 다음 화면에서 정합니다.
         </span>
       </label>
 
@@ -134,44 +84,14 @@ export function SignupForm() {
         </label>
       </div>
 
-      <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-neutral-600">
-        <input
-          type="checkbox"
-          className="mt-0.5 shrink-0"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-        />
-        <span>
-          {/* 새 탭으로 연다 — 같은 탭 이동은 입력 중인 가입 정보를 날린다 */}
-          <Link
-            href="/policies/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-neutral-900"
-          >
-            이용약관
-          </Link>
-          과{" "}
-          <Link
-            href="/policies/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-neutral-900"
-          >
-            개인정보처리방침
-          </Link>
-          에 동의합니다.
-        </span>
-      </label>
-
       {error && <p className="text-crimson-500 text-sm">{error}</p>}
 
       <button
         type="submit"
-        disabled={loading || !agreed}
+        disabled={loading}
         className="bg-trust-600 hover:bg-trust-700 w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
       >
-        {loading ? "처리 중..." : "가입하고 인증 메일 받기"}
+        {loading ? "처리 중..." : "가입 링크 받기"}
       </button>
     </form>
   );

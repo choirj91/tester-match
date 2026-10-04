@@ -20,7 +20,7 @@ const ITEMS = [
   {
     href: "/policies/refund" as const,
     title: "환불 정책",
-    desc: "크레딧 충전 / Boost 결제 환불 기준과 처리 절차.",
+    desc: "유료 테스터 시트 결제의 환불 기준과 처리 절차.",
   },
   {
     href: "/policies/credits" as const,

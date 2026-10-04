@@ -29,7 +29,7 @@ const SUBREQUEST_BUDGET = 44;
  *   - trust_score_history INSERT
  *   - apps.required_testers + 1 (정원 복구)
  *
- * Cloudflare Cron 권장: KST 21:00 (UTC 12:00) — 일일 리마인더 1시간 후.
+ * 일정: GitHub Actions 스케줄 "0 12 * * *" (KST 21:00 예약, 실제 실행은 수 시간 늦음) — 일일 리마인더(KST 16:00 예약) 뒤.
  *   crons += ["0 12 * * *"]
  */
 export async function GET(request: Request) {

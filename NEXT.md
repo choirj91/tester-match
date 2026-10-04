@@ -17,7 +17,7 @@
 
 - [ ] **커뮤니티 테스터 마켓 오픈** ([ADR-0012](01-source/decisions/ADR-0012-community-tester-market.md), ADR-0011 운영자 모델은 폴백) — 주문은 여전히 **관리자 전용 게이트**
   - [ ] 본 도메인 관리자 계정으로 E2E: 앱 하나에 크레딧/샌드박스 결제로 시트 열기 → 부계정으로 /browse 💰배지 → 참여 → 스샷 체크인 → 콘솔에 로그 뜨는지 → (14일 대신) DB로 완주 시뮬 → 마일스톤 보상(개근 600, 출시 +100) 적립·기프티콘 신청·/admin/redemptions 처리
-  - [ ] 정책 4종(크레딧·약관 §7·환불 §1~2·개인정보) 문구 승인 — 에스크로·"완주한 시트만 과금"·마일스톤 보상(ADR-0014) 반영본. 수정 요청 시 즉시 반영
+  - [x] ~~정책 문구 승인~~ (2026-10-04 사용자 승인 — 크레딧 정책 제2조·약관 제7조 마일스톤 반영본. 시트 상한 30 유지도 확정)
   - [ ] **대표자명·사업장 주소·전화 표기 + 통신판매업 신고** — 약관·개인정보 책임자·푸터 (지금은 상호·메일만). 공개 오픈 전 권장
   - [ ] 운영 런북 숙지: 04-review/history/2026-10-03-tester-market-flow-audit.md §3 (매일 08:30 [ACTION] 메일, 토스 환불 대기, 이의 판정 7일, 기프티콘 3영업일)
   - [ ] 리포트 경보 읽는 법: `확인 필요`(토스 결제 상태 대조·스윕 자동 재시도) / `환불 실패`(수동 조정 필요) / `환불 누락·과다 의심`(주문 관리에서 대조). 즉시 확인은 크론 주소에 `?mode=preview`
@@ -26,8 +26,14 @@
   - [ ] 본 도메인에서 관리자 로그인 → `/admin/paid-orders` 주문 2 [테스트 개시] → `/console/orders/2` 에서 슬롯 라벨·스샷 업로드·코멘트 실사용 확인 (구매자 계정으로도 읽기 전용 확인)
   - [ ] 토스 전자결제 신청 — 환불정책 https://tester-match.knockknock.company/policies/refund · 약관 /policies/terms · 개인정보 /policies/privacy. 주소 표기 요구 시 재검토(자택 주소 비공개 결정)
   - [ ] 토스페이먼츠 가입 → 전자결제 신청 → 라이브 키 발급 (심사 수일~2주)
-  - [ ] 라이브 전환: `wrangler pages secret put TOSS_SECRET_KEY` 교체 + `.env.local` 의 `NEXT_PUBLIC_TOSS_CLIENT_KEY` 교체 후 재빌드 + `PAID_TESTERS_PUBLIC_ORDERING = true` (lib/paid-testers.ts) → 배포 → 게시판 오픈 공지
-  - [ ] **토스 심사용 테스트 계정** ([ADR-0013](01-source/decisions/ADR-0013-email-signup.md)) — 계정 이메일 `test@knockknock.company` 확정, `PAID_TESTERS_ORDER_ALLOWLIST` 시크릿 등록 완료(다음 배포부터 적용). 남은 순서: `/auth/signup` 에서 그 메일로 직접 가입·인증(비밀번호는 본인만) → AI 세션이 데모 앱(비노출 `paused`) 생성 + 2차 배포 → 로그인·주문·결제창 확인 후 토스 폼에 ID/비밀번호 직접 입력
+  - [ ] **라이브 전환 (토스 최종 승인 완료 2026-10-04 — 남은 순서)**: ① 라이브 시크릿 키를 `wrangler pages secret put TOSS_SECRET_KEY` 로 교체(사용자 직접) ② `.env.local` 의 `NEXT_PUBLIC_TOSS_CLIENT_KEY` 를 라이브 클라이언트 키로 교체(사용자 직접, 지금은 테스트 키) ③ 재빌드·배포 — 이 시점엔 여전히 관리자만 주문 가능 ④ 관리자 계정으로 실결제 1시트(1,000원) E2E → [시트 마감] → 토스 부분취소 → [환불 완료] ⑤ `PAID_TESTERS_PUBLIC_ORDERING = true` 배포 ⑥ 게시판·오픈채팅 공지
+  - [x] ~~출석 리마인더 보강~~ (2026-10-04 배포 `afe2922` — 유료 시트 전용 안내, 스크린샷 기준 출석, 예약 KST 16시·실제 도착 19~22시). 남은 것: `.github/workflows/cron.yml` 의 전환일용 임시 줄 `0 11 4 10 *` 삭제(10-05 이후), 첫 유료 시트가 생기면 실제 메일 문구 확인. 정시 발송(Cloudflare Worker 크론)·카카오 알림톡은 보류
+  - [ ] **토스 심사용 테스트 계정** ([ADR-0013](01-source/decisions/ADR-0013-email-signup.md)) — 계정 `test@knockknock.company` 준비 완료(회원 행 1392, 비노출 데모 앱 1976, 허용목록 적용). 남은 일: 그 계정으로 로그인 → `/paid-testers` 주문 → 토스 결제창 확인 → 토스 폼에 ID/비밀번호 직접 입력
+  - [x] ~~가입 인증 보강 적용~~ (2026-10-04 — 마이그레이션 000023·000024 적용, `566ee31` 배포. 실DB 검증 33/33)
+  - [ ] **실제 Google 계정으로 사전등록 연결 확인** — 아직 로그인한 적 없는 Google 계정 주소를 AI 세션에 알려주면 시험용 사전등록 행을 만들어 둠 → 그 계정으로 로그인 → 앱이 연결되는지 확인. 연결 규칙(가입 트리거)이 Google 가입 전체가 지나가는 길이라 한 번은 실물로 봐야 함
+  - [ ] **며칠간 감사** — "회원 행 없는 로그인"이 0 인지 (`03-output/supabase/checks/` 참고). 0 이 아니면 Google 가입 연결이 실패한 것
+  - [ ] Resend 대시보드에서 `knockknock.company` 도메인의 클릭 추적이 꺼져 있는지 확인 (켜져 있으면 인증 링크가 추적 서버를 거침)
+  - [ ] **주인 불명 사전등록 행 3건** — 397번(이메일 `hansangu477`, 도메인 없음)·398번(`jaeyeong.bee`, 도메인 없음)·556번(`hansangu477@unknown.invalid` 봉인). 실제 주인 이메일을 알면 고쳐야 그 사람이 로그인했을 때 자기 앱에 연결됨
   - [x] ~~Resend 도메인 검증~~ (2026-10-03 — `knockknock.company` 검증, 발신 `noreply@knockknock.company`, 프로덕션 `RESEND_API_KEY` 새 키로 교체. 전 수신자 발송 가능)
   - [ ] `ADMIN_NOTIFY_EMAIL` 시크릿 삭제(admin@ 로 복귀) — admin@knockknock.company 수신함 확인 후
 
