@@ -1,0 +1,119 @@
+name: Deploy (Azure App Service)
+
+# 수동 실행 전용. push 로 자동 배포하지 않는다 — 운영 전환 전까지는 스테이징 확인용,
+# 전환 후에도 배포는 사람이 시작한다 (DEPLOY.md 의 승인 규칙과 같다).
+#
+# 필요한 설정 (값은 리포에 쓰지 않는다 — 리포 공개):
+#   GitHub Environment `azure-prod` (Required reviewers = 배포 승인 게이트)
+#   Environment secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#            (대상 테넌트의 앱 등록 sp-testermatch-deploy, 페더레이션 주체
+#             repo:choirj91/tester-match:environment:azure-prod — 브랜치와 무관,
+#             역할 Website Contributor — rg-testermatch-prod-krc 범위만)
+#   Variables (빌드 타임에 클라이언트 번들로 들어가는 공개 값):
+#            NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+#            NEXT_PUBLIC_TOSS_CLIENT_KEY, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_APP_NAME,
+#            NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED
+#   App Service 설정: 시작 명령 `node server.js`, 앱 설정 HOSTNAME=0.0.0.0 (standalone 은
+#   HOSTNAME 에 바인딩 — 컨테이너 호스트명이면 외부 요청을 못 받는다), PORT 는 플랫폼이 주입.
+#   앞단 구성에 맞춰 CLIENT_IP_HEADER (기본 x-forwarded-for — src/lib/client-ip.ts).
+#   런타임 비밀(SUPABASE_SECRET_KEY, RESEND_API_KEY, TOSS_SECRET_KEY, CRON_SECRET …)은
+#   App Service 앱 설정(Key Vault 참조)에 둔다. 빌드 산출물에는 들어가지 않는다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "배포하려면 deploy 입력"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-azure
+  cancel-in-progress: false
+
+env:
+  AZURE_WEBAPP_NAME: app-testermatch-prod-krc
+
+defaults:
+  run:
+    working-directory: 03-output/app
+
+jobs:
+  deploy:
+    name: Build · Deploy
+    if: inputs.confirm == 'deploy'
+    environment: azure-prod
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: 03-output/app/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test --reporter=default
+
+      - name: Check build-time values are present
+        run: |
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY NEXT_PUBLIC_TOSS_CLIENT_KEY NEXT_PUBLIC_APP_URL; do
+            [ -n "${!v}" ] || { echo "missing repository variable $v"; exit 1; }
+          done
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_TOSS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_TOSS_CLIENT_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+
+      - name: Build (standalone)
+        run: pnpm build:azure
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_TOSS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_TOSS_CLIENT_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
+          NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED: ${{ vars.NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED }}
+
+      - name: Package standalone output
+        run: |
+          # .env 파일이 산출물에 섞이지 않았는지 확인 (런타임 비밀은 앱 설정으로만)
+          if find .next/standalone -name '.env*' -not -path '*/node_modules/*' | grep -q .; then
+            echo ".env file found in standalone output"; exit 1
+          fi
+          # server.js 가 산출물 루트에 있어야 App Service 시작 명령(node server.js)이 동작한다
+          [ -f .next/standalone/server.js ] || { echo "server.js missing at standalone root"; exit 1; }
+          [ -d .next/standalone/.next/static ] || { echo ".next/static not copied"; exit 1; }
+          cd .next/standalone && zip -qr ../../release.zip .
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package: 03-output/app/release.zip
