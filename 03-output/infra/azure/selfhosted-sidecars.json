@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ADR-0015 phase 2 cutover: add only the PostgREST and GoTrue sidecars to an existing web app (app settings are applied separately by cutover-settings.sh so existing settings are kept)."
+  },
+  "parameters": {
+    "appName": {
+      "type": "string"
+    },
+    "postgrestImage": {
+      "type": "string",
+      "defaultValue": "postgrest/postgrest:v16.4"
+    },
+    "gotrueImage": {
+      "type": "string",
+      "defaultValue": "supabase/auth:v2.197.0"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites/sitecontainers",
+      "apiVersion": "2024-04-01",
+      "name": "[concat(parameters('appName'), '/postgrest')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+      ],
+      "properties": {
+        "image": "[parameters('postgrestImage')]",
+        "isMain": false,
+        "authType": "Anonymous",
+        "targetPort": "3001",
+        "volumeMounts": [],
+        "environmentVariables": []
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/sitecontainers",
+      "apiVersion": "2024-04-01",
+      "name": "[concat(parameters('appName'), '/gotrue')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites/sitecontainers', parameters('appName'), 'postgrest')]"
+      ],
+      "properties": {
+        "image": "[parameters('gotrueImage')]",
+        "isMain": false,
+        "authType": "Anonymous",
+        "targetPort": "9999",
+        "volumeMounts": [],
+        "environmentVariables": [
+          {
+            "name": "PORT",
+            "value": "GOTRUE_SIDECAR_PORT"
+          }
+        ]
+      }
+    }
+  ]
+}
