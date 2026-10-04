@@ -65,7 +65,11 @@ jobs:
           cache-dependency-path: 03-output/app/pnpm-lock.yaml
 
       - name: Install dependencies
+        # 평평한 node_modules — pnpm 기본(심볼릭 링크)은 standalone 을 zip 할 때 링크가 풀리며
+        # next 옆의 의존성(styled-jsx 등)이 빠져 App Service 에서 시작 실패 (2026-10-05)
         run: pnpm install --frozen-lockfile
+        env:
+          npm_config_node_linker: hoisted
 
       - name: Typecheck
         run: pnpm typecheck
@@ -103,6 +107,9 @@ jobs:
           # server.js 가 산출물 루트에 있어야 App Service 시작 명령(node server.js)이 동작한다
           [ -f .next/standalone/server.js ] || { echo "server.js missing at standalone root"; exit 1; }
           [ -d .next/standalone/.next/static ] || { echo ".next/static not copied"; exit 1; }
+          # 링크가 남아 있으면 zip 에서 풀려 모듈이 빠진다
+          if find .next/standalone/node_modules -type l | grep -q .; then echo "symlinks in standalone node_modules"; exit 1; fi
+          [ -f .next/standalone/node_modules/styled-jsx/package.json ] || { echo "styled-jsx missing"; exit 1; }
           cd .next/standalone && zip -qr ../../release.zip .
 
       - name: Azure login (OIDC)
