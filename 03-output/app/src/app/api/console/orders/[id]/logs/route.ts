@@ -1,10 +1,10 @@
+import { screenshotStore } from "@/lib/screenshot-store";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   CONSOLE_TOTAL_DAYS,
-  SCREENSHOT_BUCKET,
   SCREENSHOT_MAX_BYTES,
   SCREENSHOT_MIME_TO_EXT,
   screenshotObjectPath,
@@ -74,9 +74,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       return NextResponse.json({ ok: false, message: "이미지는 5MB 이하여야 합니다." }, { status: 400 });
     }
     screenshotPath = screenshotObjectPath(orderId, slot.slot_no, fields.day_n, ext);
-    const { error: uploadErr } = await supabase.storage
-      .from(SCREENSHOT_BUCKET)
-      .upload(screenshotPath, file, { contentType: file.type, upsert: true });
+    const { error: uploadErr } = await screenshotStore(supabase).upload(screenshotPath, file, file.type);
     if (uploadErr) {
       console.error("[console/logs] upload failed", uploadErr);
       return NextResponse.json({ ok: false, message: "스크린샷 업로드 실패" }, { status: 500 });

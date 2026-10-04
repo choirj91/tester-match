@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { supabaseGlobalOptions } from "@/lib/supabase/route-fetch";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -15,6 +16,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(url, key, {
+    ...supabaseGlobalOptions(),
     cookies: {
       getAll() {
         return cookieStore.getAll();

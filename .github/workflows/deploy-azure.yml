@@ -99,6 +99,8 @@ jobs:
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
           NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
           NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED: ${{ vars.NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED }}
+          # ADR-0015 2단계: 설정되면 브라우저의 /auth/v1/* 를 GoTrue 사이드카로 rewrite (빌드 타임에 고정)
+          SUPABASE_AUTH_INTERNAL_URL: ${{ vars.SUPABASE_AUTH_INTERNAL_URL }}
 
       - name: Package standalone output
         run: |
