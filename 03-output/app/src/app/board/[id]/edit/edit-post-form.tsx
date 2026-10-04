@@ -44,7 +44,12 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
       <label className="block">
         <span className="text-sm font-semibold text-neutral-900">카테고리</span>
         <div className="mt-2">
-          <select name="category" defaultValue={initial.category} className={inputClass}>
+          {/* "질문" 분류는 없어졌다 — 예전 질문 글을 고칠 때 첫 항목(이야기)이 아니라 "자유"로 둔다 */}
+          <select
+            name="category"
+            defaultValue={initial.category === "질문" ? "자유" : initial.category}
+            className={inputClass}
+          >
             {POST_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}

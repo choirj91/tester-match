@@ -1,10 +1,11 @@
 /**
- * 유료 주문 일일 리포트 (읽기 전용) — 진행 주문 표 + 운영 경보 + 환불 대사.
+ * 유료 주문 일일 리포트 (읽기 전용) — 진행 주문 표 + 운영 경보(미답변 문의 포함) + 환불 대사.
  * 경보는 전부 "지금 상태"에서 계산한다 — 처리될 때까지 매일 다시 뜬다.
  * 조회가 실패한 항목은 조용히 비우지 않고 "확인하지 못했다"는 경보를 낸다.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { inquiryBacklogAlert } from "@/lib/inquiry-rules";
 import {
   ATTENTION_NOTE_PREFIX,
   REFUND_FAILED_NOTE_PREFIX,
@@ -219,6 +220,20 @@ async function queueAlerts(supabase: SupabaseClient, now: Date, alerts: string[]
   }
 }
 
+/** 경보: 답변을 기다리는 1:1 문의 (접수·처리 중) — 건수와 가장 오래된 문의의 경과 일수 */
+async function inquiryAlert(supabase: SupabaseClient, now: Date, alerts: string[]): Promise<void> {
+  const result = await supabase
+    .from("inquiries")
+    .select("created_at", { count: "exact" })
+    .in("status", ["open", "in_progress"])
+    .order("created_at", { ascending: true })
+    .limit(1);
+  const oldest = rowsOrAlert(result, "미답변 문의", alerts);
+  if (!oldest) return;
+  const line = inquiryBacklogAlert(result.count ?? oldest.length, oldest[0]?.created_at ?? null, now);
+  if (line) alerts.push(line);
+}
+
 /** 경보: 끝난 매칭에 묶인 슬롯 */
 async function staleSlotAlert(supabase: SupabaseClient, alerts: string[]): Promise<void> {
   const slots = (rowsOrAlert(
@@ -427,6 +442,7 @@ export async function buildOrderReport(
   const rows = await buildReportRows(supabase, now, alerts);
   await orderAlerts(supabase, alerts);
   await queueAlerts(supabase, now, alerts);
+  await inquiryAlert(supabase, now, alerts);
   await staleSlotAlert(supabase, alerts);
   await missingHoldAlert(supabase, alerts);
   await reconcileRefunds(supabase, alerts);

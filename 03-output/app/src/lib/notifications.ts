@@ -21,7 +21,8 @@ export type NotificationType =
   | "redemption_done"
   | "seat_reward"
   | "seat_issue"
-  | "tester_request";
+  | "tester_request"
+  | "inquiry_answered";
 
 type Args = {
   userId: number;

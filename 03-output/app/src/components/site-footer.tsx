@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BUSINESS, CONTACT_EMAIL } from "@/lib/site";
+import { BUSINESS } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -24,9 +24,9 @@ export function SiteFooter() {
           <Link href="/policies/refund" className="text-neutral-600 hover:text-neutral-900">
             환불 정책
           </Link>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/inquiries" className="text-neutral-600 hover:text-neutral-900">
             문의
-          </a>
+          </Link>
         </div>
         <div className="mt-5 space-y-1 text-xs leading-relaxed text-neutral-400">
           <p className="font-semibold text-neutral-500">{BUSINESS.name}</p>

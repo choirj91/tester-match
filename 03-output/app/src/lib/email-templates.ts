@@ -384,3 +384,27 @@ export function signupVerifyEmail(args: { link: string }): Email {
   const text = `Tester Match 가입을 신청하셨습니다. 아래 링크를 연 뒤 화면에서 닉네임과 비밀번호를 정하면 가입이 완료됩니다.\n${args.link}`;
   return { subject, html, text };
 }
+
+/** 문의 답변 안내 — 작성자 본인에게만 발송 */
+export function inquiryAnsweredEmail(args: {
+  nickname: string;
+  inquiryId: number;
+  title: string;
+  answer: string;
+}): Email {
+  const link = `${APP_URL}/inquiries/${args.inquiryId}`;
+  const subject = `[Tester Match] 문의에 답변이 등록되었습니다`;
+  const html = layoutHtml(`
+    <p style="margin:0 0 12px;"><strong>${escapeHtml(args.nickname)}</strong> 님,</p>
+    <p style="margin:0 0 16px;">남겨주신 문의 <strong>${escapeHtml(args.title)}</strong> 에 답변이 등록되었습니다.</p>
+    <div style="margin:0 0 16px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;white-space:pre-wrap;">${escapeHtml(args.answer)}</div>
+    <p style="margin:24px 0 0;">
+      <a href="${link}"
+         style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
+        문의 내역 보기
+      </a>
+    </p>
+  `);
+  const text = `${args.nickname} 님, 문의 "${args.title}" 에 답변이 등록되었습니다.\n\n${args.answer}\n\n${link}`;
+  return { subject, html, text };
+}
