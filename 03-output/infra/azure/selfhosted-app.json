@@ -1,0 +1,121 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ADR-0015 phase 2: a Node web app with PostgREST and GoTrue (Supabase Auth) sidecars on Azure PostgreSQL, secrets as Key Vault references. Used for the staging app first; the same settings are applied to the production app at cutover."
+  },
+  "parameters": {
+    "location": { "type": "string", "defaultValue": "koreacentral" },
+    "appName": { "type": "string" },
+    "publicUrl": { "type": "string", "metadata": { "description": "https://host the browser uses (no trailing slash)." } },
+    "envTag": { "type": "string", "defaultValue": "stg" },
+    "postgrestImage": { "type": "string", "defaultValue": "postgrest/postgrest:v16.4" },
+    "gotrueImage": { "type": "string", "defaultValue": "supabase/auth:v2.197.0" },
+    "googleEnabled": { "type": "string", "defaultValue": "false" },
+    "googleClientId": { "type": "string", "defaultValue": "" }
+  },
+  "variables": {
+    "planName": "asp-testermatch-prod-krc",
+    "appiName": "appi-testermatch-prod-krc",
+    "kvName": "kv-testermatch-prod-krc",
+    "kvSecretsUserRoleId": "4633458b-17de-408a-b874-0445c86b69e6",
+    "kv": "[concat('@Microsoft.KeyVault(VaultName=', 'kv-testermatch-prod-krc', ';SecretName=')]",
+    "tags": { "project": "tester-match", "owner": "knockknock-company", "env": "[parameters('envTag')]", "managed-by": "tm-az", "cost-center": "azure-credit" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('appName')]",
+      "location": "[parameters('location')]",
+      "tags": "[variables('tags')]",
+      "kind": "app,linux",
+      "identity": { "type": "SystemAssigned" },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('planName'))]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false,
+        "siteConfig": {
+          "linuxFxVersion": "NODE|20-lts",
+          "appCommandLine": "node server.js",
+          "alwaysOn": true,
+          "http20Enabled": true,
+          "minTlsVersion": "1.2",
+          "ftpsState": "Disabled",
+          "healthCheckPath": "/robots.txt",
+          "appSettings": [
+            { "name": "NODE_ENV", "value": "production" },
+            { "name": "HOSTNAME", "value": "0.0.0.0" },
+            { "name": "CLIENT_IP_HEADER", "value": "x-forwarded-for" },
+            { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "false" },
+            { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "value": "[reference(resourceId('Microsoft.Insights/components', variables('appiName')), '2020-02-02').ConnectionString]" },
+            { "name": "NEXT_PUBLIC_SUPABASE_URL", "value": "[parameters('publicUrl')]" },
+            { "name": "NEXT_PUBLIC_APP_URL", "value": "[parameters('publicUrl')]" },
+            { "name": "SUPABASE_REST_INTERNAL_URL", "value": "http://127.0.0.1:3001" },
+            { "name": "SUPABASE_AUTH_INTERNAL_URL", "value": "http://127.0.0.1:9999" },
+            { "name": "SUPABASE_SECRET_KEY", "value": "[concat(variables('kv'), 'service-jwt)')]" },
+            { "name": "AZURE_STORAGE_CONNECTION_STRING", "value": "[concat(variables('kv'), 'azure-storage-connection-string)')]" },
+            { "name": "CRON_SECRET", "value": "[concat(variables('kv'), 'cron-secret)')]" },
+            { "name": "PGRST_DB_URI", "value": "[concat(variables('kv'), 'postgrest-db-uri)')]" },
+            { "name": "PGRST_JWT_SECRET", "value": "[concat(variables('kv'), 'jwt-secret)')]" },
+            { "name": "PGRST_DB_SCHEMAS", "value": "public" },
+            { "name": "PGRST_DB_ANON_ROLE", "value": "anon" },
+            { "name": "PGRST_DB_MAX_ROWS", "value": "1000" },
+            { "name": "PGRST_DB_POOL", "value": "10" },
+            { "name": "PGRST_SERVER_HOST", "value": "127.0.0.1" },
+            { "name": "PGRST_SERVER_PORT", "value": "3001" },
+            { "name": "GOTRUE_DB_DRIVER", "value": "postgres" },
+            { "name": "DATABASE_URL", "value": "[concat(variables('kv'), 'gotrue-database-url)')]" },
+            { "name": "GOTRUE_JWT_SECRET", "value": "[concat(variables('kv'), 'jwt-secret)')]" },
+            { "name": "GOTRUE_JWT_EXP", "value": "3600" },
+            { "name": "GOTRUE_JWT_AUD", "value": "authenticated" },
+            { "name": "GOTRUE_JWT_DEFAULT_GROUP_NAME", "value": "authenticated" },
+            { "name": "GOTRUE_JWT_ADMIN_ROLES", "value": "service_role" },
+            { "name": "API_EXTERNAL_URL", "value": "[concat(parameters('publicUrl'), '/auth/v1')]" },
+            { "name": "GOTRUE_SITE_URL", "value": "[parameters('publicUrl')]" },
+            { "name": "GOTRUE_URI_ALLOW_LIST", "value": "[concat(parameters('publicUrl'), '/**')]" },
+            { "name": "GOTRUE_API_HOST", "value": "127.0.0.1" },
+            { "name": "GOTRUE_API_PORT", "value": "9999" },
+            { "name": "GOTRUE_SIDECAR_PORT", "value": "9999" },
+            { "name": "GOTRUE_DISABLE_SIGNUP", "value": "false" },
+            { "name": "GOTRUE_EXTERNAL_EMAIL_ENABLED", "value": "true" },
+            { "name": "GOTRUE_MAILER_AUTOCONFIRM", "value": "false" },
+            { "name": "GOTRUE_EXTERNAL_GOOGLE_ENABLED", "value": "[parameters('googleEnabled')]" },
+            { "name": "GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID", "value": "[parameters('googleClientId')]" },
+            { "name": "GOTRUE_EXTERNAL_GOOGLE_SECRET", "value": "[concat(variables('kv'), 'google-client-secret)')]" },
+            { "name": "GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI", "value": "[concat(parameters('publicUrl'), '/auth/v1/callback')]" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites/sitecontainers",
+      "apiVersion": "2024-04-01",
+      "name": "[concat(parameters('appName'), '/postgrest')]",
+      "dependsOn": [ "[resourceId('Microsoft.Web/sites', parameters('appName'))]" ],
+      "properties": { "image": "[parameters('postgrestImage')]", "isMain": false, "authType": "Anonymous", "targetPort": "3001", "volumeMounts": [], "environmentVariables": [] }
+    },
+    {
+      "type": "Microsoft.Web/sites/sitecontainers",
+      "apiVersion": "2024-04-01",
+      "name": "[concat(parameters('appName'), '/gotrue')]",
+      "dependsOn": [ "[resourceId('Microsoft.Web/sites/sitecontainers', parameters('appName'), 'postgrest')]" ],
+      "properties": {
+        "image": "[parameters('gotrueImage')]", "isMain": false, "authType": "Anonymous", "targetPort": "9999", "volumeMounts": [],
+        "environmentVariables": [ { "name": "PORT", "value": "GOTRUE_SIDECAR_PORT" } ]
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('kvName')), parameters('appName'), variables('kvSecretsUserRoleId'))]",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('kvName'))]",
+      "dependsOn": [ "[resourceId('Microsoft.Web/sites', parameters('appName'))]" ],
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleId'))]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('appName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    }
+  ]
+}

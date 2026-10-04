@@ -75,6 +75,8 @@
 
 ## 2단계 — DB·인증·스토리지 이전 (필수)
 
+> **2026-10-05 방식 확정 (야간 작업, 사용자 위임)**: 쿼리·인증 재작성 대신 **Supabase 의 PostgREST·GoTrue 를 App Service 사이드카로 Azure PostgreSQL 위에서 운영**한다. `supabase-js` 호출부(약 320곳)와 가입 연결 규칙(ADR-0013, `auth.users` 트리거·RPC)이 그대로 동작하고, 비밀번호 해시·Google 계정 연결·사용자 UUID 가 보존된다. 아래 2-1 의 "Drizzle·Auth.js 재작성" 안은 대체됨. 확정 절차는 **2-6**.
+
 착수 조건: 1단계 전환 후 7일 무사고. 착수 전 **길 2′ PoC 1일** (Azure PostgreSQL 스테이징 + PostgREST 컨테이너로 supabase-js 쿼리 10개 실행) → 성공이면 쿼리 재작성 생략, 실패면 Drizzle 재작성.
 
 ### 2-1. 스키마·코드 (브랜치 `feat/azure-db`)
@@ -133,6 +135,25 @@
 
 - T+2h 이전: 앱 설정을 Supabase 로 되돌리고 1단계 빌드 재배포 (Supabase 는 점검 시작 이후 쓰기가 없었으므로 그대로 유효).
 - T+2h 이후: Azure 쪽 신규 행을 id 범위로 추출해 Supabase 에 재적재 + 원장 대조 → 3~5일 작업 [추정]. 그래서 롤백 판정은 T+2h 안에 내린다.
+
+### 2-6. 전환 절차 (확정, 리허설 2회 완료)
+
+구성: `app-testermatch-prod-krc` 에 사이드카 `postgrest`(postgrest/postgrest:v16.4, 127.0.0.1:3001, 외부 비공개)·`gotrue`(supabase/auth:v2.197.0, 127.0.0.1:9999). 브라우저의 `/auth/v1/*` 만 Next rewrite 로 GoTrue 에 연결되고 `/auth/v1/signup`·`/auth/v1/admin` 은 미들웨어가 404. 템플릿 `03-output/infra/azure/selfhosted-app.json`, DB 스크립트 `03-output/infra/azure/db/`.
+
+**사용자 선행 작업 (Google Cloud 콘솔, 약 3분)**
+1. APIs & Services → Credentials → 현재 Supabase 로그인에 쓰는 OAuth 클라이언트 → Authorized redirect URIs 에 `https://tester-match.knockknock.company/auth/v1/callback` **추가** (기존 supabase.co 콜백은 롤백 대비 유지)
+2. 같은 화면의 Client secret 을 Key Vault `kv-testermatch-prod-krc` → Secrets → `google-client-secret` 으로 저장
+
+**전환 (약 15분, 쓰기 중단 약 3분)**
+1. 공지: 전환 후 전원 재로그인 (세션 쿠키 이름이 바뀜)
+2. GitHub `cron.yml` 일시 중지, 진행 중 실행 없음 확인
+3. `db/migrate.sh` 로 최종 재동기화 (Supabase 읽기 전용 → Azure 재구축 → 53개 항목 대조 IDENTICAL 이어야 진행). 리허설 40초
+4. 운영 앱에 `selfhosted-app.json` 배포: `appName=app-testermatch-prod-krc publicUrl=https://tester-match.knockknock.company envTag=prod googleEnabled=true googleClientId=<클라이언트 ID>` — 기존 앱 설정(PortOne·Google Workspace·Resend·Slack 등)은 템플릿에 없으므로 **배포 전에 현재 앱 설정을 보존·병합**할 것 (템플릿 appSettings 는 전체 교체)
+5. GitHub `azure-prod` 빌드 변수: `NEXT_PUBLIC_SUPABASE_URL=https://tester-match.knockknock.company`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon JWT>`, `SUPABASE_AUTH_INTERNAL_URL=http://127.0.0.1:9999` → 배포 워크플로우 실행
+6. 재시작 후 1~2분 대기(사이드카 DB 연결 전에는 목록이 비어 보일 수 있음) → 스모크: 공개 페이지·`/browse` 124개 수준, Google 로그인(사용자), 이메일 로그인(심사 계정), 체크인, 로그아웃, `/auth/v1/signup` 404
+7. 크론 재개 → 30일간 Supabase 보존(읽기 전용) 후 해지
+
+**롤백**: 빌드 변수·앱 설정을 Supabase 값으로 되돌려 재배포. 전환 후 Azure 에 쌓인 쓰기는 Supabase 로 역동기화 필요 → 롤백 판단은 전환 후 2시간 안에.
 
 ## 3단계 — 메일 발송·DNS 이전, 기존 서비스 해지
 
@@ -202,6 +223,7 @@
 | 2026-10-05 01:1x~01:5x KST | **1-4 운영 전환 (승인)** | 최신 main(문의 기능) 병합·배포 → GitHub `cron.yml` 일시 중지 → `CRON_SECRET` 새로 생성해 Key Vault·GitHub 저장소 비밀에 같은 값(출력 없음) → 사용자: Cloudflare `asuid.tester-match` TXT + 프록시 끔 → 커스텀 도메인 바인딩 → 사용자: CNAME `tester-match.pages.dev` → `app-testermatch-prod-krc.azurewebsites.net` (TTL 5분) → 관리형 인증서: CLI 생성이 RG 태그 정책에 막혀 **태그 붙인 ARM(`managed-certificate.json`)으로 발급**·SNI 바인딩 | **인증서 오류 구간 약 수 분** (다른 세션 2곳이 감지·통보) |
 | 2026-10-05 | 1-4 포트원 | 전환 중 main 에 포트원 V2 결제(`ce03e52`, ADR-0016, 다른 세션)가 Cloudflare 에만 배포된 사실 확인 → 사용자 결정 "Azure 유지 + 즉시 반영": 병합(`cae1378`, tsc 0·테스트 501·eslint 0) · Key Vault `portone-api-secret` + 앱 설정 · 빌드 변수 PORTONE 2개(토스 변수 삭제) · 재배포 | 공개 15개 200 · 로그인 필요 6개 307 · API 401 · 환불정책 KCP 문구 · 인증서 CN=tester-match.knockknock.company |
 | 2026-10-05 | 1-4 크론 재개 | 운영 크론 주소 무인증·틀린 비밀 401 확인 → `cron.yml` 재활성 → `validate-app-urls` 수동 1회 HTTP 200 (새 비밀 종단 확인) | **운영이 Azure 로 전환됨.** Cloudflare Pages 는 롤백용으로 보존(롤백 시 Cloudflare 시크릿 `CRON_SECRET` 도 새 값으로 바꿔야 함) |
+| 2026-10-05 02~03시 | 2단계 준비 (사용자 야간 위임) | PR #6 병합·main 배포(사이트맵 16→115 URL 복구) · PostgreSQL 17 Flexible `psql-testermatch-prod-krc`(B1ms, 방화벽 19개 IP, 관리자 비밀번호 Key Vault) · Supabase 덤프(읽기 전용) → Azure 복원 → **53개 항목 IDENTICAL** · GoTrue v2.197.0 스키마(운영과 같은 마지막 마이그레이션) · 로컬 종단 시험(페이지·로그인·세션·관리자 API·인증 링크·크론·Blob) · PR #7 병합(`3787ea3`, 하위 호환 — 운영 동작 변화 없음, 공개 signup 404 적용) · Blob `sttestermatchprod` · 스테이징 `app-testermatch-stg-krc` + 사이드카 2개로 Azure 위 종단 시험 통과(PostgREST 외부 404 포함) · `migrate.sh` 리허설 40초 IDENTICAL | **운영 DB 전환은 하지 않음** — Google OAuth 리디렉션 URI·클라이언트 비밀번호 필요 (2-6 사용자 선행 작업) |
 | 다음 | 1-4 후속 | ① `feat/azure-hosting` → main 병합 PR (지금 운영 = 이 브랜치, main 은 뒤처짐 — 다른 세션이 main 기준으로 작업·Cloudflare 배포를 하면 운영에 반영 안 됨) ② `DEPLOY.md`·`tm-deploy` 스킬을 Azure 배포로 갱신 ③ 가입 IP 제한용 X-Forwarded-For 실측 ④ 실사용: Google 로그인·그룹 자동 가입·체크인·KCP 주문(심사 계정) ⑤ 1-5 Functions 타이머 | — |
 | 다음 | 1-3 체크리스트 | ① 시작 명령 `node server.js`, 앱 설정 `HOSTNAME=0.0.0.0`, PORT 확인 ② **스테이징에서 X-Forwarded-For 실측** 후 `CLIENT_IP_HEADER` 확정 (Cloudflare 프록시를 켜면 `cf-connecting-ip` 로 바꾸지 않으면 모든 가입이 한 IP 버킷 공유) ③ Key Vault 비밀 넣기 전 본인 계정에 `Key Vault Secrets Officer` (포털) ④ GitHub Secrets 3개 + Variables 6개 ⑤ 개인정보처리방침의 호스팅 업체(Cloudflare) 표기 변경 — 정책 문구라 **사용자 승인 필요** ⑥ **병합 직전** `feat/azure-hosting` 를 최신 main 에 맞추고 edge 제거 스크립트 재실행 — 문의 기능(다른 세션, 2026-10-04) 라우트 7개가 edge 선언을 달고 들어옴. `SLACK_INQUIRY_WEBHOOK_URL` 을 Key Vault 에 ⑦ 전환 후 정리: `middleware.ts` pages.dev 리다이렉트, `DEPLOY.md`·`NEXT.md` 의 wrangler 절차, 코드 주석의 Cloudflare 표현 | — |
 | 2026-10-04 | 사고 | 로컬 standalone 스모크 중 크론 무인증 확인 요청이 운영 페널티 스윕을 1회 실행 — 무료 매칭 5건 이탈 처리. 사용자 결정 **유지**. 기록 `04-review/history/2026-10-04-local-cron-penalty-incident.md` (브랜치) | 재발 방지: 크론 인증 fail closed |
