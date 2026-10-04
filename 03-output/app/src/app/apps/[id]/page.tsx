@@ -14,8 +14,6 @@ import { isGroupsAutoJoinEnabled } from "@/lib/google-groups";
 import { UpgradeGroupBanner } from "./upgrade-group-banner";
 import { TesterMonitor } from "./tester-monitor";
 
-export const runtime = 'edge';
-
 type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ welcome?: string }>;

@@ -6,8 +6,6 @@ import { isSameOriginRequest } from "@/lib/signup-confirm";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { InquiryAdminActionSchema } from "@/lib/validators/inquiry";
 
-export const runtime = "edge";
-
 /** 문의 처리 — 답변 등록(작성자에게 알림·메일), 상태 변경, 내부 메모. 관리자만. */
 export async function PATCH(req: Request) {
   if (!isSameOriginRequest(req.url, req.headers)) {

@@ -10,7 +10,6 @@ import {
 } from "@/lib/validators/signup";
 import { ConfirmForm } from "./confirm-form";
 
-export const runtime = "edge";
 export const metadata = {
   title: "가입 완료하기",
   robots: { index: false, follow: false },

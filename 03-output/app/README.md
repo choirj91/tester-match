@@ -20,9 +20,8 @@ pnpm dev                     # http://localhost:3000
 | `pnpm typecheck` | TypeScript 타입 검사 |
 | `pnpm lint` | ESLint |
 | `pnpm test` | Vitest 단위 테스트 |
-| `pnpm pages:build` | Cloudflare Pages 호환 빌드 (`@cloudflare/next-on-pages`) |
-| `pnpm pages:dev` | Cloudflare 로컬 미리보기 (Wrangler) |
-| `pnpm pages:deploy` | Cloudflare Pages 수동 배포 |
+| `pnpm build:azure` | Azure App Service 용 standalone 빌드 (static·public 복사 포함) |
+| `pnpm start:azure` | standalone 서버 실행 (`PORT` 환경변수, 기본 3000) |
 
 ## 폴더 구조
 

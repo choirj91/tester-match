@@ -12,8 +12,6 @@ import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 
-export const runtime = 'edge';
-
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

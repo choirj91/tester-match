@@ -4,8 +4,6 @@ import { NOTICE_CATEGORY, PostUpdateSchema } from "@/lib/validators/post";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Ctx) {

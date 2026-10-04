@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
 export const metadata = {
   title: { default: "테스트 콘솔", template: "%s | 테스트 콘솔" },
   robots: { index: false, follow: false },

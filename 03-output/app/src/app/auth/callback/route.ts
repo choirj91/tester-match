@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
+import { publicOrigin } from "@/lib/public-origin";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { safeInternalPath } from "@/lib/safe-redirect";
-
-export const runtime = "edge";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -39,7 +38,8 @@ async function repairMemberRow(session: Session | null): Promise<void> {
 }
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = publicOrigin(request);
   const code = searchParams.get("code");
   // origin 뒤에 그대로 붙이면 ".evil.com" 같은 값이 호스트를 늘려 밖으로 나간다 — 내부 경로만 허용
   const next = safeInternalPath(searchParams.get("next"), origin);

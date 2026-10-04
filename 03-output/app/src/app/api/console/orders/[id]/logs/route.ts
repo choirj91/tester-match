@@ -10,8 +10,6 @@ import {
   screenshotObjectPath,
 } from "@/lib/console";
 
-export const runtime = "edge";
-
 const FieldsSchema = z.object({
   slot_id: z.coerce.number().int().positive(),
   day_n: z.coerce.number().int().min(1).max(CONSOLE_TOTAL_DAYS),

@@ -3,8 +3,6 @@ import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 import { CONTACT_EMAIL } from "@/lib/site";
 
-export const runtime = "edge";
-
 export const metadata = {
   title: "환불 정책",
   description:

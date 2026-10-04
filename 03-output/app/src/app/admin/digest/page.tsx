@@ -6,7 +6,6 @@ import { SITE_URL, OPEN_CHAT_URL } from "@/lib/site";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 import { DigestActions } from "./digest-actions";
 
-export const runtime = "edge";
 export const metadata = { title: "오픈채팅 다이제스트" };
 
 const DEFAULT_HEADER =

@@ -9,7 +9,6 @@ import { BrowseControls } from "./browse-controls";
 import type { SortKey } from "./browse-controls";
 import { PAID_SEAT_REWARD, countOpenSeatsByApp } from "@/lib/paid-seats";
 
-export const runtime = "edge";
 export const metadata = { title: "매칭 가능 앱" };
 
 const PAGE_SIZE = 20;

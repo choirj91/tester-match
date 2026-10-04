@@ -11,7 +11,6 @@ import { SeatSettlement, type SettlementRow } from "./seat-settlement";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { SeatRewardStatus } from "@/lib/seat-reward-rules";
 
-export const runtime = "edge";
 export const metadata = { title: "주문 상세" };
 
 function fmt(iso: string | null): string {

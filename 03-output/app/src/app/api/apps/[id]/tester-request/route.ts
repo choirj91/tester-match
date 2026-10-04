@@ -4,8 +4,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createNotificationsBulk } from "@/lib/notifications";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 const MAX_RECIPIENTS = 50;

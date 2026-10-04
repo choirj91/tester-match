@@ -2,7 +2,6 @@ import Link from "next/link";
 import { isEmailSignupEnabled } from "@/lib/validators/signup";
 import { SignupForm } from "./signup-form";
 
-export const runtime = "edge";
 export const metadata = { title: "회원가입", robots: { index: false, follow: true } };
 
 export default function SignupPage() {

@@ -5,8 +5,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { REDEMPTION_LEDGER_REF, appendLedger } from "@/lib/credits";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "edge";
-
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
   action: z.enum(["done", "reject"]),

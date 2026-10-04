@@ -13,8 +13,6 @@ import {
 import { createCreditsPaidOrder } from "@/lib/paid-orders";
 import { isCreditsPaidOrder } from "@/lib/paid-seats";
 
-export const runtime = "edge";
-
 const BodySchema = PaidOrderCreateSchema.extend({
   pay_with: z.enum(["card", "credits"]).default("card"),
   agreed: z.boolean().refine((v) => v === true, "구매 전 유의사항에 모두 동의해주세요."),

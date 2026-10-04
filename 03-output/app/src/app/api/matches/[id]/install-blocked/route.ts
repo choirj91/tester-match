@@ -8,8 +8,6 @@ import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
 import { PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { runAfterResponse } from "@/lib/wait-until";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 const REPORT_WINDOW_MS = 72 * 60 * 60 * 1000;

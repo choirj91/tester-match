@@ -13,7 +13,6 @@ import {
 import { formatKrw } from "@/lib/credits";
 import { OrderForm } from "./order-form";
 
-export const runtime = "edge";
 export const metadata = {
   alternates: { canonical: "/paid-testers" },
   title: "유료 테스터",

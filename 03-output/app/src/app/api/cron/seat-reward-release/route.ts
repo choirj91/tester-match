@@ -8,8 +8,6 @@ import {
   repairReleasedWithoutEarn,
 } from "@/lib/seat-rewards";
 
-export const runtime = "edge";
-
 const RELEASES_PER_CALL = 5;
 const HOLD_REPAIRS_PER_CALL = 2;
 const EARN_REPAIRS_PER_CALL = 5;

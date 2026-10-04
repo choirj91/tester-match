@@ -5,8 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RequestForm } from "./request-form";
 
-export const runtime = "edge";
-
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props) {

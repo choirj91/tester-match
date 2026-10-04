@@ -6,7 +6,6 @@ import { listGroupMembers } from "@/lib/google-groups";
 import { fetchAll } from "@/lib/fetch-all";
 import { TESTER_GROUP_EMAIL } from "@/lib/tester-group";
 
-export const runtime = "edge";
 export const metadata = { title: "사용자 통계" };
 
 function Medal({ rank }: { rank: number }) {

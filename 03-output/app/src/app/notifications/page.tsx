@@ -3,8 +3,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { NotificationList } from "./notification-list";
 
-export const runtime = "edge";
-
 export const metadata = { title: "알림 | Tester Match" };
 
 export default async function NotificationsPage() {

@@ -7,8 +7,6 @@ import { WithdrawButton } from "./withdraw-button";
 import { GroupStatusCard } from "./group-status-card";
 import { formatKrw } from "@/lib/credits";
 
-export const runtime = 'edge';
-
 export const metadata = { title: "프로필" };
 
 export default async function ProfilePage() {

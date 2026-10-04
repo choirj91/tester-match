@@ -3,8 +3,6 @@ import { SITE_URL, SITE_NAME } from "@/lib/site";
 import { GUIDES } from "@/app/guide/guides";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
-export const runtime = "edge";
-
 function esc(s: string): string {
   return s
     .replaceAll("&", "&amp;")

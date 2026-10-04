@@ -3,7 +3,6 @@ import { GoogleSignInButton } from "./google-sign-in-button";
 import { EmailSignInForm } from "./email-sign-in-form";
 import { isEmailSignupEnabled } from "@/lib/validators/signup";
 
-export const runtime = "edge";
 export const metadata = { title: "로그인" };
 
 const NOTICE: Record<string, string> = {

@@ -14,8 +14,6 @@ import {
   screenshotObjectPath,
 } from "@/lib/console";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 const TOTAL_DAYS = 14;

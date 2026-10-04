@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Phase 1-1c for tester-match: Log Analytics workspace, workspace-based Application Insights and an RBAC Key Vault in rg-testermatch-prod-krc. Deploy at resource-group scope through 05-harness/scripts/tm-az."
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "koreacentral"
+    },
+    "dailyCapGb": {
+      "type": "string",
+      "defaultValue": "0.5",
+      "metadata": { "description": "Log Analytics daily ingestion cap in GB (keeps usage inside the 5 GB/month free grant)." }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "project": "tester-match",
+        "owner": "knockknock-company",
+        "env": "prod",
+        "managed-by": "tm-az",
+        "cost-center": "azure-credit"
+      }
+    }
+  },
+  "variables": {
+    "logName": "log-testermatch-prod-krc",
+    "appiName": "appi-testermatch-prod-krc",
+    "kvName": "kv-testermatch-prod-krc"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('logName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "sku": { "name": "PerGB2018" },
+        "retentionInDays": 30,
+        "workspaceCapping": { "dailyQuotaGb": "[json(parameters('dailyCapGb'))]" }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('appiName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "web",
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logName'))]"
+      ],
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logName'))]",
+        "IngestionMode": "LogAnalytics",
+        "DisableIpMasking": false
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-07-01",
+      "name": "[variables('kvName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "tenantId": "[subscription().tenantId]",
+        "sku": { "family": "A", "name": "standard" },
+        "enableRbacAuthorization": true,
+        "enableSoftDelete": true,
+        "softDeleteRetentionInDays": 7,
+        "publicNetworkAccess": "Enabled"
+      }
+    }
+  ],
+  "outputs": {
+    "logAnalytics": { "type": "string", "value": "[variables('logName')]" },
+    "appInsights": { "type": "string", "value": "[variables('appiName')]" },
+    "keyVault": { "type": "string", "value": "[variables('kvName')]" }
+  }
+}

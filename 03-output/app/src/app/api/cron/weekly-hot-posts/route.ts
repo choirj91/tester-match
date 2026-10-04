@@ -5,8 +5,6 @@ import { createNotificationsBulk } from "@/lib/notifications";
 import { fetchAll } from "@/lib/fetch-all";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
-export const runtime = "edge";
-
 /**
  * 주간 인기글 알림 — "아프니까 사장이다" 쪽지 모델.
  *

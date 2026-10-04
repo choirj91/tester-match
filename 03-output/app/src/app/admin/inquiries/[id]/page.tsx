@@ -8,7 +8,6 @@ import { INQUIRY_CATEGORIES, INQUIRY_STATUSES } from "@/lib/validators/inquiry";
 import { INQUIRY_STATUS_TONE, formatKst } from "@/app/inquiries/inquiry-ui";
 import { InquiryAdminPanel } from "./inquiry-admin-panel";
 
-export const runtime = "edge";
 export const metadata = { title: "문의 처리", robots: { index: false, follow: false } };
 
 type Props = { params: Promise<{ id: string }> };

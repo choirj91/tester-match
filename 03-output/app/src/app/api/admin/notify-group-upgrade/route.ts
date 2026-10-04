@@ -3,8 +3,6 @@ import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { TESTER_GROUP_URL } from "@/lib/tester-group";
 
-export const runtime = "edge";
-
 /**
  * POST /api/admin/notify-group-upgrade
  * 레거시 앱(공용 그룹 미사용) 소유자에게 전환 유도 인앱 알림 일괄 발송.

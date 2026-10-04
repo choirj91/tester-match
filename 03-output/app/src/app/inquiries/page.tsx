@@ -7,7 +7,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { INQUIRY_CATEGORIES, INQUIRY_STATUSES } from "@/lib/validators/inquiry";
 import { INQUIRY_STATUS_TONE, formatKst } from "./inquiry-ui";
 
-export const runtime = "edge";
 export const metadata = { title: "문의", robots: { index: false, follow: false } };
 
 export default async function InquiriesPage() {

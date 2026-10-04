@@ -4,7 +4,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { InquiryForm } from "./inquiry-form";
 
-export const runtime = "edge";
 export const metadata = { title: "문의하기", robots: { index: false, follow: false } };
 
 export default async function NewInquiryPage() {

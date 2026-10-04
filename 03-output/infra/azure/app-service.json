@@ -1,0 +1,105 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Phase 1-3 for tester-match: Linux App Service Plan (B1) and the Next.js standalone web app, with a system-assigned identity that can read Key Vault secrets. Runtime secrets are added later as Key Vault references. Deploy at resource-group scope through 05-harness/scripts/tm-az."
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "koreacentral"
+    },
+    "planSku": {
+      "type": "string",
+      "defaultValue": "B1",
+      "metadata": { "description": "Start at the smallest paid SKU (ADR-0015). Scale up/out by changing this." }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "project": "tester-match",
+        "owner": "knockknock-company",
+        "env": "prod",
+        "managed-by": "tm-az",
+        "cost-center": "azure-credit"
+      }
+    }
+  },
+  "variables": {
+    "planName": "asp-testermatch-prod-krc",
+    "appName": "app-testermatch-prod-krc",
+    "appiName": "appi-testermatch-prod-krc",
+    "kvName": "kv-testermatch-prod-krc",
+    "kvSecretsUserRoleId": "4633458b-17de-408a-b874-0445c86b69e6"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2023-12-01",
+      "name": "[variables('planName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "linux",
+      "sku": { "name": "[parameters('planSku')]" },
+      "properties": { "reserved": true }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[variables('appName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "app,linux",
+      "identity": { "type": "SystemAssigned" },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('planName'))]"
+      ],
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('planName'))]",
+        "httpsOnly": true,
+        "clientAffinityEnabled": false,
+        "siteConfig": {
+          "linuxFxVersion": "NODE|20-lts",
+          "appCommandLine": "node server.js",
+          "alwaysOn": true,
+          "http20Enabled": true,
+          "minTlsVersion": "1.2",
+          "ftpsState": "Disabled",
+          "healthCheckPath": "/robots.txt",
+          "appSettings": [
+            { "name": "NODE_ENV", "value": "production" },
+            { "name": "HOSTNAME", "value": "0.0.0.0" },
+            { "name": "CLIENT_IP_HEADER", "value": "x-forwarded-for" },
+            { "name": "SCM_DO_BUILD_DURING_DEPLOYMENT", "value": "false" },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('appiName')), '2020-02-02').ConnectionString]"
+            },
+            { "name": "ApplicationInsightsAgent_EXTENSION_VERSION", "value": "~3" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('kvName')), variables('appName'), variables('kvSecretsUserRoleId'))]",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('kvName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('appName'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleId'))]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('appName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    }
+  ],
+  "outputs": {
+    "appName": { "type": "string", "value": "[variables('appName')]" },
+    "defaultHostName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/sites', variables('appName')), '2023-12-01').defaultHostName]"
+    }
+  }
+}

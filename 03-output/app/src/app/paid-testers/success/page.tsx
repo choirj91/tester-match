@@ -6,7 +6,6 @@ import { confirmPaidTesterOrder, type ConfirmPaidOrderResult } from "@/lib/paid-
 import { extractPaidOrderCode } from "@/lib/paid-testers";
 import { paymentResultView } from "./view";
 
-export const runtime = "edge";
 export const metadata = {
   title: "결제 완료",
   robots: { index: false, follow: false },

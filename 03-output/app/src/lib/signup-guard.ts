@@ -4,6 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { clientIpFromHeaders } from "@/lib/client-ip";
 
 export const SIGNUP_LIMIT_PER_IP_PER_HOUR = 5;
 export const SIGNUP_LIMIT_GLOBAL_PER_HOUR = 60;
@@ -18,11 +19,7 @@ export function signupVerdict(ipCount: number, globalCount: number): SignupGuard
 }
 
 export function clientIp(req: Request): string {
-  return (
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
+  return clientIpFromHeaders(req.headers) ?? "unknown";
 }
 
 async function hashIp(ip: string): Promise<string> {

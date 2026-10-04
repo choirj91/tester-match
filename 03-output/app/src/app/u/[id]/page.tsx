@@ -5,8 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AdminBadge } from "@/components/admin-badge";
 
-export const runtime = "edge";
-
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
   matching: { label: "모집중", cls: "bg-trust-50 text-trust-700" },
   reviewing: { label: "검수중", cls: "bg-amber-100 text-amber-700" },

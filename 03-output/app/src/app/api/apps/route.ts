@@ -5,8 +5,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { TESTER_GROUP_URL } from "@/lib/tester-group";
 
-export const runtime = "edge";
-
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {

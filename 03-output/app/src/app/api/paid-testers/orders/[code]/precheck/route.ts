@@ -4,8 +4,6 @@ import { confirmPaidTesterOrder } from "@/lib/paid-orders";
 import { extractPaidOrderCode } from "@/lib/paid-testers";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 export type PrecheckState = "payable" | "paid" | "closed";
 
 const RETRY_MESSAGE = "결제 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.";

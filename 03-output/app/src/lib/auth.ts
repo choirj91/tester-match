@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getBalance } from "@/lib/credits";
@@ -73,11 +74,10 @@ export async function getCurrentUser(): Promise<AppUser | null> {
       }
     })();
 
-    // Cloudflare Pages: 응답 반환 후에도 백그라운드 작업 유지.
-    // 로컬 next dev 에선 getRequestContext 가 throw → 그냥 await (첫 로그인 1회라 허용).
+    // 응답 반환 후에도 백그라운드 작업 유지 (Next after).
+    // 요청 범위 밖에서 호출되면 after 가 throw → 그냥 await (첫 로그인 1회라 허용).
     try {
-      const { getRequestContext } = await import("@cloudflare/next-on-pages");
-      getRequestContext().ctx.waitUntil(joinPromise);
+      after(joinPromise);
     } catch {
       await joinPromise;
     }

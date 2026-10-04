@@ -3,7 +3,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { COMPANY_NAME, CONTACT_EMAIL } from "@/lib/site";
 
-export const runtime = "edge";
 export const metadata = {
   alternates: { canonical: "/about" },
   title: "서비스 소개",

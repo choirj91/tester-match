@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 /** KST 기준 오늘 00:00 (UTC ISO) */
 function kstTodayStartIso(): string {
   const kstDate = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });

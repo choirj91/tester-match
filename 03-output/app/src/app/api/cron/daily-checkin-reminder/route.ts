@@ -12,8 +12,6 @@ import {
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "edge";
-
 /**
  * F-CHK-01 — 일일 체크인 리마인더.
  *

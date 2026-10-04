@@ -22,11 +22,11 @@ describe("signupVerdict", () => {
 });
 
 describe("clientIp", () => {
-  test("Cloudflare 헤더를 우선한다", () => {
+  test("App Service 가 덧붙인 마지막 X-Forwarded-For 항목을 쓴다", () => {
     const req = new Request("https://example.com", {
-      headers: { "cf-connecting-ip": "1.2.3.4", "x-forwarded-for": "9.9.9.9" },
+      headers: { "cf-connecting-ip": "1.2.3.4", "x-forwarded-for": "9.9.9.9, 5.6.7.8:51234" },
     });
-    expect(clientIp(req)).toBe("1.2.3.4");
+    expect(clientIp(req)).toBe("5.6.7.8");
   });
 
   test("헤더가 없으면 unknown", () => {

@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 /**
  * 인증 상태 진단용 엔드포인트. 운영 배포 전 제거 또는 admin 가드 추가 필요.
  *

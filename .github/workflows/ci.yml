@@ -51,6 +51,11 @@ jobs:
         run: pnpm build
         env:
           NEXT_PUBLIC_APP_URL: http://localhost:3000
+          # 빌드 시 페이지 미리 만들기 단계가 Supabase 클라이언트를 만들 수 있도록 하는 자리표시 값 (진짜 값 아님)
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+          NEXT_PUBLIC_PORTONE_STORE_ID: ci-placeholder
+          NEXT_PUBLIC_PORTONE_CHANNEL_KEY: ci-placeholder
 
   migration-check:
     name: Supabase migration syntax

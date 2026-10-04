@@ -2,9 +2,11 @@ import type { MetadataRoute } from "next";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GUIDES } from "@/app/guide/guides";
 
-export const runtime = "edge";
-
 const SITE_URL = "https://tester-match.knockknock.company";
+
+// 요청마다 생성 — 빌드 때 만들면 DB 비밀키가 없어 정적 폴백(앱·게시글 URL 없음)이 고정된다
+// (Azure standalone 첫 배포에서 16개 URL 로 굳은 사례, 2026-10-05). edge 시절과 같은 동작.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

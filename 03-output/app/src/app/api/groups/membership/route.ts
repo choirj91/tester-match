@@ -13,8 +13,6 @@ import {
   PLAY_GROUP_JOIN_URL,
 } from "@/lib/tester-group";
 
-export const runtime = "edge";
-
 /**
  * GET /api/groups/membership — 본인 그룹 상태.
  * - 내부(자동) 그룹: Directory API 실시간 확인

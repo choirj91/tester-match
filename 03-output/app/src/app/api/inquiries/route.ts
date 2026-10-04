@@ -7,8 +7,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { InquiryCreateSchema } from "@/lib/validators/inquiry";
 import { runAfterResponse } from "@/lib/wait-until";
 
-export const runtime = "edge";
-
 /** 1:1 문의 접수 — 로그인 회원만. 저장 후 운영팀 Slack 으로 알린다. */
 export async function POST(req: Request) {
   if (!isSameOriginRequest(req.url, req.headers)) {
