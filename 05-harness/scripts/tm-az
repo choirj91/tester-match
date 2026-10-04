@@ -15,6 +15,7 @@ set -euo pipefail
 SHARED_DIR="$HOME/.azure-knockknock-homepage"
 TM_AZ_RG="rg-testermatch-prod-krc"
 TM_AZ_LOCATION="koreacentral"
+TM_AZ_VAULT="kv-testermatch-prod-krc"
 
 [[ -f "$SHARED_DIR/target.env" ]] || { echo "STOP: $SHARED_DIR/target.env not found. Set up kh-az first." >&2; exit 2; }
 # shellcheck disable=SC1091
@@ -69,6 +70,18 @@ if [[ "${ARGS[0]:-}" == account ]]; then
   exec az "${ARGS[@]}"
 fi
 for a in "${ARGS[@]}"; do [[ "$a" == --ids ]] && stop "--ids is not allowed; use -g and --name" 3; done
+
+# 3b) Key Vault secrets: only this project's vault, and never echo secret values.
+if [[ "${ARGS[0]:-} ${ARGS[1]:-}" == "keyvault secret" ]]; then
+  [[ "$(lower "$(value_of --vault-name)")" == "$TM_AZ_VAULT" ]] || stop "keyvault secret commands may only target $TM_AZ_VAULT" 5
+  case "${ARGS[2]:-}" in
+    list|set|delete|set-attributes) ;;
+    *) stop "'keyvault secret ${ARGS[2]:-}' is not allowed (could print values)" 3 ;;
+  esac
+  [[ "${ARGS[2]}" == list ]] && exec az "${ARGS[@]}" --subscription "$SUBSCRIPTION" --query "[].name" -o tsv
+  [[ "$(value_of --subscription)" == "$SUBSCRIPTION" ]] || stop "pass --subscription explicitly" 4
+  exec az "${ARGS[@]}" -o none
+fi
 
 # 4) Read verbs (allowlist) run with the subscription pinned.
 verb=""
