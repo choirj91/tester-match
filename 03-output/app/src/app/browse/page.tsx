@@ -329,10 +329,12 @@ export default async function BrowsePage({
     apps = (data as BrowseApp[] | null) ?? [];
   }
 
-  const seats = await countOpenSeatsByApp(
-    supabase,
-    [...boostApps, ...apps].map((a) => a.id),
-  );
+  // 조회 실패 시 배지만 숨긴다 (참여 자체는 서버가 다시 확인한다)
+  const seats =
+    (await countOpenSeatsByApp(
+      supabase,
+      [...boostApps, ...apps].map((a) => a.id),
+    )) ?? new Map<number, number>();
 
   const total = nonBoostTotal + boostApps.length;
 

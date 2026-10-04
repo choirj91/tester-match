@@ -9,13 +9,9 @@ import {
   ATTENTION_NOTE_PREFIX,
   REFUND_FAILED_NOTE_PREFIX,
   expectedRefundKrw,
-} from "@/lib/paid-order-sweep-rules";
-import {
-  OPEN_ORDER_SELECT,
   won,
-  type OpenOrder,
-  type QueryResult,
-} from "@/lib/paid-order-sweep";
+} from "@/lib/paid-order-sweep-rules";
+import { OPEN_ORDER_SELECT, type OpenOrder, type QueryResult } from "@/lib/paid-order-sweep";
 import { SEAT_FILLED_MATCH_STATUSES, SEAT_OPEN_STATUSES } from "@/lib/paid-seats";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -187,8 +183,15 @@ async function orderAlerts(supabase: SupabaseClient, alerts: string[]): Promise<
 
 /** 경보: 사람이 처리해야 하는 대기열 (이의 판정, 기프티콘 교환) */
 async function queueAlerts(supabase: SupabaseClient, now: Date, alerts: string[]): Promise<void> {
-  const [disputed, redemptions] = await Promise.all([
+  const overdueBefore = new Date(now.getTime() - DAY_MS).toISOString();
+  const [disputed, overdue, redemptions] = await Promise.all([
     supabase.from("seat_rewards").select("id").eq("status", "disputed").limit(ID_LIST_LIMIT),
+    supabase
+      .from("seat_rewards")
+      .select("id")
+      .eq("status", "held")
+      .lte("release_due_at", overdueBefore)
+      .limit(ID_LIST_LIMIT),
     supabase
       .from("credit_redemptions")
       .select("id, created_at")
@@ -199,6 +202,12 @@ async function queueAlerts(supabase: SupabaseClient, now: Date, alerts: string[]
   if (disputes.length > 0) {
     alerts.push(
       `보상 이의 검토 ${disputes.length}건 — 7일 내 판정하지 않으면 테스터에게 자동 지급됩니다 (/admin/seat-rewards).`,
+    );
+  }
+  const late = rowsOrAlert(overdue, "자동 확정 지연", alerts) ?? [];
+  if (late.length > 0) {
+    alerts.push(
+      `자동 확정 지연 ${late.length}건 — 확정 기한이 하루 넘게 지났는데 지급되지 않았습니다. GitHub Actions 의 시트 보상 크론 로그 확인.`,
     );
   }
   const waiting = rowsOrAlert(redemptions, "기프티콘 교환 대기", alerts) ?? [];
@@ -369,7 +378,7 @@ async function reconcileRefunds(supabase: SupabaseClient, alerts: string[]): Pro
     await supabase
       .from("paid_tester_orders")
       .select("id, order_code, status, tester_count, amount_krw, fulfillment, refund_due_krw, refunded_krw")
-      .in("status", ["canceled", "completed"])
+      .in("status", ["canceled", "completed", "refunded"])
       .gte("paid_at", RECONCILE_SINCE_ISO)
       .order("id", { ascending: false })
       .limit(RECONCILE_ORDER_LIMIT),

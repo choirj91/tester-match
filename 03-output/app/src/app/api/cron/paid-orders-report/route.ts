@@ -5,13 +5,13 @@ import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrdersDailyReportEmail } from "@/lib/email-templates";
 import { buildOrderReport } from "@/lib/paid-order-report";
 import { runSweepStep } from "@/lib/paid-order-sweep";
+import { AUTO_CANCEL_NOTE_PREFIX } from "@/lib/paid-order-sweep-rules";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 export const runtime = "edge";
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const AUTO_CANCEL_NOTE_PREFIX = "자동 취소";
 
 /** KST 기준 올해 1월 1일 0시의 UTC ISO */
 function kstYearStartIso(now: Date): string {
@@ -38,8 +38,15 @@ export async function GET(request: Request) {
   const mode = new URL(request.url).searchParams.get("mode");
 
   if (mode === "sweep") {
-    const step = await runSweepStep(supabase, now);
-    return NextResponse.json({ ok: true, ...step });
+    try {
+      const step = await runSweepStep(supabase, now);
+      return NextResponse.json({ ok: true, ...step });
+    } catch (err) {
+      // 대상 조회·기록 실패 — 500 으로 돌려 크론 잡이 실패로 보이게 한다
+      const message = err instanceof Error ? err.message : "스윕 실패";
+      console.error("[cron/paid-orders-report] sweep failed", err);
+      return NextResponse.json({ ok: false, message }, { status: 500 });
+    }
   }
 
   const report = await buildOrderReport(supabase, now);

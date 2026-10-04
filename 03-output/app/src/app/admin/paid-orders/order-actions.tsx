@@ -56,7 +56,8 @@ export function OrderActions({ orderId, status, seatsClosed, refundDueKrw, fulfi
   }
   // 시트가 마감된 커뮤니티 주문은 빈 시트 환불이 이미 돌았다 — 전액 취소는 서버가 거부한다
   const cancelable =
-    status === "pending" || (status === "paid" && (fulfillment === "operator" || !seatsClosed));
+    status === "pending" ||
+    (fulfillment === "operator" ? isOpen : status === "paid" && !seatsClosed);
   if (cancelable) {
     buttons.push({
       action: "cancel",

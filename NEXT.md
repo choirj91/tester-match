@@ -20,13 +20,16 @@
   - [ ] 정책 4종(크레딧·약관 §7·환불 §1~2·개인정보) 문구 승인 — 에스크로·"완주한 시트만 과금"·마일스톤 보상(ADR-0014) 반영본. 수정 요청 시 즉시 반영
   - [ ] **대표자명·사업장 주소·전화 표기 + 통신판매업 신고** — 약관·개인정보 책임자·푸터 (지금은 상호·메일만). 공개 오픈 전 권장
   - [ ] 운영 런북 숙지: 04-review/history/2026-10-03-tester-market-flow-audit.md §3 (매일 08:30 [ACTION] 메일, 토스 환불 대기, 이의 판정 7일, 기프티콘 3영업일)
-  - [ ] 후속 코드: 토스 취소 API 연동(환불 자동화), 완주 후 스크린샷 보관기간 삭제 크론, 리마인더 발송 실패율 리포트 편입, 페널티 스윕·리마인더 fetchAll, 과거 clamp 100 으로 잘린 신뢰도 재계산
+  - [ ] 리포트 경보 읽는 법: `확인 필요`(토스 결제 상태 대조·스윕 자동 재시도) / `환불 실패`(수동 조정 필요) / `환불 누락·과다 의심`(주문 관리에서 대조). 즉시 확인은 크론 주소에 `?mode=preview`
+  - [ ] 후속 코드: 토스 취소 API 연동(환불 자동화), 완주 후 스크린샷 보관기간 삭제 크론, 리마인더 발송 실패율 리포트 편입, 페널티 스윕·리마인더 fetchAll, 토스 환불 대기 RPC 멱등 키(응답 유실 시 중복 누적 방지), 출시 보너스 스캔 범위 확대, 과거 clamp 100 으로 잘린 신뢰도 재계산
   - [ ] 오픈 공지 글(게시판) + 오픈채팅 공지: "시트당 최대 700크레딧(설치 100·출석 20/일·7연속 +50·완주 +120·개근 +50·출시 +100), 리뷰 금지" 규칙 명시. 랭킹 크레딧 보상 폐지도 함께 고지
   - [ ] 본 도메인에서 관리자 로그인 → `/admin/paid-orders` 주문 2 [테스트 개시] → `/console/orders/2` 에서 슬롯 라벨·스샷 업로드·코멘트 실사용 확인 (구매자 계정으로도 읽기 전용 확인)
   - [ ] 토스 전자결제 신청 — 환불정책 https://tester-match.knockknock.company/policies/refund · 약관 /policies/terms · 개인정보 /policies/privacy. 주소 표기 요구 시 재검토(자택 주소 비공개 결정)
   - [ ] 토스페이먼츠 가입 → 전자결제 신청 → 라이브 키 발급 (심사 수일~2주)
   - [ ] 라이브 전환: `wrangler pages secret put TOSS_SECRET_KEY` 교체 + `.env.local` 의 `NEXT_PUBLIC_TOSS_CLIENT_KEY` 교체 후 재빌드 + `PAID_TESTERS_PUBLIC_ORDERING = true` (lib/paid-testers.ts) → 배포 → 게시판 오픈 공지
-  - [ ] **Resend 도메인 검증** — resend.com/domains 에 `knockknock.company` + DNS → `RESEND_FROM_EMAIL` 을 그 도메인 주소로, `ADMIN_NOTIFY_EMAIL` 시크릿 삭제(admin@ 로 복귀). ⚠️ 검증 전엔 choirj91@gmail.com 외 수신자 전부 403 — 리마인더·매칭 알림 등 사용자 메일 전부 미발송 상태 (09-28 이전엔 RESEND_API_KEY 자체가 프로덕션에 없었음)
+  - [ ] **토스 심사용 테스트 계정** ([ADR-0013](01-source/decisions/ADR-0013-email-signup.md)) — 계정 이메일 `test@knockknock.company` 확정, `PAID_TESTERS_ORDER_ALLOWLIST` 시크릿 등록 완료(다음 배포부터 적용). 남은 순서: `/auth/signup` 에서 그 메일로 직접 가입·인증(비밀번호는 본인만) → AI 세션이 데모 앱(비노출 `paused`) 생성 + 2차 배포 → 로그인·주문·결제창 확인 후 토스 폼에 ID/비밀번호 직접 입력
+  - [x] ~~Resend 도메인 검증~~ (2026-10-03 — `knockknock.company` 검증, 발신 `noreply@knockknock.company`, 프로덕션 `RESEND_API_KEY` 새 키로 교체. 전 수신자 발송 가능)
+  - [ ] `ADMIN_NOTIFY_EMAIL` 시크릿 삭제(admin@ 로 복귀) — admin@knockknock.company 수신함 확인 후
 
 - [ ] **공용 그룹 최종 검증** — `tester-match@googlegroups.com`
   - [ ] groups.google.com 설정 확인: 그룹 보기 "웹의 모든 사용자" / 가입 "웹상의 모든 사용자가 가입 가능"(승인 없이)

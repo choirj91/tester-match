@@ -66,14 +66,20 @@ jobs:
       github.event_name == 'workflow_dispatch' && (inputs.job == 'penalty-sweep' || inputs.job == 'all') ||
       github.event_name == 'schedule' && startsWith(github.event.schedule, '0 12')
     steps:
-      - name: Call /api/cron/penalty-sweep
+      - name: Call /api/cron/penalty-sweep (repeat until done)
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST "$APP_URL/api/cron/penalty-sweep" \
-            -H "Authorization: Bearer $CRON_SECRET" \
-            -H "Content-Type: application/json")
-          echo "HTTP $STATUS"
-          [ "$STATUS" -eq 200 ] || exit 1
+          # 요청당 처리량 상한 때문에 몇 건씩 처리한다 — more=false 까지 반복 (최대 40회)
+          for i in $(seq 1 40); do
+            STATUS=$(curl -s --max-time 60 -o /tmp/body.json -w "%{http_code}" \
+              -X POST "$APP_URL/api/cron/penalty-sweep" \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              -H "Content-Type: application/json" || true)
+            echo "penalty #$i HTTP $STATUS"
+            cat /tmp/body.json || true
+            echo
+            [ "$STATUS" = "200" ] || exit 1
+            grep -q '"more":true' /tmp/body.json || break
+          done
 
   # ── 급구 자동 만료 sweep (KST 09:00) ────────────────
   boost-expiry-sweep:
@@ -122,24 +128,24 @@ jobs:
           # 스윕은 요청당 처리량 상한 때문에 몇 건씩 처리한다 — more=false 까지 반복 (최대 40회)
           SWEEP_FAILED=0
           for i in $(seq 1 40); do
-            STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
+            STATUS=$(curl -s --max-time 60 -o /tmp/body.json -w "%{http_code}" \
               -X POST "$APP_URL/api/cron/paid-orders-report?mode=sweep" \
               -H "Authorization: Bearer $CRON_SECRET" \
-              -H "Content-Type: application/json")
+              -H "Content-Type: application/json" || true)
             echo "sweep #$i HTTP $STATUS"
             cat /tmp/body.json || true
             echo
-            if [ "$STATUS" -ne 200 ]; then SWEEP_FAILED=1; break; fi
+            if [ "$STATUS" != "200" ]; then SWEEP_FAILED=1; break; fi
             grep -q '"more":true' /tmp/body.json || break
           done
           # 스윕이 실패해도 리포트(운영 경보)는 보낸다 — 응답 본문을 로그에 남긴다
-          STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
+          STATUS=$(curl -s --max-time 60 -o /tmp/body.json -w "%{http_code}" \
             -X POST "$APP_URL/api/cron/paid-orders-report" \
             -H "Authorization: Bearer $CRON_SECRET" \
-            -H "Content-Type: application/json")
+            -H "Content-Type: application/json" || true)
           echo "report HTTP $STATUS"
           cat /tmp/body.json || true
-          [ "$STATUS" -eq 200 ] || exit 1
+          [ "$STATUS" = "200" ] || exit 1
           [ "$SWEEP_FAILED" -eq 0 ] || exit 1
 
   # ── 유료 시트 보상 자동 확정 (6시간 간격) ────────────
@@ -154,14 +160,14 @@ jobs:
         run: |
           # 자동 확정·보정·출시 보너스를 몇 건씩 처리한다 — more=false 까지 반복 (최대 40회)
           for i in $(seq 1 40); do
-            STATUS=$(curl -s -o /tmp/body.json -w "%{http_code}" \
+            STATUS=$(curl -s --max-time 60 -o /tmp/body.json -w "%{http_code}" \
               -X POST "$APP_URL/api/cron/seat-reward-release" \
               -H "Authorization: Bearer $CRON_SECRET" \
-              -H "Content-Type: application/json")
+              -H "Content-Type: application/json" || true)
             echo "release #$i HTTP $STATUS"
             cat /tmp/body.json || true
             echo
-            [ "$STATUS" -eq 200 ] || exit 1
+            [ "$STATUS" = "200" ] || exit 1
             grep -q '"more":true' /tmp/body.json || break
           done
 

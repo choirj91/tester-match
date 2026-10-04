@@ -75,10 +75,15 @@ describe("expectedRefundKrw", () => {
     expect(expectedRefundKrw({ ...community, status: "canceled" }, none)).toBe(5000);
   });
 
-  test("운영자 처리 주문은 취소면 전액, 완료면 0", () => {
+  test("운영자 처리 주문은 취소·환불이면 전액, 완료면 0", () => {
     const operator = { ...community, fulfillment: "operator" as const };
     expect(expectedRefundKrw({ ...operator, status: "canceled" }, none)).toBe(5000);
+    expect(expectedRefundKrw({ ...operator, status: "refunded" }, none)).toBe(5000);
     expect(expectedRefundKrw({ ...operator, status: "completed" }, none)).toBe(0);
+  });
+
+  test("전액 환불된 커뮤니티 주문은 전액이 환불 대상이다", () => {
+    expect(expectedRefundKrw({ ...community, status: "refunded" }, none)).toBe(5000);
   });
 });
 
