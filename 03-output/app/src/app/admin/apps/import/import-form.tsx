@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AppImportRowSchema, type AppImportRow } from "@/lib/validators/admin-app-import";
 
 type ImportError = { row: number; email?: string; reason: string };
+type ImportDuplicate = { row: number; email: string; app_name: string };
 type Result = {
   ok: boolean;
   imported?: number;
@@ -11,6 +12,7 @@ type Result = {
   total?: number;
   placeholders_created?: number;
   errors?: ImportError[];
+  duplicates?: ImportDuplicate[];
   message?: string;
 };
 type InvalidRow = { rowNum: number; raw: unknown; reason: string };
@@ -41,6 +43,10 @@ export function mergeChunkResult(base: Result, chunkResult: Result, rowOffset: n
     ...error,
     row: error.row + rowOffset,
   }));
+  const duplicates = chunkResult.duplicates?.map((duplicate) => ({
+    ...duplicate,
+    row: duplicate.row + rowOffset,
+  }));
 
   return {
     ok: true,
@@ -50,6 +56,7 @@ export function mergeChunkResult(base: Result, chunkResult: Result, rowOffset: n
     placeholders_created:
       (base.placeholders_created ?? 0) + (chunkResult.placeholders_created ?? 0),
     errors: [...(base.errors ?? []), ...(errors ?? [])],
+    duplicates: [...(base.duplicates ?? []), ...(duplicates ?? [])],
   };
 }
 
@@ -128,6 +135,7 @@ export function ImportForm() {
         total: 0,
         placeholders_created: 0,
         errors: [],
+        duplicates: [],
       };
 
       for (let i = 0; i < chunks.length; i++) {
@@ -147,6 +155,7 @@ export function ImportForm() {
             total: merged.total,
             placeholders_created: merged.placeholders_created,
             errors: merged.errors,
+            duplicates: merged.duplicates,
           });
           return;
         }
@@ -170,7 +179,7 @@ export function ImportForm() {
           <button
             type="button"
             onClick={() => setText(SAMPLE)}
-            className="text-xs text-trust-600 hover:text-trust-700"
+            className="text-trust-600 hover:text-trust-700 text-xs"
           >
             예시 채우기
           </button>
@@ -183,12 +192,12 @@ export function ImportForm() {
           required
           spellCheck={false}
           placeholder="JSON 배열 붙여넣기..."
-          className="mt-2 w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2.5 font-mono text-xs leading-relaxed shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20"
+          className="focus:border-trust-600 focus:ring-trust-500/20 mt-2 w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2.5 font-mono text-xs leading-relaxed shadow-sm placeholder:text-neutral-400 focus:ring-2 focus:outline-none"
         />
       </div>
 
       {parseError && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="bg-crimson-500/10 text-crimson-500 rounded-lg px-3 py-2 text-sm">
           {parseError}
         </p>
       )}
@@ -198,7 +207,7 @@ export function ImportForm() {
         <button
           type="submit"
           disabled={submitting || text.trim().length === 0}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-trust-600 hover:bg-trust-700 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
         >
           {submitting ? "등록 중..." : "일괄 등록"}
         </button>
@@ -254,7 +263,7 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
                 · {String((r.raw as Record<string, unknown>).email)}
               </span>
             )}
-            <span className="ml-1.5 text-crimson-500">{r.reason}</span>
+            <span className="text-crimson-500 ml-1.5">{r.reason}</span>
           </li>
         ))}
       </ul>
@@ -265,7 +274,7 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
 function ImportResult({ result }: { result: Result }) {
   if (!result.ok) {
     return (
-      <div className="rounded-lg bg-crimson-500/10 px-4 py-3 text-sm text-crimson-500">
+      <div className="bg-crimson-500/10 text-crimson-500 rounded-lg px-4 py-3 text-sm">
         실패: {result.message ?? "unknown"}
       </div>
     );
@@ -274,9 +283,10 @@ function ImportResult({ result }: { result: Result }) {
   return (
     <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
       <h3 className="text-sm font-semibold text-neutral-900">등록 결과</h3>
-      <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+      <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
         <Stat label="총 입력" value={result.total ?? 0} />
         <Stat label="등록 성공" value={result.imported ?? 0} tone="text-mint-500" />
+        <Stat label="중복 건너뜀" value={result.duplicates?.length ?? 0} />
         <Stat
           label="실패"
           value={result.skipped ?? 0}
@@ -287,14 +297,29 @@ function ImportResult({ result }: { result: Result }) {
 
       {result.errors && result.errors.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <h4 className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
             DB 오류 상세
           </h4>
           <ul className="mt-2 space-y-1 text-xs">
             {result.errors.map((e, i) => (
-              <li key={i} className="rounded bg-crimson-500/5 px-2 py-1 font-mono text-crimson-500">
+              <li key={i} className="bg-crimson-500/5 text-crimson-500 rounded px-2 py-1 font-mono">
                 row {e.row}
                 {e.email && ` · ${e.email}`} → {e.reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {result.duplicates && result.duplicates.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+            중복 건너뜀 — 같은 소유자·앱 이름·스토어 링크가 이미 등록됨
+          </h4>
+          <ul className="mt-2 space-y-1 text-xs">
+            {result.duplicates.map((d, i) => (
+              <li key={i} className="rounded bg-neutral-100 px-2 py-1 font-mono text-neutral-600">
+                row {d.row} · {d.email} → {d.app_name}
               </li>
             ))}
           </ul>
@@ -308,7 +333,7 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: str
   return (
     <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
       <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className={`mt-0.5 text-lg font-bold tabular ${tone ?? "text-neutral-900"}`}>{value}</dd>
+      <dd className={`tabular mt-0.5 text-lg font-bold ${tone ?? "text-neutral-900"}`}>{value}</dd>
     </div>
   );
 }

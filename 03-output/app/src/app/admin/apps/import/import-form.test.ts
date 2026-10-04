@@ -43,5 +43,29 @@ describe("admin app import batching", () => {
       { row: 201, email: "b@example.com", reason: "failed" },
     ]);
   });
-});
 
+  it("merges skipped duplicates and offsets their row numbers", () => {
+    const merged = mergeChunkResult(
+      {
+        ok: true,
+        duplicates: [{ row: 3, email: "a@example.com", app_name: "A 앱" }],
+      },
+      {
+        ok: true,
+        duplicates: [{ row: 2, email: "b@example.com", app_name: "B 앱" }],
+      },
+      200,
+    );
+
+    expect(merged.duplicates).toEqual([
+      { row: 3, email: "a@example.com", app_name: "A 앱" },
+      { row: 202, email: "b@example.com", app_name: "B 앱" },
+    ]);
+  });
+
+  it("treats a chunk result without duplicates as none", () => {
+    const merged = mergeChunkResult({ ok: true }, { ok: true }, 0);
+
+    expect(merged.duplicates).toEqual([]);
+  });
+});
