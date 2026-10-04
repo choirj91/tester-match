@@ -2,9 +2,14 @@
  * 유료 주문 스윕 (ADR-0012 부록 B) — 주문이 끼지 않게 하고, 사람이 처리할 일을 모아 알린다.
  *
  *  runSweepStep : 한 번에 조금씩 처리 (Cloudflare 요청당 서브리퀘스트 상한). more=true 면 다시 호출.
- *    1. 미결제 24시간 경과: 토스에 결제가 있으면 복구, 없으면 취소 (크레딧 차감분은 먼저 환급)
+ *    1. 미결제 24시간 경과: 포트원에 결제가 있으면 복구, 없으면 취소 (크레딧 차감분은 먼저 환급)
  *    2. 결제 7일 경과: 빈 시트 마감 + 환불 / 열린 시트가 있으면 급구 유지 / 진행 중이 없으면 종결
- *  리포트(진행 주문 표·운영 경보·환불 대사)는 lib/paid-order-report.ts.
+ *    3. 결제 대조 (1·2 가 아무것도 처리하지 않은 단계에서만 — 요청당 서브리퀘스트 상한 50):
+ *       a. 만료 전(15분~24시간) 미결제 주문: 결제 완료 + 검증 통과면 확정(복구), 그 외에는 swept_at 만 찍는다.
+ *          단계당 5건, 같은 주문은 20시간 안에 다시 조회하지 않는다. 5건을 꽉 채웠으면 more=true.
+ *       b. 결제 기록 없이 취소된 최근 14일 주문 중 최신 5건: 결제가 들어와 있으면 "확인 필요"(환불 대상) 메모.
+ *          a 가 끝난 단계에서 한 번만 돈다. "조회했음"을 남길 열이 없어 more 에 반영하지 않는다
+ *          (swept_at 은 자동 취소 시각으로 쓰여 일일 리포트의 자동 취소 건수를 센다 — 다시 찍으면 건수가 부푼다).
  *
  * 처리한 주문은 swept_at 을 찍어 20시간 동안 다시 잡지 않는다 — 막힌 주문 하나가 나머지를 굶기지 않는다.
  * 자동으로 풀 수 없는 건은 admin_note 에 "확인 필요:" 를 남겨 매일 리포트에 다시 올린다.
@@ -19,8 +24,12 @@ import {
   AUTO_CANCEL_NOTE_PREFIX,
   REFUND_FAILED_NOTE_PREFIX,
   attentionNote,
+  decideCanceledOrderCheck,
+  decideEarlyRecovery,
   decidePendingOrder,
   hasAttentionNote,
+  hasPaidAfterCancelNote,
+  reconcileHasMore,
   resweepFilter,
   won,
 } from "@/lib/paid-order-sweep-rules";
@@ -32,13 +41,21 @@ import {
   isCreditsPaidOrder,
   settleOrderIfDone,
 } from "@/lib/paid-seats";
-import { lookupTossPaymentByOrderId } from "@/lib/toss";
+import { expectedPortOnePayment, lookupPortOnePayment } from "@/lib/portone";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PENDING_EXPIRY_MS = DAY_MS;
 const RESWEEP_AFTER_MS = 20 * 60 * 60 * 1000;
 const PENDING_PER_STEP = 2;
 const ORDERS_PER_STEP = 2;
+const EARLY_RECOVERY_MIN_AGE_MS = 15 * 60 * 1000;
+const CANCELED_CHECK_WINDOW_MS = 14 * DAY_MS;
+/**
+ * 결제 대조 패스가 한 단계(요청 한 번)에 조회하는 주문 수 상한 (패스마다).
+ * Cloudflare Pages 무료 플랜은 요청당 서브리퀘스트가 50개다 — 주문 하나에 포트원 조회 1 + DB 기록 1~3,
+ * 복구되는 주문은 확정·시트 오픈·알림으로 그보다 훨씬 많이 쓴다.
+ */
+const RECONCILE_PER_STEP = 5;
 
 export type SweepStepResult = {
   pendingHandled: number;
@@ -46,6 +63,12 @@ export type SweepStepResult = {
   autoCanceledCount: number;
   recoveredCount: number;
   closedOrders: number;
+  /** 결제 대조: 만료 전 미결제 주문 중 복구한 건수 */
+  earlyRecoveredCount: number;
+  /** 결제 대조: 취소된 주문에서 결제를 찾아 환불 대상으로 올린 건수 */
+  paidAfterCancelCount: number;
+  /** 결제 대조 중 포트원 조회에 실패해 건너뛴 건수 (다음 실행이 다시 본다) */
+  lookupErrorCount: number;
   alerts: string[];
   more: boolean;
 };
@@ -104,22 +127,17 @@ async function holdOrder(
   }
 }
 
-/** 토스엔 승인돼 있는데 우리 쪽 반영이 빠진 주문 → 확정 */
+/** 포트원엔 결제 완료인데 우리 쪽 반영이 빠진 주문 → 확정 (확정 함수가 포트원을 다시 조회해 검증한다) */
 async function recoverPending(
   supabase: SupabaseClient,
   order: PendingOrder,
-  paymentKey: string,
   now: Date,
   alerts: string[],
 ): Promise<PendingOutcome> {
-  const result = await confirmPaidTesterOrder({
-    paymentKey,
-    orderId: order.order_code,
-    amount: order.amount_krw,
-  });
+  const result = await confirmPaidTesterOrder({ orderId: order.order_code });
   if (!result.ok) {
-    await holdOrder(supabase, order.id, now, `토스엔 승인돼 있으나 반영 실패 (${result.message})`);
-    alerts.push(`결제 복구 실패: ${order.order_code} — 토스엔 승인돼 있습니다. 수동 확인 필요.`);
+    await holdOrder(supabase, order.id, now, `포트원엔 결제 완료이나 반영 실패 (${result.message})`);
+    alerts.push(`결제 복구 실패: ${order.order_code} — 포트원엔 결제 완료입니다. 수동 확인 필요.`);
     return "held";
   }
   if (hasAttentionNote(order.admin_note)) {
@@ -187,16 +205,16 @@ async function sweepOnePending(
   now: Date,
   alerts: string[],
 ): Promise<PendingOutcome> {
-  // 카드는 승인됐는데 우리 쪽 반영이 누락된 주문일 수 있다 → 토스에 먼저 확인
-  const lookup = await lookupTossPaymentByOrderId(order.order_code);
-  const decision = decidePendingOrder(lookup, order.amount_krw);
+  // 카드는 승인됐는데 우리 쪽 반영이 누락된 주문일 수 있다 → 포트원에 먼저 확인 (결제 ID = 주문 코드)
+  const lookup = await lookupPortOnePayment(order.order_code);
+  const decision = decidePendingOrder(lookup, expectedPortOnePayment(order.amount_krw));
   if (decision.action === "hold") {
     await holdOrder(supabase, order.id, now, decision.reason);
     alerts.push(`결제 대조 필요: ${order.order_code} — ${decision.reason}. 자동 취소하지 않았습니다.`);
     return "held";
   }
   if (decision.action === "recover") {
-    return recoverPending(supabase, order, decision.paymentKey, now, alerts);
+    return recoverPending(supabase, order, now, alerts);
   }
   return cancelPending(supabase, order, now, alerts);
 }
@@ -271,7 +289,7 @@ async function sweepOneOpen(
     if (result.unfilled > 0 && result.refund) {
       alerts.push(
         result.refund.mode === "toss"
-          ? `환불 필요: "${appName}" (${order.order_code}) 미충원 ${result.unfilled}시트 — 토스에서 ${won(result.refund.amount)}원 부분취소 후 [환불 완료] 처리.`
+          ? `환불 필요: "${appName}" (${order.order_code}) 미충원 ${result.unfilled}시트 — PG 관리자(포트원 콘솔)에서 ${won(result.refund.amount)}원 부분취소 후 [환불 완료] 처리.`
           : `자동 환급: "${appName}" (${order.order_code}) 미충원 ${result.unfilled}시트 — ${won(result.refund.amount)} 크레딧 환급됨.`,
       );
     }
@@ -290,7 +308,7 @@ async function sweepOpenOrders(
   supabase: SupabaseClient,
   now: Date,
   alerts: string[],
-): Promise<{ handled: number; closed: number; more: boolean }> {
+): Promise<{ handled: number; closed: number; more: boolean; allStamped: boolean }> {
   // 최근 20시간 안에 스윕하지 않은 주문만, 오래 안 본 순서로 — 실행마다 몇 건씩 순환
   const result = await supabase
     .from("paid_tester_orders")
@@ -322,33 +340,158 @@ async function sweepOpenOrders(
     handled: orders.length,
     closed,
     more: stamped > 0 && (result.count ?? 0) > orders.length,
+    allStamped: stamped === orders.length,
   };
 }
 
-/** 스윕 한 단계. 미결제 건이 있으면 그것만, 없으면 열린 주문 몇 건을 처리한다. */
+/**
+ * 결제 대조 a — 만료 전(15분~24시간) 미결제 주문. 결제는 끝났는데 구매자가 성공 화면으로 돌아오지 않은 주문을 복구만 한다.
+ * 결제 완료 + 검증 통과가 아니면 상태·메모를 건드리지 않고 swept_at 만 찍는다 — 기존 스윕과 같은 방식으로
+ * 20시간 안에는 다시 조회하지 않는다 (조회 실패도 찍는다: 다음 실행이 다시 본다).
+ * 찍힌 주문은 24시간 미결제 스윕도 그 20시간 동안 건너뛴다 (취소가 그만큼 늦어질 수 있다 — 매일 1회 실행에서는 차이 없음).
+ * 한 건 복구하면 멈춘다 — 복구는 시트 오픈 알림까지 보내 서브리퀘스트가 크다. 다음 호출이 이어서 본다.
+ */
+async function recoverEarlyPaid(
+  supabase: SupabaseClient,
+  now: Date,
+  alerts: string[],
+): Promise<{ recovered: number; lookupErrors: number; more: boolean }> {
+  const orders = rowsOrThrow<PendingOrder>(
+    await supabase
+      .from("paid_tester_orders")
+      .select("id, order_code, buyer_user_id, amount_krw, admin_note")
+      .eq("status", "pending")
+      .lt("created_at", new Date(now.getTime() - EARLY_RECOVERY_MIN_AGE_MS).toISOString())
+      .gte("created_at", new Date(now.getTime() - PENDING_EXPIRY_MS).toISOString())
+      .or(resweepFilter(now, RESWEEP_AFTER_MS))
+      .order("created_at", { ascending: true })
+      .limit(RECONCILE_PER_STEP),
+    "만료 전 미결제 주문",
+  );
+  let lookupErrors = 0;
+  let recorded = 0;
+  for (const order of orders) {
+    const decision = decideEarlyRecovery(await lookupPortOnePayment(order.order_code), expectedPortOnePayment(order.amount_krw));
+    if (decision === "lookup_error") lookupErrors++;
+    if (decision === "recover") {
+      const result = await confirmPaidTesterOrder({ orderId: order.order_code });
+      if (result.ok) {
+        alerts.push(`결제 복구: ${order.order_code} — 결제 완료 후 반영이 빠져 있던 주문을 확정했습니다.`);
+        // 복구된 주문은 pending 에서 빠진다 → 다시 불러도 반드시 끝난다
+        return { recovered: 1, lookupErrors, more: true };
+      }
+    }
+    const { error } = await supabase
+      .from("paid_tester_orders")
+      .update({ swept_at: now.toISOString() })
+      .eq("id", order.id)
+      .eq("status", "pending");
+    if (error) console.error("[paid-order-sweep] early-recovery stamp failed", order.id, error);
+    else recorded++;
+  }
+  return {
+    recovered: 0,
+    lookupErrors,
+    more: reconcileHasMore({ picked: orders.length, cap: RECONCILE_PER_STEP, recorded }),
+  };
+}
+
+type CanceledOrder = { id: number; order_code: string; admin_note: string | null };
+
+/**
+ * 결제 대조 b — 결제 기록 없이 취소된 최근 주문 중 최신 5건. 취소 뒤에 결제창에서 결제가 끝났는데 구매자가 돌아오지 않은 경우를 찾는다.
+ * 결제 완료면 confirmPaidTesterOrder 의 "취소된 주문에 결제" 경로로 환불 대상 메모를 남긴다 (멱등). 그 외에는 아무것도 하지 않는다.
+ * "조회했음"을 남길 열이 없어 밀린 주문을 이어서 보지 못한다 — 실행마다 최신 5건만 본다 (more 에 반영하지 않으므로 반복 호출이 끝난다).
+ * 취소 시각 열이 없어 주문 생성 시각으로 기간을 잡는다. 이미 메모가 붙은 주문은 조회하지 않는다.
+ */
+async function flagPaidOnCanceled(
+  supabase: SupabaseClient,
+  now: Date,
+  alerts: string[],
+): Promise<{ flagged: number; lookupErrors: number }> {
+  const rows = rowsOrThrow<CanceledOrder>(
+    await supabase
+      .from("paid_tester_orders")
+      .select("id, order_code, admin_note")
+      .eq("status", "canceled")
+      .is("paid_at", null)
+      .gte("created_at", new Date(now.getTime() - CANCELED_CHECK_WINDOW_MS).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(RECONCILE_PER_STEP * 2),
+    "취소된 주문",
+  );
+  const orders = rows.filter((o) => !hasPaidAfterCancelNote(o.admin_note)).slice(0, RECONCILE_PER_STEP);
+  let flagged = 0;
+  let lookupErrors = 0;
+  for (const order of orders) {
+    const decision = decideCanceledOrderCheck(await lookupPortOnePayment(order.order_code));
+    if (decision === "lookup_error") lookupErrors++;
+    if (decision !== "flag") continue;
+    // 확정 함수가 다시 조회해 메모를 남기고 "closed" 로 답한다. 기록에 실패하면(retry) 다음 실행이 다시 본다
+    const result = await confirmPaidTesterOrder({ orderId: order.order_code });
+    if (result.ok || result.reason !== "closed") continue;
+    flagged++;
+    alerts.push(
+      `환불 필요: 취소된 주문 ${order.order_code} 에 카드 결제가 있습니다 — PG 관리자(포트원 콘솔)에서 전액 환불.`,
+    );
+  }
+  return { flagged, lookupErrors };
+}
+
+/**
+ * 스윕 한 단계. 미결제 건이 있으면 그것만, 없으면 열린 주문 몇 건을 처리한다.
+ * 둘 다 처리한 것이 없는 단계에서만 결제 대조(a → b)를 돈다 — 한 요청의 서브리퀘스트를 기존 패스와 나눠 쓰지 않는다.
+ * more 는 "이번 단계에서 고른 주문이 전부 다음 호출의 대상에서 빠졌을 때"만 true 다 (상태 변경 또는 swept_at) → 반드시 끝난다.
+ */
 export async function runSweepStep(supabase: SupabaseClient, now: Date): Promise<SweepStepResult> {
   const alerts: string[] = [];
+  const step: SweepStepResult = {
+    pendingHandled: 0,
+    ordersHandled: 0,
+    autoCanceledCount: 0,
+    recoveredCount: 0,
+    closedOrders: 0,
+    earlyRecoveredCount: 0,
+    paidAfterCancelCount: 0,
+    lookupErrorCount: 0,
+    alerts,
+    more: false,
+  };
   const pending = await sweepPending(supabase, now, alerts);
   if (pending.handled > 0) {
     // 처리한 건은 상태가 바뀌거나 swept_at 이 찍혀 다음 호출에서 빠진다 → 반드시 끝난다
     return {
+      ...step,
       pendingHandled: pending.handled,
-      ordersHandled: 0,
       autoCanceledCount: pending.canceled,
       recoveredCount: pending.recovered,
-      closedOrders: 0,
-      alerts,
       more: true,
     };
   }
   const open = await sweepOpenOrders(supabase, now, alerts);
+  if (open.handled > 0) {
+    // 처리한 주문이 전부 기록됐으면 한 번 더 부르게 해, 다음 단계가 결제 대조만 돌게 한다
+    return {
+      ...step,
+      ordersHandled: open.handled,
+      closedOrders: open.closed,
+      more: open.more || open.allStamped,
+    };
+  }
+
+  const early = await recoverEarlyPaid(supabase, now, alerts);
+  const afterEarly = {
+    ...step,
+    earlyRecoveredCount: early.recovered,
+    lookupErrorCount: early.lookupErrors,
+  };
+  // 밀린 미결제 주문이 남았으면 그것부터 — 취소 주문 대조는 마지막 단계에서 한 번만 돈다
+  if (early.more) return { ...afterEarly, more: true };
+
+  const canceled = await flagPaidOnCanceled(supabase, now, alerts);
   return {
-    pendingHandled: 0,
-    ordersHandled: open.handled,
-    autoCanceledCount: 0,
-    recoveredCount: 0,
-    closedOrders: open.closed,
-    alerts,
-    more: open.more,
+    ...afterEarly,
+    paidAfterCancelCount: canceled.flagged,
+    lookupErrorCount: early.lookupErrors + canceled.lookupErrors,
   };
 }

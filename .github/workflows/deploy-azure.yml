@@ -11,12 +11,12 @@ name: Deploy (Azure App Service)
 #             역할 Website Contributor — rg-testermatch-prod-krc 범위만)
 #   Variables (빌드 타임에 클라이언트 번들로 들어가는 공개 값):
 #            NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-#            NEXT_PUBLIC_TOSS_CLIENT_KEY, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_APP_NAME,
+#            NEXT_PUBLIC_PORTONE_STORE_ID, NEXT_PUBLIC_PORTONE_CHANNEL_KEY, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_APP_NAME,
 #            NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED
 #   App Service 설정: 시작 명령 `node server.js`, 앱 설정 HOSTNAME=0.0.0.0 (standalone 은
 #   HOSTNAME 에 바인딩 — 컨테이너 호스트명이면 외부 요청을 못 받는다), PORT 는 플랫폼이 주입.
 #   앞단 구성에 맞춰 CLIENT_IP_HEADER (기본 x-forwarded-for — src/lib/client-ip.ts).
-#   런타임 비밀(SUPABASE_SECRET_KEY, RESEND_API_KEY, TOSS_SECRET_KEY, CRON_SECRET …)은
+#   런타임 비밀(SUPABASE_SECRET_KEY, RESEND_API_KEY, PORTONE_API_SECRET, CRON_SECRET …)은
 #   App Service 앱 설정(Key Vault 참조)에 둔다. 빌드 산출물에는 들어가지 않는다.
 
 on:
@@ -79,13 +79,14 @@ jobs:
 
       - name: Check build-time values are present
         run: |
-          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY NEXT_PUBLIC_TOSS_CLIENT_KEY NEXT_PUBLIC_APP_URL; do
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY NEXT_PUBLIC_PORTONE_STORE_ID NEXT_PUBLIC_PORTONE_CHANNEL_KEY NEXT_PUBLIC_APP_URL; do
             [ -n "${!v}" ] || { echo "missing repository variable $v"; exit 1; }
           done
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-          NEXT_PUBLIC_TOSS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_TOSS_CLIENT_KEY }}
+          NEXT_PUBLIC_PORTONE_STORE_ID: ${{ vars.NEXT_PUBLIC_PORTONE_STORE_ID }}
+          NEXT_PUBLIC_PORTONE_CHANNEL_KEY: ${{ vars.NEXT_PUBLIC_PORTONE_CHANNEL_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
 
       - name: Build (standalone)
@@ -93,7 +94,8 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-          NEXT_PUBLIC_TOSS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_TOSS_CLIENT_KEY }}
+          NEXT_PUBLIC_PORTONE_STORE_ID: ${{ vars.NEXT_PUBLIC_PORTONE_STORE_ID }}
+          NEXT_PUBLIC_PORTONE_CHANNEL_KEY: ${{ vars.NEXT_PUBLIC_PORTONE_CHANNEL_KEY }}
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
           NEXT_PUBLIC_APP_NAME: ${{ vars.NEXT_PUBLIC_APP_NAME }}
           NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED: ${{ vars.NEXT_PUBLIC_EMAIL_SIGNUP_ENABLED }}

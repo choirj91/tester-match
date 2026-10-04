@@ -155,7 +155,7 @@ async function buildReportRows(
   });
 }
 
-/** 경보: 토스 환불 대기, 환불 실패·확인 필요 메모가 붙은 주문 */
+/** 경보: 카드 결제 환불 대기, 환불 실패·확인 필요 메모가 붙은 주문 */
 async function orderAlerts(supabase: SupabaseClient, alerts: string[]): Promise<void> {
   const [refundDue, refundFailed, needsAttention] = await Promise.all([
     supabase.from("paid_tester_orders").select("order_code, refund_due_krw").gt("refund_due_krw", 0),
@@ -168,11 +168,11 @@ async function orderAlerts(supabase: SupabaseClient, alerts: string[]): Promise<
       .select("order_code, admin_note")
       .like("admin_note", `${ATTENTION_NOTE_PREFIX}%`),
   ]);
-  const due = rowsOrAlert(refundDue, "토스 환불 대기", alerts) ?? [];
+  const due = rowsOrAlert(refundDue, "카드 결제 환불 대기", alerts) ?? [];
   if (due.length > 0) {
     const total = due.reduce((sum, o) => sum + o.refund_due_krw, 0);
     alerts.push(
-      `토스 환불 대기 ${due.length}건 · ${won(total)}원 (${due.map((o) => o.order_code).join(", ")}) — 토스 대시보드에서 부분취소 후 [환불 완료].`,
+      `카드 결제 환불 대기 ${due.length}건 · ${won(total)}원 (${due.map((o) => o.order_code).join(", ")}) — PG 관리자(포트원 콘솔)에서 부분취소 후 [환불 완료].`,
     );
   }
   const noted = [
@@ -386,7 +386,7 @@ async function loadCreditRefunds(
 
 /**
  * 환불 대사 — 끝난 주문의 기록된 환불이 "과금 대상이 아닌 시트 × 단가"와 다르면 경보 (누락·과다 모두).
- * 토스 결제는 refund_due + refunded, 크레딧 결제는 원장 환급 합계와 비교한다.
+ * 카드 결제는 refund_due + refunded, 크레딧 결제는 원장 환급 합계와 비교한다.
  */
 async function reconcileRefunds(supabase: SupabaseClient, alerts: string[]): Promise<void> {
   const orders = rowsOrAlert<ClosedOrder>(

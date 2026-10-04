@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { canOrderPaidTesters, paidTesterOrderName } from "@/lib/paid-testers";
-import { CheckoutWidget } from "./checkout-widget";
+import { PayButton } from "./pay-button";
 
 export const metadata = {
   title: "결제",
@@ -47,7 +47,8 @@ export default async function CheckoutPage({
     redirect("/paid-testers");
   }
 
-  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY ?? "";
+  const storeId = process.env.NEXT_PUBLIC_PORTONE_STORE_ID ?? "";
+  const channelKey = process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY ?? "";
   const appName = order.apps?.name ?? "앱";
 
   return (
@@ -64,15 +65,16 @@ export default async function CheckoutPage({
           </p>
         </div>
 
-        {clientKey ? (
-          <CheckoutWidget
-            clientKey={clientKey}
-            customerKey={`tm_user_${user.id}`}
+        {storeId && channelKey ? (
+          <PayButton
+            storeId={storeId}
+            channelKey={channelKey}
             orderCode={order.order_code}
             orderName={paidTesterOrderName(appName, order.tester_count)}
             amount={order.amount_krw}
             customerEmail={user.email}
             customerName={user.nickname}
+            customerId={`tm_user_${user.id}`}
           />
         ) : (
           <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed text-amber-900">

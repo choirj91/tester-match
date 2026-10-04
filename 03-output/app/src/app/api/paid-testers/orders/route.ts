@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z, ZodError } from "zod";
 import { PaidOrderCreateSchema } from "@/lib/validators/paid-order";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,11 +11,40 @@ import {
   paidTesterAmountKrw,
 } from "@/lib/paid-testers";
 import { createCreditsPaidOrder } from "@/lib/paid-orders";
+import { isCreditsPaidOrder } from "@/lib/paid-seats";
 
 const BodySchema = PaidOrderCreateSchema.extend({
-  pay_with: z.enum(["toss", "credits"]).default("toss"),
+  pay_with: z.enum(["card", "credits"]).default("card"),
   agreed: z.boolean().refine((v) => v === true, "구매 전 유의사항에 모두 동의해주세요."),
 });
+
+const REUSE_PENDING_WINDOW_MS = 30 * 60 * 1000;
+
+/**
+ * 같은 구매자의 같은 미결제 카드 주문(같은 앱·인원·심사용 여부, 최근 30분)이 있으면 그 주문 코드를 돌려준다.
+ * 결제창을 닫고 다시 신청할 때마다 주문이 새로 생기면 주문마다 결제 ID 가 달라 같은 구매가 두 번 결제될 수 있다.
+ * 크레딧이 차감된 채 멈춘 주문은 카드 결제로 잇지 않는다 (스윕이 환급·취소한다).
+ */
+async function findReusablePendingOrder(
+  supabase: SupabaseClient,
+  args: { buyerId: number; appId: number; testerCount: number; reviewOrder: boolean },
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("paid_tester_orders")
+    .select("id, order_code")
+    .eq("buyer_user_id", args.buyerId)
+    .eq("app_id", args.appId)
+    .eq("tester_count", args.testerCount)
+    .eq("status", "pending")
+    .eq("seats_closed", args.reviewOrder)
+    .eq("fulfillment", args.reviewOrder ? "operator" : "community")
+    .gte("created_at", new Date(Date.now() - REUSE_PENDING_WINDOW_MS).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<{ id: number; order_code: string }>();
+  if (!data) return null;
+  return (await isCreditsPaidOrder(supabase, data.id)) === false ? data.order_code : null;
+}
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -115,6 +145,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, message: result.message }, { status: 409 });
     }
     return NextResponse.json({ ok: true, order_code: result.orderCode, paid: true });
+  }
+
+  const reusableCode = await findReusablePendingOrder(supabase, {
+    buyerId: user.id,
+    appId: app.id,
+    testerCount: payload.tester_count,
+    reviewOrder,
+  });
+  if (reusableCode) {
+    return NextResponse.json({ ok: true, order_code: reusableCode, paid: false });
   }
 
   const orderCode = newPaidOrderCode();

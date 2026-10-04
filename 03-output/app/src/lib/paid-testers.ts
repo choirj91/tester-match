@@ -28,7 +28,7 @@ export function paidTesterAmountKrw(testerCount: number): number {
   return testerCount * PAID_TESTER_PRICE_KRW;
 }
 
-/** 토스 orderName 은 최대 100자 — 초과 시 앱 이름을 축약한다. */
+/** 결제창에 넘기는 주문명은 최대 100자로 맞춘다 — 초과 시 앱 이름을 축약한다. */
 export function paidTesterOrderName(appName: string, testerCount: number): string {
   const suffix = ` 테스터 ${testerCount}명 (14일)`;
   const maxAppNameLength = 100 - suffix.length;
@@ -38,8 +38,8 @@ export function paidTesterOrderName(appName: string, testerCount: number): strin
 }
 
 /**
- * 주문 오픈 게이트. 토스 라이브 키 전환 전까지 운영자만 주문 가능 —
- * 샌드박스 키 상태에서 일반 유저가 "가상 결제" 로 주문을 만드는 것을 막는다.
+ * 주문 오픈 게이트. 결제(PG) 실연동 전환 전까지 운영자만 주문 가능 —
+ * 테스트 채널 상태에서 일반 유저가 "가상 결제" 로 주문을 만드는 것을 막는다.
  * 라이브 전환 시 true 로 바꾸면 로그인 사용자 전체에게 열린다.
  */
 export const PAID_TESTERS_PUBLIC_ORDERING = false;
@@ -73,7 +73,21 @@ export function isReviewOrderer(user: OrderGateUser): boolean {
   );
 }
 
-/** 토스 orderId 규칙: 6~64자, [A-Za-z0-9_-] 만 허용. */
+/**
+ * 주문 코드 — 포트원 결제 ID(paymentId)로 그대로 쓴다.
+ * 결제 ID 규칙(NHN KCP): ASCII 만, 최대 40자 → "pt_" + 32자리 hex = 35자.
+ */
 export function newPaidOrderCode(): string {
   return `pt_${crypto.randomUUID().replace(/-/g, "")}`;
+}
+
+const PAID_ORDER_CODE_PREFIX_PATTERN = /^pt_[0-9a-f]{32}/;
+
+/**
+ * 쿼리 파라미터에서 주문 코드를 골라낸다 (결제 후 돌아온 URL — 외부 입력).
+ * 리디렉션 과정에서 뒤에 다른 문자열이 붙어 와도 앞의 주문 코드만 쓴다. 주문 코드가 아니면 null.
+ */
+export function extractPaidOrderCode(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  return value.match(PAID_ORDER_CODE_PREFIX_PATTERN)?.[0] ?? null;
 }

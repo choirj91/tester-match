@@ -4,7 +4,7 @@ const ServerEnv = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
   BREVO_API_KEY: z.string().min(1).optional(),
-  TOSS_SECRET_KEY: z.string().min(1).optional(),
+  PORTONE_API_SECRET: z.string().min(1).optional(),
 });
 
 const ClientEnv = z.object({
@@ -12,7 +12,8 @@ const ClientEnv = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_APP_NAME: z.string().min(1).optional(),
-  NEXT_PUBLIC_TOSS_CLIENT_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_PORTONE_STORE_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_PORTONE_CHANNEL_KEY: z.string().min(1).optional(),
 });
 
 export const env = {
@@ -22,6 +23,7 @@ export const env = {
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-    NEXT_PUBLIC_TOSS_CLIENT_KEY: process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY,
+    NEXT_PUBLIC_PORTONE_STORE_ID: process.env.NEXT_PUBLIC_PORTONE_STORE_ID,
+    NEXT_PUBLIC_PORTONE_CHANNEL_KEY: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY,
   }),
 };

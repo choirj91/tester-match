@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "App Service managed certificate for a custom domain. Created through a template because `az webapp config ssl create` sets no tags and the resource group policy requires the `project` tag. The domain must already resolve to the app."
+  },
+  "parameters": {
+    "hostname": { "type": "string", "defaultValue": "tester-match.knockknock.company" },
+    "location": { "type": "string", "defaultValue": "koreacentral" },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "project": "tester-match",
+        "owner": "knockknock-company",
+        "env": "prod",
+        "managed-by": "tm-az",
+        "cost-center": "azure-credit"
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/certificates",
+      "apiVersion": "2023-12-01",
+      "name": "[format('cert-{0}', replace(parameters('hostname'), '.', '-'))]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'asp-testermatch-prod-krc')]",
+        "canonicalName": "[parameters('hostname')]"
+      }
+    }
+  ],
+  "outputs": {
+    "thumbprint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/certificates', format('cert-{0}', replace(parameters('hostname'), '.', '-'))), '2023-12-01').thumbprint]"
+    }
+  }
+}

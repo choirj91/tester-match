@@ -58,7 +58,7 @@ export default async function AdminSeatRewardsPage() {
           이의 검토 <strong>{disputed}건</strong> · 확정 대기 <strong>{formatKrw(heldKrw)} 크레딧</strong>.
           보류 건은 구매자 확정 또는 3일 후 자동 확정(6시간 간격 크론). 이의 건은 콘솔 스크린샷을
           확인해 [지급] 또는 [몰수] — 몰수하면 구매자 시트 환불이 자동 기록됩니다 (크레딧 결제는 즉시 환급,
-          토스 결제는 주문 관리의 환불 대기로). 따로 환불하지 마세요.
+          카드 결제는 주문 관리의 환불 대기로). 따로 환불하지 마세요.
         </p>
 
         {error ? (

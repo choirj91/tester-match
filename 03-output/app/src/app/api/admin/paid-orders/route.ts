@@ -4,13 +4,16 @@ import { z, ZodError } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensureOrderSlots } from "@/lib/console-data";
-import { REFUND_FAILED_NOTE_PREFIX } from "@/lib/paid-order-sweep-rules";
+import { REFUND_FAILED_NOTE_PREFIX, decidePendingOrder } from "@/lib/paid-order-sweep-rules";
+import { confirmPaidTesterOrder } from "@/lib/paid-orders";
 import {
   SEAT_FILLED_MATCH_STATUSES,
   closeOrderSeats,
+  isCreditsPaidOrder,
   refundCreditsOrder,
   settleOrderIfDone,
 } from "@/lib/paid-seats";
+import { expectedPortOnePayment, lookupPortOnePayment } from "@/lib/portone";
 
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
@@ -19,6 +22,8 @@ const ActionSchema = z.object({
 
 type OrderRow = {
   id: number;
+  order_code: string;
+  amount_krw: number;
   status: string;
   fulfillment: "community" | "operator";
   seats_closed: boolean;
@@ -51,7 +56,7 @@ async function closeSeats(supabase: SupabaseClient, order: OrderRow) {
   return NextResponse.json({ ok: true, unfilled: result.unfilled, refund: result.refund });
 }
 
-/** 토스 부분취소를 대시보드에서 끝낸 뒤 누른다 — 환불 대기 금액을 환불 완료로 옮김 */
+/** PG 관리자(포트원 콘솔)에서 부분취소를 끝낸 뒤 누른다 — 환불 대기 금액을 환불 완료로 옮김 */
 async function markRefunded(supabase: SupabaseClient, order: OrderRow) {
   if (order.refund_due_krw <= 0) return fail("환불 대기 금액이 없습니다.", 409);
   const { data: moved } = await supabase
@@ -132,12 +137,45 @@ async function revertCancel(supabase: SupabaseClient, order: OrderRow): Promise<
 }
 
 /**
+ * 미결제(pending) 카드 주문을 취소하기 전에 포트원에 결제를 조회한다 — 서버 승인 관문이 없어
+ * 결제창에서 이미 결제가 끝났는데 우리 쪽 반영만 빠진 주문일 수 있다.
+ * 판정은 스윕과 같은 규칙(decidePendingOrder)을 쓴다: 취소 가능(cancel)일 때만 null 을 돌려 기존 취소 절차로 넘어간다.
+ * 결제 완료(recover)면 취소하지 않고 바로 확정하고, 판단할 수 없으면(hold) 사유를 알리고 취소하지 않는다.
+ * 크레딧 결제 주문은 카드 결제가 없으므로 조회하지 않는다.
+ */
+async function guardPendingCardCancel(
+  supabase: SupabaseClient,
+  order: OrderRow,
+): Promise<NextResponse | null> {
+  if ((await isCreditsPaidOrder(supabase, order.id)) === true) return null;
+
+  const decision = decidePendingOrder(await lookupPortOnePayment(order.order_code), expectedPortOnePayment(order.amount_krw));
+  if (decision.action === "cancel") return null;
+  if (decision.action === "hold") {
+    return fail(`취소하지 않았습니다 — ${decision.reason}. 잠시 후 다시 시도하거나 PG 관리자(포트원 콘솔)에서 확인해주세요.`, 409);
+  }
+
+  const confirmed = await confirmPaidTesterOrder({ orderId: order.order_code });
+  return fail(
+    confirmed.ok
+      ? "이미 카드 결제가 완료된 주문이라 취소하지 않았습니다. 결제를 반영했으니 새로고침 후 확인해주세요."
+      : `이미 카드 결제가 완료된 주문이라 취소하지 않았습니다. 결제 반영은 실패했습니다 (${confirmed.message}) — 새로고침 후 확인해주세요.`,
+    409,
+  );
+}
+
+/**
  * 취소 = 전액 환불. 테스터가 참여했거나 시트가 마감된 커뮤니티 주문은 거부한다 (부분 환불이 이미 돌았을 수 있다).
  * 상태를 먼저 바꾸고(읽은 상태 그대로일 때만 — 조건부 UPDATE 가 동시 실행을 한 번으로 만든다) 환불한다.
  * 환불이 실패하면 되돌려 다시 누를 수 있게 한다.
  */
 async function cancelOrder(supabase: SupabaseClient, order: OrderRow, adminNickname: string) {
   if (!cancelableStatuses(order).includes(order.status)) return fail(STALE_STATE, 409);
+
+  if (order.status === "pending") {
+    const blocked = await guardPendingCardCancel(supabase, order);
+    if (blocked) return blocked;
+  }
 
   const { count: filled, error: countErr } = await supabase
     .from("matches")
@@ -199,7 +237,7 @@ export async function PATCH(req: Request) {
   const supabase = createSupabaseAdminClient();
   const { data: order, error } = await supabase
     .from("paid_tester_orders")
-    .select("id, status, fulfillment, seats_closed, refund_due_krw, refunded_krw, admin_note")
+    .select("id, order_code, amount_krw, status, fulfillment, seats_closed, refund_due_krw, refunded_krw, admin_note")
     .eq("id", payload.id)
     .maybeSingle<OrderRow>();
   if (error) {
