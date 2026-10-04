@@ -16,6 +16,7 @@ compatibility_flags = ["nodejs_compat"]
 #   - RESEND_FROM_EMAIL
 #   - SUPABASE_SECRET_KEY
 #   - CRON_SECRET (cron 엔드포인트 보호용)
+#   - SLACK_INQUIRY_WEBHOOK_URL (1:1 문의 접수 시 Slack 알림 — 없으면 전송만 건너뜀)
 #   - NEXT_PUBLIC_SUPABASE_URL
 #   - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 #   - NEXT_PUBLIC_APP_URL

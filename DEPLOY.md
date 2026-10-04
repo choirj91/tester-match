@@ -50,6 +50,7 @@ npx supabase db push
 | `GOOGLE_ADMIN_EMAIL` | domain-wide delegation 대상 관리자 |
 | `TESTER_GROUP_EMAIL` | 내부 그룹 (기본 testers@knockknock.company) |
 | `RESEND_API_KEY` | 이메일 발송 |
+| `SLACK_INQUIRY_WEBHOOK_URL` | 1:1 문의 접수 시 운영팀 Slack 알림 (수신 웹훅 주소 — 비밀값). 없으면 Slack 전송만 건너뛰고 관리자 목록에 "Slack 미전송" 표시 |
 
 값 변경 후 **재배포해야 반영** (빌드 타임 주입).
 

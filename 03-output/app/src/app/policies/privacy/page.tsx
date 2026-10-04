@@ -19,6 +19,7 @@ export default async function PrivacyPage() {
           <tr><td>필수</td><td>이메일, 비밀번호(암호화 저장), 닉네임, 카카오톡 닉네임</td><td>이메일로 회원가입</td></tr>
           <tr><td>자동</td><td>IP, 브라우저, 디바이스 정보</td><td>서비스 이용 중</td></tr>
           <tr><td>결제</td><td>결제 수단 식별값(PG 거래 ID)</td><td>결제 시</td></tr>
+          <tr><td>문의</td><td>문의 제목·내용 (회원이 직접 입력)</td><td>1:1 문의 접수 시</td></tr>
           <tr><td>선택</td><td>닉네임, 카카오톡 닉네임(커뮤니티 오픈채팅 회원 확인·안내용, 비공개), 타임존, 관심 카테고리</td><td>프로필 설정</td></tr>
           <tr><td>선택</td><td>디바이스 모델·OS·Play Integrity 결과</td><td>디바이스 등록</td></tr>
         </tbody>
@@ -40,6 +41,7 @@ export default async function PrivacyPage() {
         <li>회원 식별·인증, 서비스 제공</li>
         <li>매칭 알고리즘 운영</li>
         <li>결제·환불 처리</li>
+        <li>문의 응대, 처리 결과 안내</li>
         <li>분쟁 해결, 부정 이용 방지</li>
         <li>마케팅 정보 발송 (별도 동의 시)</li>
       </ul>
@@ -53,6 +55,7 @@ export default async function PrivacyPage() {
           <tr><td>회원 정보</td><td>탈퇴 시 즉시 파기</td><td>회원의 동의</td></tr>
           <tr><td>결제 기록</td><td>5년</td><td>전자상거래법 제6조</td></tr>
           <tr><td>표시·광고에 관한 기록</td><td>6개월</td><td>전자상거래법 제6조</td></tr>
+          <tr><td>문의·불만 처리 기록</td><td>3년</td><td>전자상거래법 제6조</td></tr>
           <tr><td>부정 이용 기록</td><td>3년</td><td>부정 이용 방지</td></tr>
         </tbody>
       </table>
@@ -74,6 +77,7 @@ export default async function PrivacyPage() {
           <tr><td>Cloudflare Inc.</td><td>웹 호스팅·DNS·CDN·WAF</td><td>Global Edge</td></tr>
           <tr><td>Resend / Brevo</td><td>이메일 발송</td><td>US/EU</td></tr>
           <tr><td>토스페이먼츠(주)</td><td>국내 결제 (v1)</td><td>한국</td></tr>
+          <tr><td>Slack Technologies, LLC</td><td>문의 접수 알림 — 운영팀 내부 메신저로 닉네임·문의 제목·내용 일부 전달 (이메일 등 연락처 제외)</td><td>US</td></tr>
           <tr><td>Stripe Inc. (v2)</td><td>해외 결제 — v2 영어권 확장 시</td><td>US/EU</td></tr>
           <tr><td>Sentry</td><td>에러 추적</td><td>US</td></tr>
           <tr><td>PostHog</td><td>행동 분석 (선택 동의)</td><td>EU</td></tr>
