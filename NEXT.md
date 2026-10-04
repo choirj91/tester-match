@@ -10,10 +10,17 @@
 
 - [ ] **1:1 문의 + Slack 알림 배포** (2026-10-04 구현·검증, 미배포) — 게시판 "질문" 분류를 없애고 푸터 [문의] → `/inquiries` (회원 전용, 본인·관리자만 열람), 관리자 `/admin/inquiries`
   - [x] 운영 DB에 `inquiries` 테이블 적용 (`20261004000001`) — 테스트 문의 1건(#1, 종결) 남아 있음
-  - [ ] **Slack 웹훅 등록 (사용자 직접)**: `cd 03-output/app && npx wrangler pages secret put SLACK_INQUIRY_WEBHOOK_URL --project-name tester-match` → 값 붙여넣기. 로컬은 `03-output/app/.env.local` 에 `SLACK_INQUIRY_WEBHOOK_URL=` 한 줄. 등록 후 배포해야 적용
-  - [ ] 개인정보처리방침 4줄 승인 (문의 내용 수집·문의 응대 목적·문의 기록 3년·Slack 위탁) → 코드 배포 → 게시판 마이그레이션(`20261004000002`, 기존 질문 글 3건을 "자유"로 이동 + 제약에서 "질문" 제거) 적용
+  - [x] **Slack 웹훅 등록** (2026-10-04 사용자 등록 완료): `cd 03-output/app && npx wrangler pages secret put SLACK_INQUIRY_WEBHOOK_URL --project-name tester-match` → 값 붙여넣기. 로컬은 `03-output/app/.env.local` 에 `SLACK_INQUIRY_WEBHOOK_URL=` 한 줄. 등록 후 배포해야 적용
+  - [x] 개인정보처리방침 4줄 승인 (2026-10-04 — 문의 내용 수집·문의 응대 목적·문의 기록 3년·Slack 위탁) → 코드 배포 → 게시판 마이그레이션(`20261004000002`, 기존 질문 글 3건을 "자유"로 이동 + 제약에서 "질문" 제거) 적용
   - [ ] 배포 후 확인: 로그인 → 문의 접수 → Slack 도착 → 관리자 답변 → 작성자 알림·메일
   - [ ] 후속: 3년 지난 문의 파기 자동화(첫 대상 2029-10), 비회원 문의 허용 여부, 문의 미답변 건수를 일일 리포트에 넣을지
+
+- [ ] **앱 중복 행 후속** — 1단계(엄격 중복 84행 소프트 삭제 + 참조 교체)는 2026-10-04 반영 완료 ([기록](04-review/history/2026-10-04-duplicate-apps-investigation.md))
+  - [x] ~~import 중복 방지 수정 PR 병합·배포~~ (2026-10-04 — PR #3 `f4485af`, 운영 `6476cc8b`)
+  - [ ] 결정 필요: 같은 앱 재등록(끌어올리기 용도) 허용 여부 → 부분 unique 인덱스 + 일반 등록 라우트 가드
+  - [ ] 수동 검토: 이름만 다른 같은 패키지 21그룹, 다른 소유자가 같은 패키지 등록 13그룹
+  - [ ] 보관 테이블 `_app_dedupe_20261004*` 3개 — 되돌릴 일 없으면 삭제
+  - [ ] 그룹 전환 알림 라우트(`notify-group-upgrade`) 1,000행 잘림 수정
 
 - [ ] **커뮤니티 테스터 마켓 오픈** ([ADR-0012](01-source/decisions/ADR-0012-community-tester-market.md), ADR-0011 운영자 모델은 폴백) — 주문은 여전히 **관리자 전용 게이트**
   - [ ] 본 도메인 관리자 계정으로 E2E: 앱 하나에 크레딧/샌드박스 결제로 시트 열기 → 부계정으로 /browse 💰배지 → 참여 → 스샷 체크인 → 콘솔에 로그 뜨는지 → (14일 대신) DB로 완주 시뮬 → 마일스톤 보상(개근 600, 출시 +100) 적립·기프티콘 신청·/admin/redemptions 처리

@@ -3,10 +3,12 @@ import { ZodError } from "zod";
 import { AppImportBatchSchema, type AppImportRow } from "@/lib/validators/admin-app-import";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/admin";
+import { appDedupeKey } from "@/lib/app-dedupe";
 
 export const runtime = "edge";
 
 type ImportError = { row: number; email?: string; reason: string };
+type ImportDuplicate = { row: number; email: string; app_name: string };
 
 export async function POST(req: Request) {
   const admin = await getAdminUser();
@@ -31,11 +33,14 @@ export async function POST(req: Request) {
 
   const supabase = createSupabaseAdminClient();
   const errors: ImportError[] = [];
+  const duplicates: ImportDuplicate[] = [];
   let imported = 0;
   let placeholdersCreated = 0;
 
   // 같은 batch 안에서 동일 이메일 사용자 캐시 (중복 lookup 회피)
   const userIdByEmail = new Map<string, number>();
+  // 소유자별 보유 앱 키 — DB 의 기존 앱 + 이 batch 에서 방금 넣은 앱
+  const appKeysByOwner = new Map<number, Set<string>>();
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -77,11 +82,39 @@ export async function POST(req: Request) {
           }
           userId = created.id;
           placeholdersCreated++;
+          appKeysByOwner.set(userId, new Set());
         }
         userIdByEmail.set(row.email, userId);
       }
 
-      // 2) 앱 INSERT
+      // 2) 중복 검사 — 같은 소유자가 같은 이름·스토어 링크의 앱을 이미 갖고 있으면 건너뜀.
+      //    재제출(묶음 실패 후 전체 재시도)과 원본 시트의 반복 행을 모두 막는다.
+      let ownedKeys = appKeysByOwner.get(userId);
+      if (!ownedKeys) {
+        const { data: owned, error: ownedErr } = await supabase
+          .from("apps")
+          .select("name, store_invite_url")
+          .eq("owner_user_id", userId)
+          .neq("status", "deleted");
+        if (ownedErr) {
+          // 확인 못 하면 넣지 않는다 — 중복 생성보다 누락이 복구하기 쉽다.
+          errors.push({
+            row: i + 1,
+            email: row.email,
+            reason: `app_lookup_failed: ${ownedErr.message}`,
+          });
+          continue;
+        }
+        ownedKeys = new Set((owned ?? []).map(appDedupeKey));
+        appKeysByOwner.set(userId, ownedKeys);
+      }
+      const appKey = appDedupeKey({ name: row.app_name, store_invite_url: row.store_invite_url });
+      if (ownedKeys.has(appKey)) {
+        duplicates.push({ row: i + 1, email: row.email, app_name: row.app_name });
+        continue;
+      }
+
+      // 3) 앱 INSERT
       const { error: appErr } = await supabase.from("apps").insert({
         owner_user_id: userId,
         name: row.app_name,
@@ -99,6 +132,7 @@ export async function POST(req: Request) {
         });
         continue;
       }
+      ownedKeys.add(appKey);
       imported++;
     } catch (e) {
       errors.push({
@@ -116,5 +150,6 @@ export async function POST(req: Request) {
     total: rows.length,
     placeholders_created: placeholdersCreated,
     errors,
+    duplicates,
   });
 }
