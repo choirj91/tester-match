@@ -1,3 +1,5 @@
+import { paidSeatNudgeLines, type ReminderItem } from "@/lib/checkin-reminder";
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const layoutHtml = (innerHtml: string, footerNote = "") => `
@@ -52,30 +54,64 @@ export function matchOptInEmail(args: {
 
 export function dailyCheckinReminderEmail(args: {
   testerNickname: string;
-  apps: Array<{ name: string; appId: number; dayN: number }>;
+  items: ReminderItem[];
 }): Email {
-  const list = args.apps
-    .map(
-      (a) =>
-        `<li style="margin:6px 0;"><strong>${escapeHtml(a.name)}</strong> — ${a.dayN}일차</li>`,
-    )
+  const paid = args.items.filter((i) => i.paidSeat);
+  const free = args.items.filter((i) => !i.paidSeat);
+  const urgent = paid.some((i) => i.paidSeat?.lastChance);
+  const subject = urgent
+    ? "[Tester Match] ⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
+    : paid.length > 0
+      ? `[Tester Match] 💰 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
+      : `[Tester Match] 오늘 체크인할 앱 ${args.items.length}개`;
+
+  const paidHtml = paid
+    .map((i) => {
+      const tone = i.paidSeat?.lastChance
+        ? "border:1px solid #f87171;background:#fef2f2;"
+        : "border:1px solid #fcd34d;background:#fffbeb;";
+      const lines = paidSeatNudgeLines(i)
+        .map((l) => `<p style="margin:3px 0;font-size:14px;">${escapeHtml(l)}</p>`)
+        .join("");
+      return `<div style="margin:0 0 12px;padding:14px 16px;border-radius:12px;${tone}">
+        <p style="margin:0 0 6px;font-weight:700;">💰 ${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
+      </div>`;
+    })
     .join("");
-  const subject = `[Tester Match] 오늘 체크인할 앱 ${args.apps.length}개`;
+  const freeHtml =
+    free.length === 0
+      ? ""
+      : `<p style="margin:16px 0 8px;">품앗이 체크인 ${free.length}개</p>
+    <ul style="margin:0 0 16px;padding-left:20px;">${free
+      .map((a) => `<li style="margin:6px 0;"><strong>${escapeHtml(a.name)}</strong> — ${a.dayN}일차</li>`)
+      .join("")}</ul>`;
+  const notes = [
+    paid.length > 0
+      ? "유료 시트는 앱 실행 화면 스크린샷 1장과 함께 체크인해야 출석으로 인정됩니다. 결석이 3일이 되면 시트가 해제됩니다."
+      : "",
+    free.length > 0 ? "품앗이 체크인을 5일 연속 놓치면 페널티가 부과됩니다." : "",
+  ].filter(Boolean);
+
   const html = layoutHtml(`
     <p style="margin:0 0 12px;"><strong>${escapeHtml(args.testerNickname)}</strong> 님,</p>
-    <p style="margin:0 0 16px;">오늘 체크인이 필요한 앱 ${args.apps.length}개가 있습니다.</p>
-    <ul style="margin:0 0 16px;padding-left:20px;">${list}</ul>
+    <p style="margin:0 0 16px;">오늘 체크인이 필요한 앱 ${args.items.length}개가 있습니다.</p>
+    ${paidHtml}${freeHtml}
     <p style="margin:24px 0 0;">
       <a href="${APP_URL}/my-tests"
          style="display:inline-block;background:#2563eb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">
         지금 체크인하기
       </a>
     </p>
-    <p style="margin:16px 0 0;font-size:13px;color:#64748b;">
-      체크인을 5일 연속 놓치면 페널티가 부과됩니다.
-    </p>
+    ${notes.map((n) => `<p style="margin:16px 0 0;font-size:13px;color:#64748b;">${n}</p>`).join("")}
   `);
-  const text = `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.apps.length}개:\n${args.apps.map((a) => `- ${a.name} (${a.dayN}일차)`).join("\n")}\n\n체크인: ${APP_URL}/my-tests`;
+  const text = [
+    `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.items.length}개:`,
+    ...paid.map((i) => `💰 ${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
+    ...free.map((a) => `- ${a.name} (${a.dayN}일차)`),
+    "",
+    `체크인: ${APP_URL}/my-tests`,
+    ...notes,
+  ].join("\n");
   return { subject, html, text };
 }
 
