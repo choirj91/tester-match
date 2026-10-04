@@ -30,3 +30,23 @@ export function inquiryRateLimit(recentCreatedAt: string[], now: Date): RateLimi
   }
   return { ok: true };
 }
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * 일일 관리자 리포트에 넣는 미답변 문의 안내. 답변을 기다리는 문의(접수·처리 중)가 없으면 null.
+ * @param total 미답변 문의 수
+ * @param oldestCreatedAt 그중 가장 오래된 문의의 접수 시각(ISO). 모르면 null
+ */
+export function inquiryBacklogAlert(
+  total: number,
+  oldestCreatedAt: string | null,
+  now: Date,
+): string | null {
+  if (total <= 0) return null;
+  const oldest = oldestCreatedAt ? new Date(oldestCreatedAt).getTime() : Number.NaN;
+  const days = Number.isFinite(oldest) ? Math.floor((now.getTime() - oldest) / DAY_MS) : null;
+  const age =
+    days === null ? "" : days < 1 ? " — 가장 오래된 문의는 접수한 지 하루 미만" : ` — 가장 오래된 문의는 ${days}일 전 접수`;
+  return `미답변 문의 ${total}건${age} (/admin/inquiries).`;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { INQUIRY_DAILY_LIMIT, inquiryRateLimit } from "./inquiry-rules";
+import { INQUIRY_DAILY_LIMIT, inquiryBacklogAlert, inquiryRateLimit } from "./inquiry-rules";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 const minutesAgo = (m: number) => new Date(NOW.getTime() - m * 60 * 1000).toISOString();
@@ -38,5 +38,30 @@ describe("inquiryRateLimit", () => {
 
   test("해석할 수 없는 시각은 무시한다", () => {
     expect(inquiryRateLimit(["not-a-date"], NOW)).toEqual({ ok: true });
+  });
+});
+
+describe("inquiryBacklogAlert", () => {
+  const daysAgo = (d: number) => new Date(NOW.getTime() - d * 24 * 60 * 60 * 1000).toISOString();
+
+  test("미답변 문의가 없으면 안내하지 않는다", () => {
+    expect(inquiryBacklogAlert(0, null, NOW)).toBeNull();
+  });
+
+  test("건수와 가장 오래된 문의의 경과 일수를 알린다", () => {
+    expect(inquiryBacklogAlert(3, daysAgo(2.5), NOW)).toBe(
+      "미답변 문의 3건 — 가장 오래된 문의는 2일 전 접수 (/admin/inquiries).",
+    );
+  });
+
+  test("하루가 안 된 문의는 일수 대신 하루 미만으로 적는다", () => {
+    expect(inquiryBacklogAlert(1, minutesAgo(90), NOW)).toBe(
+      "미답변 문의 1건 — 가장 오래된 문의는 접수한 지 하루 미만 (/admin/inquiries).",
+    );
+  });
+
+  test("접수 시각을 모르면 건수만 알린다", () => {
+    expect(inquiryBacklogAlert(2, null, NOW)).toBe("미답변 문의 2건 (/admin/inquiries).");
+    expect(inquiryBacklogAlert(2, "not-a-date", NOW)).toBe("미답변 문의 2건 (/admin/inquiries).");
   });
 });
