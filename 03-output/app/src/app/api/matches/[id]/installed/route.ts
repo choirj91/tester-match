@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 /**
  * POST /api/matches/[id]/installed — 테스터 본인의 설치 자가확인.
  * 멱등: 이미 확인된 경우 시각 유지.

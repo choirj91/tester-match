@@ -6,8 +6,6 @@ import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
 import { PLAY_GROUP_EMAIL } from "@/lib/tester-group";
 import { AppForm } from "./app-form";
 
-export const runtime = 'edge';
-
 export const metadata = { title: "앱 등록" };
 
 export default async function NewAppPage() {

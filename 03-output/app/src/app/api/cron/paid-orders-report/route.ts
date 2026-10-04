@@ -8,8 +8,6 @@ import { runSweepStep } from "@/lib/paid-order-sweep";
 import { AUTO_CANCEL_NOTE_PREFIX } from "@/lib/paid-order-sweep-rules";
 import { CONTACT_EMAIL } from "@/lib/site";
 
-export const runtime = "edge";
-
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 

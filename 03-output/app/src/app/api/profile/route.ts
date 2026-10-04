@@ -6,8 +6,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
-
 export async function PATCH(req: Request) {
   const user = await getCurrentUser();
   if (!user) {

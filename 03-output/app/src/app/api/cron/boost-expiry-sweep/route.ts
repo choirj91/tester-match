@@ -4,8 +4,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { createNotification } from "@/lib/notifications";
 
-export const runtime = "edge";
-
 /**
  * F-BOOST-01 — 급구 자동 만료 sweep.
  *

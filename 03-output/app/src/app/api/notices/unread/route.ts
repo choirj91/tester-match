@@ -3,8 +3,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
-export const runtime = "edge";
-
 /**
  * GET /api/notices/unread — 안 읽은 공지 수.
  * 비로그인은 읽음 추적 불가 → 0 반환 (배지 미표시).

@@ -4,8 +4,6 @@ import { CommentUpdateSchema } from "@/lib/validators/comment";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, { params }: Ctx) {

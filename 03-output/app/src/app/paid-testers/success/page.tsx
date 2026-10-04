@@ -4,7 +4,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { confirmPaidTesterOrder, type ConfirmPaidOrderResult } from "@/lib/paid-orders";
 
-export const runtime = "edge";
 export const metadata = {
   title: "결제 완료",
   robots: { index: false, follow: false },

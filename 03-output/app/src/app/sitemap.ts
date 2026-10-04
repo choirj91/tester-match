@@ -2,8 +2,6 @@ import type { MetadataRoute } from "next";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GUIDES } from "@/app/guide/guides";
 
-export const runtime = "edge";
-
 const SITE_URL = "https://tester-match.knockknock.company";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

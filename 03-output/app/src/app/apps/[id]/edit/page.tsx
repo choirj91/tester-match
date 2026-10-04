@@ -5,8 +5,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { EditAppForm } from "./edit-app-form";
 
-export const runtime = 'edge';
-
 type Props = { params: Promise<{ id: string }> };
 
 export default async function EditAppPage({ params }: Props) {

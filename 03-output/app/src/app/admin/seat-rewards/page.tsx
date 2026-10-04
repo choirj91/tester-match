@@ -6,7 +6,6 @@ import { formatKrw } from "@/lib/credits";
 import { SEAT_REWARD_STATUS_LABEL, type SeatRewardStatus } from "@/lib/seat-reward-rules";
 import { RewardActions } from "./reward-actions";
 
-export const runtime = "edge";
 export const metadata = { title: "시트 보상 정산" };
 
 type Row = {

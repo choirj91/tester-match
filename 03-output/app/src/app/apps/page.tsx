@@ -6,8 +6,6 @@ import { SiteHeader } from "@/components/site-header";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { canOrderPaidTesters } from "@/lib/paid-testers";
 
-export const runtime = "edge";
-
 export const metadata = { title: "내 앱" };
 
 export default async function AppsPage() {

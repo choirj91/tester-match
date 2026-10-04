@@ -8,8 +8,6 @@ import { createNotification } from "@/lib/notifications";
 import { completePaidSeat } from "@/lib/seat-rewards";
 import { TRUST_MAX } from "@/lib/trust";
 
-export const runtime = "edge";
-
 /**
  * 요청당 서브리퀘스트 상한(50) 안에서 처리할 예산. 건별 예상 비용은 lib/penalty-judge.ts.
  * 상한을 넘으면 매칭은 이미 penalized 인데 시트 해제·환불이 빠진 채 끝난다 → 넘기 전에 멈추고 다음 호출로 미룬다.

@@ -17,8 +17,6 @@ import {
   isOrderOverfilled,
 } from "@/lib/paid-seats";
 
-export const runtime = "edge";
-
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {

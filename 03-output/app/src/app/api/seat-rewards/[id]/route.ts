@@ -8,8 +8,6 @@ import {
   releaseSeatReward,
 } from "@/lib/seat-rewards";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 const BodySchema = z.discriminatedUnion("action", [

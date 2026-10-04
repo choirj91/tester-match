@@ -3,7 +3,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { GUIDES } from "./guides";
 
-export const runtime = "edge";
 export const metadata = {
   alternates: { canonical: "/guide" },
   title: "출시 가이드",

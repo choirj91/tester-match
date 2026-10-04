@@ -29,7 +29,7 @@ Google Play Closed Testing 12명/14일 요건을 해소하는 한국형 품앗�
 | # | 결정 | 위반 시 |
 |---|---|---|
 | 1 | **한국 우선** (KRW, 한국어, KST). 영어권은 v2 | 시장 사이징·매출·UI 모두 한국 기준 |
-| 2 | **Cloudflare Pages + Supabase**. Vercel 채택 X | 상업 약관 위반·bandwidth 제한 |
+| 2 | **Azure 전용 인프라** (App Service + PostgreSQL Flexible + Functions + Blob + ACS Email + Azure DNS, Korea Central) — 최소 사양으로 시작, SKU 변경으로 확장. 이전 중에는 Cloudflare Pages + Supabase 가 운영 (ADR-0015, ADR-0002 대체). Azure 명령은 `05-harness/scripts/tm-az` 로만 | 회사(직장) Azure 계정 혼용·운영 이중화 |
 | 3 | **1원 = 1 크레딧, 1매칭 = 1,000원** (테스터 800 + 플랫폼 200) | 회계·환급·외부 전환(v3) 호환 깨짐 |
 
 근거: [01-source/decisions/](01-source/decisions/) — Context/Decision/Why/Consequences
@@ -47,7 +47,7 @@ Google Play Closed Testing 12명/14일 요건을 해소하는 한국형 품앗�
 3. **비교 데이터**: 모든 기술 주장에 Before/After 또는 경쟁사 비교
 4. **예시 제시**: 매칭·결제·체크인 워크플로우에 구체적 시나리오
 5. **결정 추적**: 새 결정은 ADR 추가, 기존 결정 변경은 ADR 갱신
-6. **무료 우선**: 기능 추가 시 무료 티어 영향 분석 (08_tech_stack §2 표 참조)
+6. **최소 사양 + 확장 가능**: 무료 한도에 맞추려고 설계를 비틀지 않는다. 대신 가장 작은 유료 사양에서 시작하고, 기능 추가 시 Azure 월 비용 변화를 적는다 (`03-output/azure-migration/04-cost.md`). 사양을 올리면 예산 알림도 같이 올린다
 7. **정책 우선**: Google Play incentivized 정책 위반 가능 기능은 자동 차단 (F-RVW-* 보류)
 
 ---

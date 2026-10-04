@@ -4,8 +4,6 @@ import type { Session } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { safeInternalPath } from "@/lib/safe-redirect";
 
-export const runtime = "edge";
-
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**

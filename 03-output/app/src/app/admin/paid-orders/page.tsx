@@ -9,7 +9,6 @@ import { DigestActions } from "@/app/admin/digest/digest-actions";
 import { OPEN_CHAT_URL } from "@/lib/site";
 import { SEAT_FILLED_MATCH_STATUSES, seatNoticeText } from "@/lib/paid-seats";
 
-export const runtime = "edge";
 export const metadata = { title: "유료 테스터 주문" };
 
 type Row = {

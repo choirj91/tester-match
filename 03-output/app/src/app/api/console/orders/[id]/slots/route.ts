@@ -4,8 +4,6 @@ import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensureOrderSlots } from "@/lib/console-data";
 
-export const runtime = "edge";
-
 function parseOrderId(id: string): number | null {
   const n = Number(id);
   return Number.isInteger(n) && n > 0 ? n : null;

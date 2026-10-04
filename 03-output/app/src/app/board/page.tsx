@@ -5,8 +5,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ALL_POST_CATEGORIES, NOTICE_CATEGORY } from "@/lib/validators/post";
 import { AdminBadge } from "@/components/admin-badge";
 
-export const runtime = 'edge';
-
 export const metadata = { title: "게시판" };
 
 type Props = { searchParams: Promise<{ category?: string }> };

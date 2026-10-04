@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { verifyCronAuth } from "@/lib/cron-auth";
 
-export const runtime = "edge";
-
 /**
  * F-APP-02 — 앱 초대 링크 HEAD 검증.
  *

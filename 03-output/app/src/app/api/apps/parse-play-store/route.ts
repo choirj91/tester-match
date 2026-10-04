@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
-
 const Body = z.object({
   url: z.string().url("URL 형식이 올바르지 않습니다."),
 });

@@ -3,8 +3,6 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { releaseSeatReward } from "@/lib/seat-rewards";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ orderId: string }> };
 
 const CONFIRM_PER_CALL = 5;

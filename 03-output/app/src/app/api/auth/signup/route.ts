@@ -8,8 +8,6 @@ import { SignupSchema, isEmailSignupEnabled } from "@/lib/validators/signup";
 import { checkAndRecordSignupAttempt } from "@/lib/signup-guard";
 import { buildConfirmUrl, randomPassword } from "@/lib/signup-confirm";
 
-export const runtime = "edge";
-
 const GENERIC_FAILURE = "가입 처리에 실패했습니다. 잠시 후 다시 시도해주세요.";
 const ALREADY_REGISTERED =
   "이미 가입된 이메일입니다. 로그인해주세요. (Google 로 가입했다면 Google 로그인을 이용하세요)";

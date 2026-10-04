@@ -11,8 +11,6 @@ import {
 } from "@/lib/paid-testers";
 import { createCreditsPaidOrder } from "@/lib/paid-orders";
 
-export const runtime = "edge";
-
 const BodySchema = PaidOrderCreateSchema.extend({
   pay_with: z.enum(["toss", "credits"]).default("toss"),
   agreed: z.boolean().refine((v) => v === true, "구매 전 유의사항에 모두 동의해주세요."),

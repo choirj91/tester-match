@@ -4,8 +4,6 @@ import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { forfeitSeatReward, releaseSeatReward } from "@/lib/seat-rewards";
 
-export const runtime = "edge";
-
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
   action: z.enum(["release", "forfeit"]),

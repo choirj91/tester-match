@@ -6,8 +6,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 import { applyTrustDelta, OPTOUT_TRUST_DELTA } from "@/lib/trust";
 
-export const runtime = "edge";
-
 type Ctx = { params: Promise<{ id: string }> };
 
 /**

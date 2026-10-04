@@ -16,8 +16,6 @@ import {
 import { CheckInButton } from "./check-in-button";
 import { InstalledButton } from "./installed-button";
 
-export const runtime = 'edge';
-
 export const metadata = { title: "내 테스트" };
 
 const STATUS_LABEL: Record<string, { text: string; tone: string }> = {

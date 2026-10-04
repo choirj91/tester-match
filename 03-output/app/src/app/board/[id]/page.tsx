@@ -10,8 +10,6 @@ import { AdminBadge } from "@/components/admin-badge";
 import { Linkify } from "@/components/linkify";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 
-export const runtime = 'edge';
-
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

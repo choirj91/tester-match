@@ -12,8 +12,6 @@ import {
   settleOrderIfDone,
 } from "@/lib/paid-seats";
 
-export const runtime = "edge";
-
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
   action: z.enum(["start", "complete", "cancel", "close_seats", "mark_refunded"]),

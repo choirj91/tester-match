@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# tm-az: Azure CLI pinned to the Knock Knock Company tenant/subscription and the
+# tester-match resource group.
+#
+# Login and target identifiers are SHARED with knockknock-homepage (scripts/kh-az):
+#   - same isolated config dir  ~/.azure-knockknock-homepage  (one sign-in serves both)
+#   - same target.env           (tenant / subscription / account live only there)
+# Only the resource group differs, so neither wrapper can change the other's resources.
+# Never touches ~/.azure (the employer's default Azure login).
+#
+# Read verbs run after a context check; every other command must name the
+# subscription and stay inside rg-testermatch-prod-krc.
+set -euo pipefail
+
+SHARED_DIR="$HOME/.azure-knockknock-homepage"
+TM_AZ_RG="rg-testermatch-prod-krc"
+TM_AZ_LOCATION="koreacentral"
+
+[[ -f "$SHARED_DIR/target.env" ]] || { echo "STOP: $SHARED_DIR/target.env not found. Set up kh-az first." >&2; exit 2; }
+# shellcheck disable=SC1091
+source "$SHARED_DIR/target.env"
+: "${KH_AZ_TENANT:?missing}" "${KH_AZ_SUBSCRIPTION:?missing}" "${KH_AZ_ACCOUNT:?missing}"
+TENANT="$KH_AZ_TENANT"
+SUBSCRIPTION="$KH_AZ_SUBSCRIPTION"
+ACCOUNT="$KH_AZ_ACCOUNT"
+
+export AZURE_CONFIG_DIR="$SHARED_DIR"   # this process only
+export AZURE_CORE_COLLECT_TELEMETRY=no
+
+stop()  { echo "STOP: $1. Do not work around it; report to the user." >&2; exit "${2:-9}"; }
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
+case "${1:-}" in
+  login)   exec az login --tenant "$TENANT" --allow-no-subscriptions ;;  # user signs in
+  use)     exec az account set --subscription "$SUBSCRIPTION" ;;          # shared isolated dir only
+  version) exec az version ;;
+esac
+
+# 1) The signed-in context must match the shared target.env.
+ctx_tenant=$(az account show --query tenantId -o tsv 2>/dev/null || true)
+ctx_sub=$(az account show --query id -o tsv 2>/dev/null || true)
+ctx_user=$(az account show --query user.name -o tsv 2>/dev/null || true)
+[[ "$ctx_tenant" == "$TENANT" ]] || stop "tenant mismatch" 2
+[[ "$ctx_sub" == "$SUBSCRIPTION" ]] || stop "subscription mismatch (tenant matches, so 'tm-az use' is allowed)" 2
+[[ "$(lower "$ctx_user")" == "$(lower "$ACCOUNT")" ]] || stop "account mismatch" 2
+
+# 2) Split --opt=value so every check sees one form; refuse repeated scoping flags.
+ARGS=()
+for a in "$@"; do
+  if [[ "$a" == --*=* ]]; then ARGS+=("${a%%=*}" "${a#*=}"); else ARGS+=("$a"); fi
+done
+value_of() {  # value_of -g --resource-group : value after the first matching flag
+  local flags=" $* " i
+  for ((i = 0; i < ${#ARGS[@]}; i++)); do
+    if [[ "$flags" == *" ${ARGS[i]} "* ]]; then printf '%s' "${ARGS[i+1]:-}"; return; fi
+  done
+}
+for f in "-g --resource-group" "--subscription" "--scope" "-n --name" "-l --location"; do
+  n=0; for a in "${ARGS[@]}"; do [[ " $f " == *" $a "* ]] && n=$((n + 1)); done
+  (( n <= 1 )) || stop "flag '$f' given more than once" 3
+done
+
+# 3) Commands that never go through this wrapper.
+case "${ARGS[0]:-}" in
+  logout|rest|ad|login) stop "'az ${ARGS[0]}' is unscoped and not allowed here" 3 ;;
+esac
+if [[ "${ARGS[0]:-}" == account ]]; then
+  [[ "${ARGS[1]:-}" == show ]] || stop "only 'account show' is allowed; use 'tm-az use'" 3
+  exec az "${ARGS[@]}"
+fi
+for a in "${ARGS[@]}"; do [[ "$a" == --ids ]] && stop "--ids is not allowed; use -g and --name" 3; done
+
+# 4) Read verbs (allowlist) run with the subscription pinned.
+verb=""
+for a in "${ARGS[@]}"; do [[ "$a" == -* ]] && break; verb="$a"; done
+if [[ "$verb" =~ ^(show|list|list-[a-z-]+|get|get-[a-z-]+|exists|check-name)$ ]]; then
+  exec az "${ARGS[@]}" --subscription "$SUBSCRIPTION"
+fi
+
+# 5) Everything else counts as a change.
+[[ "$(value_of --subscription)" == "$SUBSCRIPTION" ]] || stop "pass --subscription explicitly" 4
+rg_l=$(lower "$TM_AZ_RG")
+scope=$(value_of --scope)
+location=$(value_of -l --location)
+if [[ -n "$location" && "$(lower "$location")" != "$TM_AZ_LOCATION" ]]; then
+  stop "location must be $TM_AZ_LOCATION" 5
+fi
+if [[ "${ARGS[0]:-}" == group ]]; then
+  [[ "$(lower "$(value_of -n --name -g --resource-group)")" == "$rg_l" ]] || stop "group commands may only target $TM_AZ_RG" 5
+elif [[ -n "$scope" ]]; then
+  [[ "$(lower "$scope")" =~ /resourcegroups/${rg_l}(/|$) ]] || stop "--scope must be inside $TM_AZ_RG" 5
+else
+  [[ "$(lower "$(value_of -g --resource-group)")" == "$rg_l" ]] || stop "resource group must be $TM_AZ_RG" 5
+fi
+
+exec az "${ARGS[@]}"

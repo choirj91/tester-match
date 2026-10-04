@@ -13,8 +13,6 @@ import { redemptionRequestedEmail } from "@/lib/email-templates";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { runAfterResponse } from "@/lib/wait-until";
 
-export const runtime = "edge";
-
 const BodySchema = z.object({
   amount: z.coerce
     .number()

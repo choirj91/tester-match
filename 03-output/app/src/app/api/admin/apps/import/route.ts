@@ -5,8 +5,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminUser } from "@/lib/admin";
 import { appDedupeKey } from "@/lib/app-dedupe";
 
-export const runtime = "edge";
-
 type ImportError = { row: number; email?: string; reason: string };
 type ImportDuplicate = { row: number; email: string; app_name: string };
 

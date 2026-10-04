@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 // GET /api/notifications
 // ?count=1  → { count: N } (읽지 않은 알림 수만)
 // 기본       → { notifications: [...] }

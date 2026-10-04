@@ -4,8 +4,6 @@ import { ALL_POST_CATEGORIES, NOTICE_CATEGORY, PostCreateSchema } from "@/lib/va
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = "edge";
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const category = url.searchParams.get("category");

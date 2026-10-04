@@ -17,8 +17,6 @@ import {
   type CompleteSignupInput,
 } from "@/lib/validators/signup";
 
-export const runtime = "edge";
-
 const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const;
 const PASSWORD_SAVE_ATTEMPTS = 2;
 

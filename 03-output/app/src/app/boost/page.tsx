@@ -3,7 +3,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
 export const metadata = { title: "급구 — 빠른 테스터 모집" };
 
 const HOW_IT_WORKS = [

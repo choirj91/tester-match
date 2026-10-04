@@ -1,8 +1,6 @@
 import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 
-export const runtime = 'edge';
-
 export const metadata = { title: "이용약관" };
 
 export default async function TermsPage() {

@@ -6,7 +6,6 @@ import { CONSOLE_TOTAL_DAYS, attendanceRate } from "@/lib/console";
 import { PAID_ORDER_STATUS_LABEL } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
 
-export const runtime = "edge";
 export const metadata = { title: "대시보드" };
 
 export default async function ConsoleHomePage() {

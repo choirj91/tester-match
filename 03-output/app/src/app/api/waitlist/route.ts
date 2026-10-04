@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-
-export const runtime = "edge";
+import { clientIpFromHeaders } from "@/lib/client-ip";
 
 const Body = z.object({
   email: z.string().email().max(254),
@@ -28,10 +27,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const ip =
-    req.headers.get("cf-connecting-ip") ??
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    null;
+  const ip = clientIpFromHeaders(req.headers);
   const userAgent = req.headers.get("user-agent");
   const referer = req.headers.get("referer");
 

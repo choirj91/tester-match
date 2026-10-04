@@ -6,7 +6,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { canOrderPaidTesters, paidTesterOrderName } from "@/lib/paid-testers";
 import { CheckoutWidget } from "./checkout-widget";
 
-export const runtime = "edge";
 export const metadata = {
   title: "결제",
   robots: { index: false, follow: false },

@@ -4,7 +4,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { formatKrw } from "@/lib/credits";
 import { RedemptionActions } from "./redemption-actions";
 
-export const runtime = "edge";
 export const metadata = { title: "기프티콘 교환" };
 
 type Row = {

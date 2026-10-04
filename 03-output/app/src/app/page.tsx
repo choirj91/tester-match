@@ -6,8 +6,6 @@ import { OnboardingProgress } from "@/components/onboarding-progress";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = 'edge';
-
 // ── 문제 카드 ────────────────────────────────────────────────────────
 const PAINS = [
   {

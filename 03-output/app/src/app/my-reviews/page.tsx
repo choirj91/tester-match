@@ -4,7 +4,6 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
 export const metadata = { title: "맞리뷰" };
 
 function formatDate(iso: string | null | undefined) {

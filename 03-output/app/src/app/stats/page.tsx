@@ -5,7 +5,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchAll } from "@/lib/fetch-all";
 import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 
-export const runtime = "edge";
 export const metadata = {
   title: "활동 랭킹",
   description:

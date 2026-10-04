@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "edge";
-
 /**
  * POST /api/track
  * 클라이언트에서 호출 — localStorage session_id 기반 일별 방문자 집계.

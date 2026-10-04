@@ -12,8 +12,6 @@ import {
 import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 import { RedemptionForm } from "./redemption-form";
 
-export const runtime = "edge";
-
 export const metadata = { title: "크레딧" };
 
 export default async function CreditsPage() {
