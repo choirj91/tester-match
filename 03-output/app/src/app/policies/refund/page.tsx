@@ -110,12 +110,8 @@ export default async function RefundPage() {
         </thead>
         <tbody>
           <tr>
-            <td>토스페이먼츠 — 신용·체크카드</td>
+            <td>신용·체크카드 (NHN KCP)</td>
             <td>환불 승인 후 영업일 3~5일 (카드사 사정에 따라 상이)</td>
-          </tr>
-          <tr>
-            <td>토스페이먼츠 — 계좌이체·간편결제</td>
-            <td>환불 승인 후 영업일 1~3일</td>
           </tr>
         </tbody>
       </table>
@@ -128,7 +124,7 @@ export default async function RefundPage() {
           시작)·앱 이름·환불 사유를 보내주세요.
         </li>
         <li>운영팀이 콘솔 이행 기록을 확인해 제2조 기준으로 환불액을 산정하고 회신합니다.</li>
-        <li>승인 후 토스페이먼츠를 통해 원결제 수단으로 환불됩니다.</li>
+        <li>승인 후 결제대행사(NHN KCP)를 통해 원결제 수단으로 환불됩니다.</li>
       </ol>
 
       <h2>제5조 (분쟁 해결)</h2>

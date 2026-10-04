@@ -76,7 +76,8 @@ export default async function PrivacyPage() {
           <tr><td>Supabase Inc.</td><td>DB·인증·스토리지 호스팅</td><td>EU/US</td></tr>
           <tr><td>Cloudflare Inc.</td><td>웹 호스팅·DNS·CDN·WAF</td><td>Global Edge</td></tr>
           <tr><td>Resend / Brevo</td><td>이메일 발송</td><td>US/EU</td></tr>
-          <tr><td>토스페이먼츠(주)</td><td>국내 결제 (v1)</td><td>한국</td></tr>
+          <tr><td>NHN KCP(주)</td><td>신용·체크카드 결제 처리</td><td>한국</td></tr>
+          <tr><td>(주)코리아포트원</td><td>결제 연동 (결제 요청·조회 중계)</td><td>한국</td></tr>
           <tr><td>Slack Technologies, LLC</td><td>문의 접수 알림 — 운영팀 내부 메신저로 닉네임·문의 제목·내용 일부 전달 (이메일 등 연락처 제외)</td><td>US</td></tr>
           <tr><td>Stripe Inc. (v2)</td><td>해외 결제 — v2 영어권 확장 시</td><td>US/EU</td></tr>
           <tr><td>Sentry</td><td>에러 추적</td><td>US</td></tr>
