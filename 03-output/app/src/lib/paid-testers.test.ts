@@ -3,6 +3,7 @@ import {
   PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_PRICE_KRW,
   canOrderPaidTesters,
+  extractPaidOrderCode,
   newPaidOrderCode,
   paidTesterAmountKrw,
   paidTesterOrderName,
@@ -37,7 +38,7 @@ describe("paidTesterOrderName", () => {
     expect(paidTesterOrderName("가계부", 3)).toBe("가계부 테스터 3명 (14일)");
   });
 
-  test("긴 앱 이름도 토스 제한(100자) 이내로 축약된다", () => {
+  test("긴 앱 이름도 100자 이내로 축약된다", () => {
     const longName = "앱".repeat(200);
     const orderName = paidTesterOrderName(longName, 10);
     expect(orderName.length).toBeLessThanOrEqual(100);
@@ -47,11 +48,10 @@ describe("paidTesterOrderName", () => {
 });
 
 describe("newPaidOrderCode", () => {
-  test("토스 orderId 규칙(6~64자, [A-Za-z0-9_-])을 만족한다", () => {
+  test("포트원 결제 ID 규칙(KCP: ASCII, 최대 40자)을 만족한다", () => {
     const code = newPaidOrderCode();
     expect(code).toMatch(/^pt_[0-9a-f]{32}$/);
-    expect(code.length).toBeGreaterThanOrEqual(6);
-    expect(code.length).toBeLessThanOrEqual(64);
+    expect(code.length).toBeLessThanOrEqual(40);
   });
 
   test("호출마다 고유하다", () => {
@@ -74,4 +74,23 @@ describe("주문 허용목록", () => {
       process.env.PAID_TESTERS_ORDER_ALLOWLIST = prev;
     }
   });
+});
+
+describe("extractPaidOrderCode", () => {
+  const code = "pt_0123456789abcdef0123456789abcdef";
+
+  test("주문 코드를 그대로 돌려준다", () => {
+    expect(extractPaidOrderCode(code)).toBe(code);
+  });
+
+  test("뒤에 다른 문자열이 붙어 와도 주문 코드만 골라낸다", () => {
+    expect(extractPaidOrderCode(`${code}?paymentId=${code}`)).toBe(code);
+  });
+
+  test.each([undefined, "", "pt_short", "xx_0123456789abcdef0123456789abcdef", [code, code]])(
+    "주문 코드가 아니면(%j) null",
+    (value) => {
+      expect(extractPaidOrderCode(value)).toBeNull();
+    },
+  );
 });

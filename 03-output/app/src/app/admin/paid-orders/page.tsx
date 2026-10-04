@@ -95,7 +95,7 @@ export default async function AdminPaidOrdersPage() {
 
         <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
           운영 절차 (ADR-0012): 결제 확정 시 급구 노출 + 전 회원 알림 자동. [공지 복사] → 오픈채팅
-          붙여넣기. 완주한 시트만 과금 — 결제 7일 후 빈 시트는 자동 마감·환불(토스 결제는 환불 대기로 표시 → 토스 대시보드 부분취소 후 [환불 완료]). 매일 08:30 메일의 [ACTION] 항목을
+          붙여넣기. 완주한 시트만 과금 — 결제 7일 후 빈 시트는 자동 마감·환불(카드 결제는 환불 대기로 표시 → PG 관리자(포트원 콘솔)에서 부분취소 후 [환불 완료]). 매일 08:30 메일의 [ACTION] 항목을
           처리하면 됩니다.
         </div>
 

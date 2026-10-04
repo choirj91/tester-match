@@ -25,7 +25,7 @@ export function OrderActions({ orderId, status, seatsClosed, refundDueKrw, fulfi
     buttons.push({
       action: "mark_refunded",
       label: `환불 완료 (${refundDueKrw.toLocaleString("ko-KR")}원)`,
-      confirm: `토스 대시보드에서 ${refundDueKrw.toLocaleString("ko-KR")}원 부분취소를 마쳤나요? 환불 완료로 기록합니다.`,
+      confirm: `PG 관리자(포트원 콘솔)에서 ${refundDueKrw.toLocaleString("ko-KR")}원 부분취소를 마쳤나요? 환불 완료로 기록합니다.`,
       tone: "bg-red-600 text-white hover:bg-red-700",
     });
   }
@@ -33,7 +33,7 @@ export function OrderActions({ orderId, status, seatsClosed, refundDueKrw, fulfi
     buttons.push({
       action: "close_seats",
       label: "시트 마감",
-      confirm: "빈 시트를 닫고 그만큼 환불 처리합니다 (크레딧 자동 환급 / 토스는 환불 대기). 진행 중 테스터는 그대로 진행됩니다.",
+      confirm: "빈 시트를 닫고 그만큼 환불 처리합니다 (크레딧 자동 환급 / 카드 결제는 환불 대기). 진행 중 테스터는 그대로 진행됩니다.",
       tone: "border border-neutral-300 text-neutral-700 hover:border-amber-500 hover:text-amber-700",
     });
   }
@@ -62,7 +62,7 @@ export function OrderActions({ orderId, status, seatsClosed, refundDueKrw, fulfi
     buttons.push({
       action: "cancel",
       label: "취소",
-      confirm: "주문을 취소하고 전액 환불할까요? 크레딧 결제는 자동 환급, 토스 결제는 환불 대기로 표시됩니다.",
+      confirm: "주문을 취소하고 전액 환불할까요? 크레딧 결제는 자동 환급, 카드 결제는 환불 대기로 표시됩니다.",
       tone: "border border-neutral-300 text-neutral-600 hover:border-red-400 hover:text-red-600",
     });
   }

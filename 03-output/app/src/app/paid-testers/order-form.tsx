@@ -14,7 +14,7 @@ type Props = {
   balance: number;
 };
 
-type PayWith = "toss" | "credits";
+type PayWith = "card" | "credits";
 
 /** 구매 전 유의사항 — 전부 체크해야 결제 가능 (서버도 agreed=true 검증, 주문에 동의 시각 기록) */
 const NOTICES = [
@@ -29,7 +29,7 @@ export function OrderForm({ apps, balance }: Props) {
   const router = useRouter();
   const [appId, setAppId] = useState<number>(apps[0]?.id ?? 0);
   const [count, setCount] = useState<number>(PAID_TESTER_MIN_COUNT);
-  const [payWith, setPayWith] = useState<PayWith>("toss");
+  const [payWith, setPayWith] = useState<PayWith>("card");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checked, setChecked] = useState<boolean[]>(() => NOTICES.map(() => false));
@@ -37,7 +37,7 @@ export function OrderForm({ apps, balance }: Props) {
 
   const amount = paidTesterAmountKrw(count);
   const canUseCredits = balance >= amount;
-  const effectivePayWith: PayWith = canUseCredits ? payWith : "toss";
+  const effectivePayWith: PayWith = canUseCredits ? payWith : "card";
 
   const presets = [1, 3, 5, 10, 12, 20, 50, PAID_TESTER_MAX_COUNT].filter(
     (n, i, all) => n <= PAID_TESTER_MAX_COUNT && all.indexOf(n) === i,
@@ -149,10 +149,10 @@ export function OrderForm({ apps, balance }: Props) {
           <input
             type="radio"
             name="pay_with"
-            checked={effectivePayWith === "toss"}
-            onChange={() => setPayWith("toss")}
+            checked={effectivePayWith === "card"}
+            onChange={() => setPayWith("card")}
           />
-          카드·간편결제 (토스페이먼츠)
+          신용·체크카드
         </label>
         <label
           className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-neutral-400"}`}
