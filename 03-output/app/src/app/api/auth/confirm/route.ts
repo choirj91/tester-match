@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { publicOrigin } from "@/lib/public-origin";
 import {
   CONFIRM_COOKIE,
   CONFIRM_COOKIE_MAX_AGE_SECONDS,
@@ -23,7 +24,7 @@ const PASSWORD_SAVE_ATTEMPTS = 2;
 type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
 function redirectTo(req: Request, path: string) {
-  const res = NextResponse.redirect(new URL(path, req.url), 303);
+  const res = NextResponse.redirect(new URL(path, publicOrigin(req)), 303);
   res.headers.set("Cache-Control", "no-store");
   return res;
 }
@@ -139,7 +140,7 @@ async function confirmSignup(tokenHash: string, input: CompleteSignupInput): Pro
 /** 확인 화면의 양식이 호출 — 닉네임·비밀번호·약관 동의를 받아 여기서 가입을 확정한다. */
 export async function POST(req: Request) {
   // 다른 사이트(같은 상위 도메인의 서브도메인 포함)에서 온 제출은 받지 않는다. 쿠키도 건드리지 않는다.
-  if (!isSameOriginRequest(req.url, req.headers)) return redirectTo(req, "/auth/confirm");
+  if (!isSameOriginRequest(publicOrigin(req), req.headers)) return redirectTo(req, "/auth/confirm");
 
   const cookieStore = await cookies();
   const tokenHash = cookieStore.get(CONFIRM_COOKIE)?.value;
