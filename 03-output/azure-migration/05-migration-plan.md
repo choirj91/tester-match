@@ -148,7 +148,7 @@
 1. 공지: 전환 후 전원 재로그인 (세션 쿠키 이름이 바뀜)
 2. GitHub `cron.yml` 일시 중지, 진행 중 실행 없음 확인
 3. `db/migrate.sh` 로 최종 재동기화 (Supabase 읽기 전용 → Azure 재구축 → 53개 항목 대조 IDENTICAL 이어야 진행). 리허설 40초
-4. 운영 앱에 `selfhosted-app.json` 배포: `appName=app-testermatch-prod-krc publicUrl=https://tester-match.knockknock.company envTag=prod googleEnabled=true googleClientId=<클라이언트 ID>` — 기존 앱 설정(PortOne·Google Workspace·Resend·Slack 등)은 템플릿에 없으므로 **배포 전에 현재 앱 설정을 보존·병합**할 것 (템플릿 appSettings 는 전체 교체)
+4. 운영 앱: 사이드카만 `selfhosted-sidecars.json`(appName=app-testermatch-prod-krc)으로 추가 → 설정은 **추가형** `cutover-settings.sh app-testermatch-prod-krc https://tester-match.knockknock.company <Key Vault google-client-id>` (기존 설정 유지, 스테이징에서 시험 완료). 참고 — 전체 템플릿 방식: 운영 앱에 `selfhosted-app.json` 배포: `appName=app-testermatch-prod-krc publicUrl=https://tester-match.knockknock.company envTag=prod googleEnabled=true googleClientId=<클라이언트 ID>` — 기존 앱 설정(PortOne·Google Workspace·Resend·Slack 등)은 템플릿에 없으므로 **배포 전에 현재 앱 설정을 보존·병합**할 것 (템플릿 appSettings 는 전체 교체)
 5. GitHub `azure-prod` 빌드 변수: `NEXT_PUBLIC_SUPABASE_URL=https://tester-match.knockknock.company`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<anon JWT>`, `SUPABASE_AUTH_INTERNAL_URL=http://127.0.0.1:9999` → 배포 워크플로우 실행
 6. 재시작 후 1~2분 대기(사이드카 DB 연결 전에는 목록이 비어 보일 수 있음) → 스모크: 공개 페이지·`/browse` 124개 수준, Google 로그인(사용자), 이메일 로그인(심사 계정), 체크인, 로그아웃, `/auth/v1/signup` 404
 7. 크론 재개 → 30일간 Supabase 보존(읽기 전용) 후 해지
