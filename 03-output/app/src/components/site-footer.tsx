@@ -30,7 +30,19 @@ export function SiteFooter() {
         </div>
         <div className="mt-5 space-y-1 text-xs leading-relaxed text-neutral-400">
           <p className="font-semibold text-neutral-500">{BUSINESS.name}</p>
-          <p>사업자등록번호 {BUSINESS.registrationNumber}</p>
+          <p>
+            대표자 {BUSINESS.representative} · 사업자등록번호 {BUSINESS.registrationNumber}
+          </p>
+          <p>주소 {BUSINESS.address}</p>
+          <p>
+            전화{" "}
+            <a
+              href={`tel:${BUSINESS.phone.replaceAll("-", "")}`}
+              className="hover:text-neutral-600"
+            >
+              {BUSINESS.phone}
+            </a>
+          </p>
           <p>
             문의{" "}
             <a href={`mailto:${BUSINESS.email}`} className="hover:text-neutral-600">
