@@ -4,8 +4,10 @@ name: Deploy (Azure App Service)
 # 전환 후에도 배포는 사람이 시작한다 (DEPLOY.md 의 승인 규칙과 같다).
 #
 # 필요한 설정 (값은 리포에 쓰지 않는다 — 리포 공개):
-#   Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
-#            (대상 테넌트의 앱 등록 sp-testermatch-deploy, GitHub OIDC 페더레이션,
+#   GitHub Environment `azure-prod` (Required reviewers = 배포 승인 게이트)
+#   Environment secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#            (대상 테넌트의 앱 등록 sp-testermatch-deploy, 페더레이션 주체
+#             repo:choirj91/tester-match:environment:azure-prod — 브랜치와 무관,
 #             역할 Website Contributor — rg-testermatch-prod-krc 범위만)
 #   Variables (빌드 타임에 클라이언트 번들로 들어가는 공개 값):
 #            NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -43,6 +45,7 @@ jobs:
   deploy:
     name: Build · Deploy
     if: inputs.confirm == 'deploy'
+    environment: azure-prod
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

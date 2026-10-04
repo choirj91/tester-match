@@ -165,7 +165,7 @@ exec az "${ARGS[@]}"
 | Bicep | `tm-az deployment group create --subscription $TM_AZ_SUBSCRIPTION -g rg-testermatch-prod-krc -f main.bicep` — 그룹 범위 배포만. 구독 범위 배포(`deployment sub`)는 리소스 그룹·예산 생성 시 1회만 |
 | Terraform (쓴다면) | `provider "azurerm" { tenant_id = var.tenant_id  subscription_id = var.subscription_id }` 명시 + `use_cli = true` 를 `AZURE_CONFIG_DIR=~/.azure-knockknock-homepage` 아래에서만 실행. 변수 파일은 리포 밖. **`ARM_*` 환경변수 전역 설정 금지** |
 | azd | 사용하지 않음 (기본 자격 증명·전역 설정을 쓰는 경로가 많음 [추정]) |
-| GitHub Actions | `azure/login` + OIDC. 대상 테넌트에 새 앱 등록 `sp-testermatch-deploy`, 페더레이션 주체 `repo:<owner>/tester-match:ref:refs/heads/main`, 역할 **Website Contributor** 를 `rg-testermatch-prod-krc` 범위에만. ID 3종은 GitHub Secrets 에만 |
+| GitHub Actions | `azure/login` + OIDC. 대상 테넌트에 새 앱 등록 `sp-testermatch-deploy`, 페더레이션 주체 `repo:<owner>/tester-match:environment:azure-prod` (GitHub Environment — 브랜치 무관, Required reviewers 로 배포 승인), 역할 **Website Contributor** 를 `rg-testermatch-prod-krc` 범위에만. ID 3종은 GitHub Secrets 에만 |
 | Azure SDK 스크립트 | `DefaultAzureCredential` 금지 → `AzureCliCredential` + 래퍼 아래 실행, 또는 구독 ID 를 코드에서 명시 |
 | VS Code Azure 확장 | 이 프로젝트에선 로그인하지 않음 — 확장은 기본 계정 세션을 공유할 수 있음 [추정] |
 
