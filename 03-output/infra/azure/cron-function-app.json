@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ADR-0015 1-5: Function App for the tester-match cron timers (cron-functions/). Runs on the existing B1 plan asp-testermatch-prod-krc — no extra compute cost; move to its own plan by changing planName. Timers stay off until CRON_TIMERS_ENABLED=1, which is set only after GitHub cron.yml stops scheduling."
+  },
+  "parameters": {
+    "location": { "type": "string", "defaultValue": "koreacentral" },
+    "functionAppName": { "type": "string", "defaultValue": "func-testermatch-cron-krc" },
+    "planName": { "type": "string", "defaultValue": "asp-testermatch-prod-krc" },
+    "appUrl": { "type": "string", "defaultValue": "https://tester-match.knockknock.company" },
+    "timersEnabled": { "type": "string", "defaultValue": "0", "allowedValues": [ "0", "1" ] },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "project": "tester-match",
+        "owner": "knockknock-company",
+        "env": "prod",
+        "managed-by": "tm-az",
+        "cost-center": "azure-credit"
+      }
+    }
+  },
+  "variables": {
+    "appiName": "appi-testermatch-prod-krc",
+    "kvName": "kv-testermatch-prod-krc",
+    "kvSecretsUserRoleId": "4633458b-17de-408a-b874-0445c86b69e6",
+    "kvRef": "[concat('@Microsoft.KeyVault(SecretUri=https://', variables('kvName'), '.vault.azure.net/secrets/')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2023-12-01",
+      "name": "[parameters('functionAppName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "kind": "functionapp,linux",
+      "identity": { "type": "SystemAssigned" },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('planName'))]",
+        "httpsOnly": true,
+        "keyVaultReferenceIdentity": "SystemAssigned",
+        "siteConfig": {
+          "linuxFxVersion": "Node|20",
+          "alwaysOn": true,
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "appSettings": [
+            { "name": "FUNCTIONS_EXTENSION_VERSION", "value": "~4" },
+            { "name": "FUNCTIONS_WORKER_RUNTIME", "value": "node" },
+            { "name": "AzureWebJobsStorage", "value": "[concat(variables('kvRef'), 'azure-storage-connection-string/)')]" },
+            { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "value": "[reference(resourceId('Microsoft.Insights/components', variables('appiName')), '2020-02-02').ConnectionString]" },
+            { "name": "APP_URL", "value": "[parameters('appUrl')]" },
+            { "name": "CRON_SECRET", "value": "[concat(variables('kvRef'), 'cron-secret/)')]" },
+            { "name": "CRON_TIMERS_ENABLED", "value": "[parameters('timersEnabled')]" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2022-04-01",
+      "name": "[guid(resourceId('Microsoft.KeyVault/vaults', variables('kvName')), parameters('functionAppName'), variables('kvSecretsUserRoleId'))]",
+      "scope": "[format('Microsoft.KeyVault/vaults/{0}', variables('kvName'))]",
+      "dependsOn": [ "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]" ],
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('kvSecretsUserRoleId'))]",
+        "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    }
+  ]
+}
