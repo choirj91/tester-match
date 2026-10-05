@@ -22,9 +22,6 @@
       "type": "Microsoft.Web/sites/sitecontainers",
       "apiVersion": "2024-04-01",
       "name": "[concat(parameters('appName'), '/postgrest')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
-      ],
       "properties": {
         "image": "[parameters('postgrestImage')]",
         "isMain": false,
