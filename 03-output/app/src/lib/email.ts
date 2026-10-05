@@ -1,9 +1,11 @@
 /**
- * 이메일 발송 — Resend API 직접 호출 (edge runtime 호환).
- * RESEND_API_KEY 가 없으면 콘솔에만 로그 (개발/CI 환경 graceful no-op).
- *
- * 향후: 일일 한도 100/일 도달 시 BREVO_API_KEY fallback 추가 예정.
+ * 이메일 발송.
+ * - ACS_CONNECTION_STRING 이 있으면 Azure Communication Services Email (ADR-0015 3-1)
+ * - 없고 RESEND_API_KEY 가 있으면 Resend (병행 기간 롤백 경로 — 앱 설정에서 ACS 값을 지우면 복귀)
+ * - 둘 다 없으면 콘솔에만 로그 (개발/CI 환경 graceful no-op)
  */
+
+import { parseAcsConnectionString, sendViaAcs } from "@/lib/email-acs";
 
 export type SendEmailArgs = {
   to: string;
@@ -44,11 +46,18 @@ export function getAdminNotifyEmail(fallback: string): string {
 export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
   if (isUndeliverableAddress(args.to)) return { ok: false, reason: "undeliverable" };
 
-  const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL ?? "Tester Match <noreply@testermatch.local>";
 
+  const acsRaw = process.env.ACS_CONNECTION_STRING;
+  if (acsRaw) {
+    const creds = parseAcsConnectionString(acsRaw);
+    if (creds) return sendViaAcs(creds, { from, ...args });
+    console.error("[email] ACS_CONNECTION_STRING is malformed — falling back to Resend");
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log("[email] (no RESEND_API_KEY) would send:", {
+    console.log("[email] (no mail provider configured) would send:", {
       to: args.to,
       subject: args.subject,
     });
