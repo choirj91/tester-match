@@ -1,23 +1,9 @@
 name: Cron Jobs
 
 on:
-  schedule:
-    # ── KST 기준 (UTC+9) ──────────────────────────────
-    # 매일 KST 16:00 (UTC 07:00) — 체크인 리마인더.
-    # GitHub 스케줄이 이 저장소에서 3~6시간 늦게 실행돼(2026-09-30~10-04 실측) 실제 도착은 KST 19~22시
-    - cron: "0 7 * * *"
-    # 매일 KST 21:00 (UTC 12:00) — 미체크인 페널티 sweep
-    - cron: "0 12 * * *"
-    # 6시간 간격 — 앱 초대 링크 HEAD 검증
-    - cron: "0 */6 * * *"
-    # 매일 KST 09:00 (UTC 00:00) — 급구 자동 만료 sweep + D-1 알림
-    - cron: "0 0 * * *"
-    # 매주 월요일 KST 10:00 (UTC 01:00) — 주간 인기글 전 회원 알림 (멱등)
-    - cron: "0 1 * * 1"
-    # 매일 KST 08:30 (UTC 23:30 전날) — 유료 주문 스윕(미결제 복구·7일 충원 마감·종결) + 관리자 리포트
-    - cron: "30 23 * * *"
-    # 6시간 간격(매 15분) — 유료 시트 보상 자동 확정(구매자 3일 무응답) + 보류 누락 보정 + 출시 보너스
-    - cron: "15 */6 * * *"
+  # 2026-10-05: 정기 실행은 Azure Functions 타이머(func-testermatch-cron-krc)로 옮겼다 (ADR-0015 1-5).
+  # 여기에 schedule 을 다시 넣으면 같은 작업이 두 번 돈다 — 리마인더 메일은 멱등이 아니다.
+  # 일정은 03-output/infra/azure/cron-functions/README.md. 이 워크플로우는 수동 실행용으로만 남긴다.
   # 수동 실행 지원 (Dashboard Actions 탭 → Run workflow)
   workflow_dispatch:
     inputs:
