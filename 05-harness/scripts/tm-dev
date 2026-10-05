@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# tm-dev: choose which database `pnpm dev` talks to.
+#
+#   tm-dev local   local Supabase stack in Docker (Postgres + PostgREST + GoTrue),
+#                  migrations + seed.sql applied. Safe default for development.
+#   tm-dev prod    production Azure PostgreSQL, through PostgREST + GoTrue
+#                  containers on this machine (same images as the App Service sidecars).
+#                  Real data: reads and writes hit production.
+#   tm-dev off     stop the prod containers and remove the override file.
+#   tm-dev status  show the current mode.
+#
+# The mode is written to 03-output/app/.env.development.local, which Next.js loads
+# with higher priority than .env.local. .env.local itself is never touched.
+# Restart `pnpm dev` after switching.
+#
+# Prod secrets come from ~/.config/tester-match/prod-db.env (mode 600, outside the repo):
+#   JWT_SECRET, ANON_JWT, SERVICE_JWT, PGRST_DB_URI, GOTRUE_DATABASE_URL,
+#   AZURE_STORAGE_CONNECTION_STRING
+# The Azure PostgreSQL firewall must allow this machine's public IP.
+#
+# Guards in prod mode: outgoing mail is disabled (RESEND_API_KEY empty), cron routes
+# stay closed (no CRON_SECRET, CRON_ALLOW_UNAUTHENTICATED=0), signup is disabled in
+# GoTrue, and the admin auth API is still blocked by middleware.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+APP_DIR="$ROOT/03-output/app"
+SUPABASE_WORKDIR="$ROOT/03-output"
+OVERRIDE="$APP_DIR/.env.development.local"
+PROD_ENV="${TM_PROD_DB_ENV:-$HOME/.config/tester-match/prod-db.env}"
+DEV_ORIGIN="${TM_DEV_ORIGIN:-http://localhost:3000}"
+
+POSTGREST_IMAGE="postgrest/postgrest:v16.4"
+GOTRUE_IMAGE="supabase/auth:v2.197.0"
+POSTGREST_NAME="tm-prod-postgrest"
+GOTRUE_NAME="tm-prod-gotrue"
+POSTGREST_PORT=3001
+GOTRUE_PORT=9999
+
+die() { echo "tm-dev: $1" >&2; exit 1; }
+
+write_override() {  # write_override <mode> <lines...>
+  local mode="$1"; shift
+  umask 077
+  {
+    echo "# Written by 05-harness/scripts/tm-dev ($mode). Run 'tm-dev off' to fall back to .env.local."
+    echo "TM_DEV_MODE=$mode"
+    printf '%s\n' "$@"
+  } > "$OVERRIDE"
+}
+
+stop_prod() {
+  docker rm -f "$POSTGREST_NAME" "$GOTRUE_NAME" >/dev/null 2>&1 || true
+}
+
+wait_http() {  # wait_http <url> <container>
+  local i
+  for i in $(seq 1 30); do
+    curl -fsS -o /dev/null "$1" 2>/dev/null && return 0
+    sleep 1
+  done
+  die "$2 did not answer at $1 — check 'docker logs $2'"
+}
+
+mode_local() {
+  command -v supabase >/dev/null || die "supabase CLI not found"
+  docker info >/dev/null 2>&1 || die "Docker is not running"
+  stop_prod
+  supabase start --workdir "$SUPABASE_WORKDIR" >/dev/null
+  local status api anon service
+  status="$(supabase status --workdir "$SUPABASE_WORKDIR" -o env 2>/dev/null)"
+  api="$(sed -n 's/^API_URL="\(.*\)"$/\1/p' <<<"$status")"
+  anon="$(sed -n 's/^ANON_KEY="\(.*\)"$/\1/p' <<<"$status")"
+  service="$(sed -n 's/^SERVICE_ROLE_KEY="\(.*\)"$/\1/p' <<<"$status")"
+  [[ -n "$api" && -n "$anon" && -n "$service" ]] || die "could not read 'supabase status' output"
+  write_override local \
+    "NEXT_PUBLIC_SUPABASE_URL=$api" \
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$anon" \
+    "SUPABASE_SECRET_KEY=$service" \
+    "SUPABASE_REST_INTERNAL_URL=" \
+    "SUPABASE_AUTH_INTERNAL_URL=" \
+    "AZURE_STORAGE_CONNECTION_STRING=" \
+    "NEXT_PUBLIC_APP_URL=$DEV_ORIGIN" \
+    "RESEND_API_KEY=" \
+    "CRON_ALLOW_UNAUTHENTICATED=0"
+  echo "mode: local — $api (Studio http://127.0.0.1:54323, mail http://127.0.0.1:54324)"
+  echo "reset data to migrations + seed: supabase db reset --workdir $SUPABASE_WORKDIR"
+}
+
+mode_prod() {
+  [[ -f "$PROD_ENV" ]] || die "$PROD_ENV not found"
+  [[ "$(stat -f %Lp "$PROD_ENV" 2>/dev/null || stat -c %a "$PROD_ENV")" == 600 ]] || die "$PROD_ENV must be mode 600"
+  docker info >/dev/null 2>&1 || die "Docker is not running"
+  # shellcheck disable=SC1090
+  set -a; source "$PROD_ENV"; set +a
+  : "${JWT_SECRET:?missing in $PROD_ENV}" "${ANON_JWT:?}" "${SERVICE_JWT:?}" "${PGRST_DB_URI:?}" "${GOTRUE_DATABASE_URL:?}"
+
+  stop_prod
+  docker run -d --name "$POSTGREST_NAME" -p "127.0.0.1:$POSTGREST_PORT:3000" \
+    -e PGRST_DB_URI="$PGRST_DB_URI" -e PGRST_JWT_SECRET="$JWT_SECRET" \
+    -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \
+    -e PGRST_DB_MAX_ROWS=1000 -e PGRST_DB_POOL=3 \
+    -e PGRST_SERVER_HOST=0.0.0.0 -e PGRST_SERVER_PORT=3000 \
+    "$POSTGREST_IMAGE" >/dev/null
+  docker run -d --name "$GOTRUE_NAME" -p "127.0.0.1:$GOTRUE_PORT:9999" \
+    -e GOTRUE_DB_DRIVER=postgres -e DATABASE_URL="$GOTRUE_DATABASE_URL" \
+    -e GOTRUE_JWT_SECRET="$JWT_SECRET" -e GOTRUE_JWT_EXP=3600 \
+    -e GOTRUE_JWT_AUD=authenticated -e GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated \
+    -e GOTRUE_JWT_ADMIN_ROLES=service_role \
+    -e API_EXTERNAL_URL="$DEV_ORIGIN/auth/v1" -e GOTRUE_SITE_URL="$DEV_ORIGIN" \
+    -e GOTRUE_URI_ALLOW_LIST="$DEV_ORIGIN/**" \
+    -e GOTRUE_API_HOST=0.0.0.0 -e GOTRUE_API_PORT=9999 -e PORT=9999 \
+    -e GOTRUE_DISABLE_SIGNUP=true -e GOTRUE_EXTERNAL_EMAIL_ENABLED=true \
+    -e GOTRUE_MAILER_AUTOCONFIRM=false -e GOTRUE_EXTERNAL_GOOGLE_ENABLED=false \
+    "$GOTRUE_IMAGE" >/dev/null
+  wait_http "http://127.0.0.1:$POSTGREST_PORT/" "$POSTGREST_NAME"
+  wait_http "http://127.0.0.1:$GOTRUE_PORT/health" "$GOTRUE_NAME"
+
+  write_override prod \
+    "NEXT_PUBLIC_SUPABASE_URL=$DEV_ORIGIN" \
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$ANON_JWT" \
+    "SUPABASE_SECRET_KEY=$SERVICE_JWT" \
+    "SUPABASE_REST_INTERNAL_URL=http://127.0.0.1:$POSTGREST_PORT" \
+    "SUPABASE_AUTH_INTERNAL_URL=http://127.0.0.1:$GOTRUE_PORT" \
+    "AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}" \
+    "NEXT_PUBLIC_APP_URL=$DEV_ORIGIN" \
+    "RESEND_API_KEY=" \
+    "CRON_SECRET=" \
+    "CRON_ALLOW_UNAUTHENTICATED=0"
+  echo "mode: PROD — Azure PostgreSQL via 127.0.0.1:$POSTGREST_PORT (PostgREST) and :$GOTRUE_PORT (GoTrue)"
+  echo "WARNING: reads and writes hit production data. Mail and cron are disabled; Google login is off (email login only)."
+}
+
+mode_off() {
+  stop_prod
+  rm -f "$OVERRIDE"
+  echo "mode: off — prod containers stopped, .env.local in effect"
+  echo "the local Supabase stack keeps running; stop it with: supabase stop --workdir $SUPABASE_WORKDIR"
+}
+
+mode_status() {
+  if [[ -f "$OVERRIDE" ]]; then
+    echo "mode: $(sed -n 's/^TM_DEV_MODE=//p' "$OVERRIDE")"
+  else
+    echo "mode: off (.env.local)"
+  fi
+  docker ps --filter "name=tm-prod-" --format '  {{.Names}} {{.Status}}'
+}
+
+case "${1:-status}" in
+  local)  mode_local ;;
+  prod)   mode_prod ;;
+  off)    mode_off ;;
+  status) mode_status ;;
+  *) die "usage: tm-dev local|prod|off|status" ;;
+esac
