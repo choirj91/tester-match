@@ -9,13 +9,14 @@
 # Never touches ~/.azure (the employer's default Azure login).
 #
 # Read verbs run after a context check; every other command must name the
-# subscription and stay inside rg-testermatch-prod-krc.
+# subscription and stay inside rg-testermatch-prod-krc (exception: DNS zones in rg-knockknock-shared, step 5a).
 set -euo pipefail
 
 SHARED_DIR="$HOME/.azure-knockknock-homepage"
 TM_AZ_RG="rg-testermatch-prod-krc"
 TM_AZ_LOCATION="koreacentral"
 TM_AZ_VAULT="kv-testermatch-prod-krc"
+TM_AZ_SHARED_DNS_RG="rg-knockknock-shared"
 
 [[ -f "$SHARED_DIR/target.env" ]] || { echo "STOP: $SHARED_DIR/target.env not found. Set up kh-az first." >&2; exit 2; }
 # shellcheck disable=SC1091
@@ -98,6 +99,20 @@ location=$(value_of -l --location)
 if [[ -n "$location" && "$(lower "$location")" != "$TM_AZ_LOCATION" ]]; then
   stop "location must be $TM_AZ_LOCATION" 5
 fi
+# 5a) Shared DNS zone (ADR-0015 3-2, agreed with knockknock-homepage 2026-10-04): the
+#     knockknock.company zone lives in rg-knockknock-shared. Only creating that group and
+#     changing DNS zones/records there is allowed — no other resource types, no zone delete.
+shared_l=$(lower "$TM_AZ_SHARED_DNS_RG")
+target_rg=$(lower "$(value_of -g --resource-group)")
+if [[ "${ARGS[0]:-} ${ARGS[1]:-}" == "group create" && "$(lower "$(value_of -n --name)")" == "$shared_l" ]]; then
+  exec az "${ARGS[@]}"
+fi
+if [[ "$target_rg" == "$shared_l" ]]; then
+  [[ "${ARGS[0]:-} ${ARGS[1]:-}" == "network dns" ]] || stop "only 'network dns' commands may target $TM_AZ_SHARED_DNS_RG" 5
+  [[ "${ARGS[2]:-} ${ARGS[3]:-}" == "zone delete" ]] && stop "deleting the shared DNS zone is not allowed here" 5
+  exec az "${ARGS[@]}"
+fi
+
 if [[ "${ARGS[0]:-}" == group ]]; then
   [[ "$(lower "$(value_of -n --name -g --resource-group)")" == "$rg_l" ]] || stop "group commands may only target $TM_AZ_RG" 5
 elif [[ -n "$scope" ]]; then
