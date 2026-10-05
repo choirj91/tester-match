@@ -1,0 +1,124 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ADR-0015 phase 3-1: Azure Communication Services Email for tester-match. Deploy once with linkDomain=false, add the domain's verification/SPF/DKIM records to DNS, verify the domain, then redeploy with linkDomain=true to connect it to the Communication Service that sends mail. The primary connection string is written straight into Key Vault as acs-connection-string (never printed or kept in deployment outputs)."
+  },
+  "parameters": {
+    "emailServiceName": {
+      "type": "string",
+      "defaultValue": "ecs-testermatch-prod"
+    },
+    "communicationServiceName": {
+      "type": "string",
+      "defaultValue": "acs-testermatch-prod"
+    },
+    "domainName": {
+      "type": "string",
+      "defaultValue": "knockknock.company"
+    },
+    "senderUsername": {
+      "type": "string",
+      "defaultValue": "noreply"
+    },
+    "senderDisplayName": {
+      "type": "string",
+      "defaultValue": "Tester Match"
+    },
+    "dataLocation": {
+      "type": "string",
+      "defaultValue": "Korea"
+    },
+    "linkDomain": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {
+        "project": "tester-match",
+        "owner": "knockknock-company",
+        "env": "prod",
+        "managed-by": "tm-az",
+        "cost-center": "azure-credit"
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "kv-testermatch-prod-krc"
+    }
+  },
+  "variables": {
+    "domainId": "[resourceId('Microsoft.Communication/emailServices/domains', parameters('emailServiceName'), parameters('domainName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Communication/emailServices",
+      "apiVersion": "2023-04-01",
+      "name": "[parameters('emailServiceName')]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "dataLocation": "[parameters('dataLocation')]"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/emailServices/domains",
+      "apiVersion": "2023-04-01",
+      "name": "[format('{0}/{1}', parameters('emailServiceName'), parameters('domainName'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/emailServices', parameters('emailServiceName'))]"
+      ],
+      "properties": {
+        "domainManagement": "CustomerManaged",
+        "userEngagementTracking": "Disabled"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/emailServices/domains/senderUsernames",
+      "apiVersion": "2023-04-01",
+      "name": "[format('{0}/{1}/{2}', parameters('emailServiceName'), parameters('domainName'), parameters('senderUsername'))]",
+      "dependsOn": [
+        "[variables('domainId')]"
+      ],
+      "properties": {
+        "username": "[parameters('senderUsername')]",
+        "displayName": "[parameters('senderDisplayName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Communication/communicationServices",
+      "apiVersion": "2023-04-01",
+      "name": "[parameters('communicationServiceName')]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "dependsOn": [
+        "[variables('domainId')]"
+      ],
+      "properties": {
+        "dataLocation": "[parameters('dataLocation')]",
+        "linkedDomains": "[if(parameters('linkDomain'), createArray(variables('domainId')), createArray())]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-07-01",
+      "name": "[format('{0}/acs-connection-string', parameters('keyVaultName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Communication/communicationServices', parameters('communicationServiceName'))]"
+      ],
+      "properties": {
+        "value": "[listKeys(resourceId('Microsoft.Communication/communicationServices', parameters('communicationServiceName')), '2023-04-01').primaryConnectionString]",
+        "contentType": "ACS connection string (endpoint;accesskey)"
+      }
+    }
+  ],
+  "outputs": {
+    "verificationRecords": {
+      "type": "object",
+      "value": "[reference(variables('domainId'), '2023-04-01').verificationRecords]"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { z } from "zod";
 const ServerEnv = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
+  ACS_CONNECTION_STRING: z.string().min(1).optional(),
   BREVO_API_KEY: z.string().min(1).optional(),
   PORTONE_API_SECRET: z.string().min(1).optional(),
 });
