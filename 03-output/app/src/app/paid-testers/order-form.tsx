@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   PAID_TESTER_MAX_COUNT,
   PAID_TESTER_MIN_COUNT,
+  PAID_TESTER_RECOMMENDED_COUNT,
   paidTesterAmountKrw,
 } from "@/lib/paid-testers";
 
 type Props = {
   apps: Array<{ id: number; name: string }>;
+  /** 처음 골라 둘 앱 — 앱 관리 화면·급구 알림에서 들어온 경우 */
+  initialAppId?: number;
   /** 보유 크레딧 — 결제 금액 이상이면 크레딧 결제 선택지 노출 */
   balance: number;
   /** 주문 게이트 — false 면 폼은 보이되 신청 버튼 대신 "오픈 준비 중" 안내 (ADR-0017 오픈 대기) */
@@ -27,10 +30,12 @@ const NOTICES = [
   "테스터에게 리뷰·별점을 요청하지 않습니다. 완주한 시트만 과금됩니다 — 결제 7일 내 못 채운 시트, 충원 마감 후 이탈한 시트, 이의가 인용된 시트는 환불됩니다.",
 ];
 
-export function OrderForm({ apps, balance, orderingOpen }: Props) {
+export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) {
   const router = useRouter();
-  const [appId, setAppId] = useState<number>(apps[0]?.id ?? 0);
-  const [count, setCount] = useState<number>(PAID_TESTER_MIN_COUNT);
+  const [appId, setAppId] = useState<number>(initialAppId ?? apps[0]?.id ?? 0);
+  const [count, setCount] = useState<number>(
+    Math.min(PAID_TESTER_MAX_COUNT, PAID_TESTER_RECOMMENDED_COUNT),
+  );
   const [payWith, setPayWith] = useState<PayWith>("card");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +46,16 @@ export function OrderForm({ apps, balance, orderingOpen }: Props) {
   const canUseCredits = balance >= amount;
   const effectivePayWith: PayWith = canUseCredits ? payWith : "card";
 
-  const presets = [1, 3, 5, 10, 12, 20, 50, PAID_TESTER_MAX_COUNT].filter(
-    (n, i, all) => n <= PAID_TESTER_MAX_COUNT && all.indexOf(n) === i,
-  );
+  const presets = [
+    1,
+    3,
+    5,
+    10,
+    12,
+    PAID_TESTER_RECOMMENDED_COUNT,
+    20,
+    PAID_TESTER_MAX_COUNT,
+  ].filter((n, i, all) => n <= PAID_TESTER_MAX_COUNT && all.indexOf(n) === i);
   const clampCount = (n: number) =>
     Math.min(PAID_TESTER_MAX_COUNT, Math.max(PAID_TESTER_MIN_COUNT, Math.floor(n) || PAID_TESTER_MIN_COUNT));
 
@@ -141,7 +153,8 @@ export function OrderForm({ apps, balance, orderingOpen }: Props) {
           ))}
         </div>
         <p className="mt-1.5 text-xs text-neutral-500">
-          Google 요건은 12명입니다. 이탈에 대비해 여유 있게 잡아도 완주한 시트만 과금됩니다.
+          Google 요건은 12명입니다. 14일 사이 1~2명은 빠지기 쉬워 {PAID_TESTER_RECOMMENDED_COUNT}
+          명을 권합니다. 여유 있게 잡아도 못 채우거나 완주하지 못한 시트는 환불됩니다.
         </p>
       </div>
 

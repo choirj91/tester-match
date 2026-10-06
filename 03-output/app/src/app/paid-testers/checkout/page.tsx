@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { FeeBreakdown } from "@/components/fee-breakdown";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -9,7 +10,6 @@ import {
   canOrderPaidTesters,
   paidTesterOrderName,
 } from "@/lib/paid-testers";
-import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 import { PayButton } from "./pay-button";
 
 export const metadata = {
@@ -75,15 +75,14 @@ export default async function CheckoutPage({
           </p>
         </div>
 
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
-          결제 금액은 14일을 완주한 테스터의 보상(시트당 최대 {formatKrw(SEAT_REWARD_MAX)} 크레딧 →
-          기프티콘·네이버페이 포인트)으로 돌아가고, Tester Match 는 결제 수수료와 운영비용만
-          사용합니다. 완주한 시트만 과금되며, 못 채운 시트·이탈 시트는{" "}
+        <FeeBreakdown className="mt-4" />
+        <p className="mt-2 text-xs text-neutral-500">
+          환불 기준 전체는{" "}
           <Link href="/policies/refund" className="underline underline-offset-2">
             환불 정책
           </Link>
-          에 따라 환불됩니다.
-        </div>
+          을 따릅니다.
+        </p>
 
         {storeId && channelKey ? (
           <PayButton

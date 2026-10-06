@@ -5,7 +5,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
 import { DeleteAppButton } from "./delete-app-button";
-import { BoostToggle } from "./boost-toggle";
+import { BoostCard } from "./boost-card";
+import { isReviewOrderer } from "@/lib/paid-testers";
 import { KakaoOpenchatShareButton } from "@/components/kakao-openchat-share-button";
 import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL, PLAY_GROUP_JOIN_URL } from "@/lib/tester-group";
 import { CopyGroupEmailButton } from "@/components/copy-group-email-button";
@@ -231,10 +232,11 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <BoostToggle
-          id={app.id}
+        <BoostCard
+          appId={app.id}
           isBoost={app.is_boost ?? false}
           deadlineAt={app.boost_deadline_at ?? null}
+          canOrder={app.status === "matching" || isReviewOrderer(user)}
         />
 
         <KpiSection matches={matches ?? []} />

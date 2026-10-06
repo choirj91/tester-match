@@ -8,12 +8,12 @@ type NavItem = { href: string; label: string; soon?: boolean };
 
 const NAV: readonly NavItem[] = [
   { href: "/browse", label: "매칭 가능" },
-  { href: "/boost", label: "급구" },
+  { href: "/paid-testers", label: "급구" },
   { href: "/board", label: "게시판" },
   { href: "/guide", label: "가이드" },
   { href: "/stats", label: "랭킹" },
   { href: "/my-tests", label: "내 테스트" },
-  { href: "/my-reviews", label: "맞리뷰" },
+  { href: "/my-reviews", label: "맞테스트" },
   { href: "/apps", label: "내 앱" },
   { href: "/rewards", label: "보상" },
   { href: "/credits", label: "크레딧" },
@@ -34,12 +34,13 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
           </span>
         </Link>
 
-        <nav className="hidden flex-1 items-center gap-6 sm:flex">
+        {/* 메뉴가 한 줄에 다 들어가는 폭(xl)부터 보인다. 더 좁으면 아래 둘째 줄 메뉴(가로 스크롤)를 쓴다 */}
+        <nav className="hidden min-w-0 flex-1 items-center gap-5 xl:flex">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium text-neutral-700 hover:text-neutral-900"
+              className="shrink-0 text-sm font-medium whitespace-nowrap text-neutral-700 hover:text-neutral-900"
             >
               {item.label}
               {item.soon && (
@@ -102,8 +103,8 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         </div>
       </div>
 
-      {/* Mobile nav row */}
-      <nav className="flex items-center gap-4 overflow-x-auto border-t border-neutral-100 px-6 py-2 sm:hidden">
+      {/* Mobile·좁은 화면 nav row */}
+      <nav className="flex items-center gap-4 overflow-x-auto border-t border-neutral-100 px-6 py-2 xl:hidden">
         {NAV.map((item) => (
           <Link
             key={item.href}

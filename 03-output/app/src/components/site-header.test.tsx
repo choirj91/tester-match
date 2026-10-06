@@ -21,9 +21,11 @@ describe("SiteHeader", () => {
     expect(screen.getAllByText("내 앱").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders 급구 nav item (badge removed after launch)", () => {
+  it("renders 급구 nav item that opens the paid tester order page", () => {
     render(<SiteHeader user={user} />);
-    expect(screen.getAllByText("급구").length).toBeGreaterThanOrEqual(1);
+    const links = screen.getAllByRole("link", { name: "급구" });
+    expect(links.length).toBeGreaterThanOrEqual(1);
+    for (const link of links) expect(link).toHaveAttribute("href", "/paid-testers");
   });
 
   it("renders nickname and signout when authenticated", () => {
@@ -47,8 +49,9 @@ describe("SiteHeader", () => {
     expect(screen.getByText("★50")).toBeInTheDocument();
   });
 
-  it("renders 맞리뷰 nav item", () => {
+  it("renders 맞테스트 nav item without the word 리뷰", () => {
     render(<SiteHeader user={user} />);
-    expect(screen.getAllByText("맞리뷰").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("맞테스트").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("맞리뷰")).not.toBeInTheDocument();
   });
 });

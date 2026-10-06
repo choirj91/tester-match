@@ -5,8 +5,18 @@ import { AppScrollBanner } from "@/components/app-scroll-banner";
 import { OnboardingProgress } from "@/components/onboarding-progress";
 import { getCurrentUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
-import { PAID_TESTERS_PUBLIC_ORDERING, PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
-import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
+import { REDEMPTION_MIN_CREDITS } from "@/lib/paid-seats";
+import {
+  PAID_TESTERS_PUBLIC_ORDERING,
+  PAID_TESTER_PRICE_KRW,
+  PAID_TESTER_RECOMMENDED_COUNT,
+  paidTesterAmountKrw,
+} from "@/lib/paid-testers";
+import {
+  SEAT_REWARDS,
+  SEAT_REWARD_MAX,
+  SEAT_REWARD_MAX_AT_COMPLETION,
+} from "@/lib/seat-reward-rules";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // ── 문제 카드 ────────────────────────────────────────────────────────
@@ -32,14 +42,35 @@ const TESTER_CARDS = [
     desc: "Google Play에 올라오기 전, 아직 세상에 공개되지 않은 앱을 당신이 먼저 씁니다. 출시 직전의 앱은 어디서도 볼 수 없습니다.",
   },
   {
-    title: "테스트하고 보상도 받습니다",
-    desc: `💰 유료 테스터 시트에 참여해 14일을 완주하면 크레딧이 쌓입니다 (시트당 최대 ${SEAT_REWARD_MAX}). 크레딧은 기프티콘이나 네이버페이 포인트로 바꿀 수 있습니다.`,
+    title: "하루 1분, 커피 한 잔을 모읍니다",
+    desc: `💰 급구 시트는 하루 1분 체크인(앱 실행 + 스크린샷 1장)으로 참여합니다. 14일을 완주하면 앱 하나에 최대 ${formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)} 크레딧(앱이 출시되면 +${SEAT_REWARDS.launch}), ${formatKrw(REDEMPTION_MIN_CREDITS)} 크레딧부터 커피 기프티콘이나 네이버페이 포인트로 바꿉니다.`,
   },
   {
     title: "개발자에게 직접 닿습니다",
     desc: "당신의 피드백이 출시 전 앱을 바꿉니다. 리뷰 한 줄보다 14일의 실제 사용이 개발자에게는 훨씬 더 큰 도움입니다.",
   },
 ];
+
+// ── 급구 — 부탁 대신 투자, 시간은 보상으로 ────────────────────────────
+const PRICE_LABEL = `${formatKrw(PAID_TESTER_PRICE_KRW)}원`;
+
+const CYCLE = [
+  {
+    who: "개발자",
+    value: `${PAID_TESTER_RECOMMENDED_COUNT}명 ${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`,
+    desc: "커피 몇 잔 값으로 14일을 함께할 테스터를 모읍니다. 매일 스크린샷 증빙을 확인하고, 못 채우거나 완주하지 못한 시트는 환불받습니다.",
+  },
+  {
+    who: "테스터",
+    value: `하루 1분 → 완주 시 최대 ${formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)} 크레딧`,
+    desc: `출시 전 앱을 하루 1분씩 열어 보고 14일을 완주하면 앱 하나에 최대 ${formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)} 크레딧, 앱이 출시되면 ${SEAT_REWARDS.launch} 더. 차곡차곡 모으면 고물가 시대 커피 한 잔이 됩니다 (${formatKrw(REDEMPTION_MIN_CREDITS)} 크레딧부터 기프티콘 교환).`,
+  },
+  {
+    who: "Tester Match",
+    value: "가장 큰 몫은 테스터 보상에",
+    desc: `회사는 1명 ${PRICE_LABEL} 가운데 최대 ${formatKrw(SEAT_REWARD_MAX)}원을 테스터 보상 비용으로 씁니다. 나머지는 부가세·카드 수수료·서버·보상 발송에 쓰고, 남는 돈은 서비스를 계속 운영하는 데 다시 씁니다.`,
+  },
+] as const;
 
 // ── How it works ─────────────────────────────────────────────────────
 const STEPS = [
@@ -70,8 +101,12 @@ const FAQ = [
     a: `출시 전 앱을 누구보다 먼저 체험할 수 있고, 참여할수록 신뢰도 ★가 쌓입니다. 크레딧은 💰 유료 테스터 시트에 참여했을 때만 적립됩니다 (시트당 최대 ${SEAT_REWARD_MAX}, 완주 후 지급). 크레딧은 기프티콘·네이버페이 포인트로 바꾸거나 내 앱의 테스터 시트를 여는 데 쓸 수 있고, 구매하거나 현금으로 바꿀 수는 없습니다.`,
   },
   {
-    q: "유료 테스터 결제 금액은 어디에 쓰이나요?",
-    a: `테스터 1명당 ${formatKrw(PAID_TESTER_PRICE_KRW)}원(부가세 포함)이며, 완주한 시트만 과금됩니다. 결제 금액은 테스터 보상과 결제 수수료·운영비용에 쓰입니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
+    q: "급구는 무료 아니었나요?",
+    a: "급구는 이제 유료 테스터를 신청한 앱에 함께 켜집니다. 결제하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이 갑니다. 앱 등록과 품앗이 테스트 참여는 지금처럼 무료입니다.",
+  },
+  {
+    q: "급구(유료 테스터) 결제 금액은 어디에 쓰이나요?",
+    a: `테스터 1명당 ${PRICE_LABEL}(부가세 포함)이며, 못 채우거나 완주하지 못한 시트는 환불됩니다. 회사는 이 금액 가운데 최대 ${formatKrw(SEAT_REWARD_MAX)}원을 14일을 완주한 테스터의 보상(기프티콘·네이버페이 포인트) 비용으로 쓰고, 나머지는 부가세·카드 수수료·서버·보상 발송 같은 운영비에 씁니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
   },
   {
     q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
@@ -158,8 +193,8 @@ export default async function HomePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">
-        <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
-          베타 오픈 준비 중
+        <span className="bg-spark-50 text-spark-600 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
+          베타 운영 중
         </span>
         <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-5xl">
           당신의 앱을 처음으로 열어볼
@@ -319,32 +354,56 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Paid testers */}
-      <section className="mx-auto max-w-4xl px-6 py-16">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-              테스터가 부족할 때
+      {/* 급구 — 부탁 대신 투자 */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <div className="text-center">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="bg-spark-50 text-spark-600 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
+              급구 · 유료 테스터
             </span>
             {!PAID_TESTERS_PUBLIC_ORDERING && (
-              <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800">
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
                 결제 오픈 대기
               </span>
             )}
           </div>
-          <h2 className="mt-4 text-2xl font-bold text-neutral-900">
-            유료 테스터 — 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}원
+          <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
+            부탁은 투자로,
+            <br />
+            <span className="text-trust-600">하루 1분은 보상으로</span>
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-neutral-700">
-            품앗이로 못 채운 인원을 회사가 모집·관리하는 커뮤니티 테스터가 채웁니다. 14일간 매일 실기기
-            스크린샷 체크인, 완주한 시트만 과금. 결제 금액은 테스터 보상과 결제 수수료·운영비용에 쓰이며,
-            크레딧은 판매하지 않습니다.
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-neutral-600">
+            테스터 구하기가 더는 눈치 보는 부탁이 아니었으면 했습니다. 개발자는 1명당 {PRICE_LABEL}
+            으로 14일 동안 매일 앱을 여는 테스터를 모으고, 테스터는 하루 1분 체크인으로 출시 전 앱을
+            먼저 써 보고 보상을 받습니다.
           </p>
+        </div>
+        <div className="mt-10 grid gap-5 sm:grid-cols-3">
+          {CYCLE.map((c) => (
+            <div
+              key={c.who}
+              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+            >
+              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
+                {c.who}
+              </span>
+              <p className="tabular mt-3 text-lg font-bold text-neutral-900">{c.value}</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/paid-testers"
-            className="mt-5 inline-flex rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="bg-trust-600 hover:bg-trust-700 rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-sm"
           >
-            유료 테스터 자세히 보기 →
+            급구 신청하기 →
+          </Link>
+          <Link
+            href="/rewards"
+            className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+          >
+            테스터 보상 보기 →
           </Link>
         </div>
       </section>

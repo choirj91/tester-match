@@ -193,14 +193,24 @@ export function paidOrderReceiptEmail(args: {
   testerCount: number;
   amountKrw: number;
   orderCode: string;
+  /** false = 심사·시험용 주문 — 시트를 열지 않아 급구·전 회원 알림이 없다 */
+  seatsOpened: boolean;
 }): Email {
   const amount = args.amountKrw.toLocaleString("ko-KR");
   const subject = `[Tester Match] 유료 테스터 신청 완료 — ${args.appName}`;
+  const progress = args.seatsOpened
+    ? "급구 노출과 전 회원 알림이 나갔고, 커뮤니티 테스터가 시트를 채우면 14일간 매일 스크린샷 체크인합니다."
+    : "심사·시험용 주문이라 시트를 열지 않았습니다. 급구 표시와 전 회원 알림은 실제 주문에서만 나갑니다.";
+  const footer = args.seatsOpened
+    ? `테스터 참여 현황과 매일의 스크린샷은 콘솔에서 확인할 수 있습니다. 완주한 시트만 과금되며,
+      결제 후 7일 내 채워지지 않은 시트는 자동 환불됩니다. Play Console 비공개 테스트 트랙에
+      공용 테스터 그룹(tester-match@googlegroups.com)이 등록돼 있는지 꼭 확인해주세요.`
+    : "주문 내용은 콘솔에서 확인할 수 있습니다. 결제 취소·환불은 운영팀이 처리합니다.";
   const html = layoutHtml(`
     <p style="margin:0 0 12px;"><strong>${escapeHtml(args.buyerNickname)}</strong> 님,</p>
     <p style="margin:0 0 16px;">
       <strong>${escapeHtml(args.appName)}</strong> 유료 테스터 신청이 완료되었습니다.
-      급구 노출과 전 회원 알림이 나갔고, 커뮤니티 테스터가 시트를 채우면 14일간 매일 스크린샷 체크인합니다.
+      ${progress}
     </p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
       <tr><td style="padding:6px 0;color:#64748b;">인원</td><td>${args.testerCount}명</td></tr>
@@ -208,9 +218,7 @@ export function paidOrderReceiptEmail(args: {
       <tr><td style="padding:6px 0;color:#64748b;">주문번호</td><td>${args.orderCode}</td></tr>
     </table>
     <p style="margin:0 0 16px;font-size:13px;color:#64748b;">
-      테스터 참여 현황과 매일의 스크린샷은 콘솔에서 확인할 수 있습니다. 완주한 시트만 과금되며,
-      결제 후 7일 내 채워지지 않은 시트는 자동 환불됩니다. Play Console 비공개 테스트 트랙에
-      공용 테스터 그룹(tester-match@googlegroups.com)이 등록돼 있는지 꼭 확인해주세요.
+      ${footer}
     </p>
     <p style="margin:24px 0 0;">
       <a href="${APP_URL}/paid-testers"

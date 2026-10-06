@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "맞리뷰" };
+export const metadata = { title: "맞테스트" };
 
 function formatDate(iso: string | null | undefined) {
   if (!iso) return "—";
@@ -77,7 +77,7 @@ export default async function MyReviewsPage() {
     (testerUsersRaw ?? []).map((u) => [u.id, u]),
   );
 
-  // 5. 테스터의 앱 (맞리뷰 대상)
+  // 5. 테스터의 앱 (맞테스트 대상)
   const { data: testerAppsRaw } =
     testerIds.length > 0
       ? await supabase
@@ -129,18 +129,18 @@ export default async function MyReviewsPage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">맞리뷰</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">맞테스트</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            내 앱을 테스트해준 사람 목록. 상대방 앱도 테스트해주면 맞리뷰가 완성됩니다.
+            내 앱을 테스트해준 사람 목록. 상대방 앱도 테스트해주면 맞테스트가 완성됩니다.
           </p>
           {totalTesters > 0 && (
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-neutral-500">
               <span>참여자 {totalTesters}명</span>
               {mutualPossible > 0 && (
-                <span className="font-semibold text-trust-600">맞리뷰 가능 {mutualPossible}건</span>
+                <span className="font-semibold text-trust-600">맞테스트 가능 {mutualPossible}건</span>
               )}
               {mutualDone > 0 && (
-                <span className="text-mint-500">맞리뷰 완료 {mutualDone}건</span>
+                <span className="text-mint-500">맞테스트 완료 {mutualDone}건</span>
               )}
             </div>
           )}
@@ -174,7 +174,7 @@ export default async function MyReviewsPage() {
                       </p>
                       {row.mutualDone && row.mutualMatchedApp && (
                         <p className="mt-0.5 text-xs text-neutral-400">
-                          맞리뷰 앱:{" "}
+                          맞테스트 앱:{" "}
                           <span className="font-medium text-neutral-500">
                             {row.mutualMatchedApp.name}
                           </span>
@@ -192,18 +192,18 @@ export default async function MyReviewsPage() {
                       )}
                     </div>
 
-                    {/* 맞리뷰 버튼/배지 */}
+                    {/* 맞테스트 버튼/배지 */}
                     <div className="shrink-0">
                       {row.mutualDone ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500">
-                          맞리뷰 완료 ✓
+                          맞테스트 완료 ✓
                         </span>
                       ) : row.mutualTarget ? (
                         <Link
                           href={`/browse/${row.mutualTarget.id}`}
                           className="inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
                         >
-                          맞리뷰 하기 →
+                          맞테스트 하기 →
                         </Link>
                       ) : (
                         <span className="text-xs text-neutral-400">
@@ -214,7 +214,7 @@ export default async function MyReviewsPage() {
                   </>
                 );
 
-                // 맞리뷰 완료 — 카드 전체가 상대방 앱으로 이동하는 링크
+                // 맞테스트 완료 — 카드 전체가 상대방 앱으로 이동하는 링크
                 if (row.mutualDone && row.mutualMatchedApp) {
                   return (
                     <li key={row.tid}>
@@ -251,7 +251,7 @@ function EmptyState({ hasApps }: { hasApps: boolean }) {
             아직 내 앱을 테스트한 사람이 없습니다.
           </p>
           <p className="mt-2 text-sm text-neutral-500">
-            매칭 가능 앱 목록에서 다른 앱을 먼저 테스트하면 맞리뷰가 자연스럽게 쌓입니다.
+            매칭 가능 앱 목록에서 다른 앱을 먼저 테스트하면 맞테스트가 자연스럽게 쌓입니다.
           </p>
           <Link
             href="/browse"
@@ -264,7 +264,7 @@ function EmptyState({ hasApps }: { hasApps: boolean }) {
         <>
           <p className="text-base font-medium text-neutral-700">등록한 앱이 없습니다.</p>
           <p className="mt-2 text-sm text-neutral-500">
-            앱을 먼저 등록해야 맞리뷰를 받을 수 있습니다.
+            앱을 먼저 등록해야 맞테스트를 받을 수 있습니다.
           </p>
           <Link
             href="/apps/new"

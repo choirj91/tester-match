@@ -51,6 +51,19 @@ async function isOrderBuyer(orderCode: string, userId: number): Promise<boolean>
   return data?.buyer_user_id === userId;
 }
 
+/**
+ * 시트를 열지 않은 주문인지 — 심사·시험용 주문은 결제 전부터 seats_closed 라 급구·전 회원 알림이 없다.
+ * 조회 실패는 false(일반 주문 문구)로 둔다.
+ */
+async function isSeatsClosedOrder(orderCode: string): Promise<boolean> {
+  const { data } = await createSupabaseAdminClient()
+    .from("paid_tester_orders")
+    .select("seats_closed")
+    .eq("order_code", orderCode)
+    .maybeSingle<{ seats_closed: boolean }>();
+  return data?.seats_closed === true;
+}
+
 type SearchParams = {
   /** 우리가 붙이는 주문 코드 (PC 결제 완료 후 이동, 크레딧 결제) */
   orderId?: string;
@@ -102,6 +115,8 @@ export default async function PaymentSuccessPage({
     windowCode: isCredits ? undefined : code,
     orderCode,
   });
+  const seatsClosed =
+    view.kind === "success" && view.order ? await isSeatsClosedOrder(view.order.orderCode) : false;
 
   return (
     <>
@@ -110,7 +125,9 @@ export default async function PaymentSuccessPage({
         {view.kind === "success" && view.order && (
           <>
             <p className="text-4xl">✅</p>
-            <h1 className="mt-4 text-2xl font-bold text-neutral-900">시트가 열렸습니다</h1>
+            <h1 className="mt-4 text-2xl font-bold text-neutral-900">
+              {seatsClosed ? "결제가 완료되었습니다" : "시트가 열렸습니다"}
+            </h1>
             <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 text-left text-sm">
               <p className="font-semibold text-neutral-900">{view.order.appName}</p>
               <p className="mt-2 text-neutral-600">
@@ -121,8 +138,9 @@ export default async function PaymentSuccessPage({
               <p className="mt-1 text-xs text-neutral-400">주문번호 {view.order.orderCode}</p>
             </div>
             <p className="mt-6 text-sm leading-relaxed text-neutral-600">
-              앱이 급구 상단에 노출되고 전 회원에게 알림이 발송되었습니다. 테스터가 시트를 채우면
-              콘솔에서 매일 스크린샷 증빙을 확인할 수 있습니다.
+              {seatsClosed
+                ? "심사·시험용 주문이라 시트를 열지 않았습니다. 급구 표시와 전 회원 알림은 실제 주문에서만 나갑니다."
+                : "앱이 급구 상단에 노출되고 전 회원에게 알림이 발송되었습니다. 테스터가 시트를 채우면 콘솔에서 매일 스크린샷 증빙을 확인할 수 있습니다."}
             </p>
           </>
         )}

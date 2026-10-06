@@ -360,6 +360,7 @@ async function notifyPaidOrder(
       const receiptTmpl = paidOrderReceiptEmail({
         buyerNickname: buyer.nickname,
         ...summary,
+        seatsOpened: !order.seats_closed,
       });
       await sendEmail({ to: buyer.email, ...receiptTmpl });
     }

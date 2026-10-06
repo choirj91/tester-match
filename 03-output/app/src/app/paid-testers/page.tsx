@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FeeBreakdown } from "@/components/fee-breakdown";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -7,11 +8,14 @@ import {
   PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_MAX_COUNT,
   PAID_TESTER_PRICE_KRW,
+  PAID_TESTER_RECOMMENDED_COUNT,
   canOrderPaidTesters,
   isReviewOrderer,
+  paidTesterAmountKrw,
   type PaidOrderStatus,
 } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
+import { PAID_SEAT_BOOST_DAYS } from "@/lib/paid-seats";
 import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 import { OrderForm } from "./order-form";
 
@@ -19,7 +23,7 @@ const PRICE_LABEL = `${formatKrw(PAID_TESTER_PRICE_KRW)}원`;
 
 export const metadata = {
   alternates: { canonical: "/paid-testers" },
-  title: "유료 테스터",
+  title: "급구 — 유료 테스터 모집",
   description: `Google Play 비공개 테스트 12명이 부족할 때 — 회사가 모집·관리하는 테스터가 1명당 ${PRICE_LABEL}(부가세 포함)에 14일간 실기기로 매일 스크린샷 체크인합니다. 완주한 시트만 과금.`,
 };
 
@@ -39,8 +43,8 @@ const STEPS = [
     desc: `부족한 인원만큼 1~${PAID_TESTER_MAX_COUNT}명(시트)을 선택해 결제합니다. 1명 = ${PRICE_LABEL}(부가세 포함), 신용·체크카드. 판매·환불 주체는 낰낰컴퍼니입니다.`,
   },
   {
-    title: "급구 노출 + 전 회원 알림",
-    desc: "결제 즉시 매칭 목록 상단 급구에 노출되고 전 회원에게 알림이 갑니다. 회사가 모집·관리하는 커뮤니티 테스터가 시트를 선착순으로 채웁니다 (신뢰도는 닉네임 옆 ★로 표시).",
+    title: "급구 표시 + 전 회원 알림",
+    desc: `결제 즉시 매칭 목록 맨 위 급구 칸에 표시되고(결제 후 ${PAID_SEAT_BOOST_DAYS}일, 빈 시트가 남아 있으면 연장) 전 회원에게 알림이 갑니다. 회사가 모집·관리하는 커뮤니티 테스터가 시트를 선착순으로 채웁니다 (신뢰도는 닉네임 옆 ★로 표시).`,
   },
   {
     title: "14일 매일 체크인 + 스크린샷",
@@ -60,6 +64,15 @@ const GUARANTEES = [
   "크레딧은 판매하지 않습니다 — 결제 금액은 크레딧으로 바뀌지 않고, 테스터 보상은 회사가 지급합니다",
 ];
 
+const HIGHLIGHTS = [
+  {
+    value: `${PAID_TESTER_RECOMMENDED_COUNT}명 ${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`,
+    label: "Google 요건 12명에 이탈 대비 2명 (부가세 포함)",
+  },
+  { value: "매일 증빙", label: "14일 동안 실기기 실행 화면 스크린샷 1장씩" },
+  { value: "미완주 시트 환불", label: "못 채운 시트·이탈한 시트·이의가 인용된 시트" },
+] as const;
+
 const REFUND_SUMMARY = [
   ["테스터 참여 전 · 결제 7일 이내", "100% 환불"],
   ["결제 후 7일까지 채워지지 않은 시트", "해당 시트 100% 자동 환불"],
@@ -67,7 +80,12 @@ const REFUND_SUMMARY = [
   ["완주 후 확정된 시트", "환불 불가 (서비스 제공 완료)"],
 ] as const;
 
-export default async function PaidTestersPage() {
+export default async function PaidTestersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ app?: string }>;
+}) {
+  const { app: requestedApp } = await searchParams;
   const user = await getCurrentUser();
   const orderingOpen = canOrderPaidTesters(user);
 
@@ -93,37 +111,52 @@ export default async function PaidTestersPage() {
     apps = appsRes.data ?? [];
     orders = (ordersRes.data ?? []) as unknown as OrderRow[];
   }
+  // 앱 관리 화면·급구 알림에서 들어오면 그 앱을 골라 둔다 (내 주문 가능 앱일 때만)
+  const requestedAppId = Number(requestedApp);
+  const hasRequestedApp = Number.isSafeInteger(requestedAppId) && requestedAppId > 0;
+  const initialAppId = apps.some((a) => a.id === requestedAppId) ? requestedAppId : undefined;
+  // 고른 앱이 신청 대상이 아니면 다른 앱이 골라진 채 결제되지 않도록 알린다
+  const requestedAppUnavailable = hasRequestedApp && initialAppId === undefined && apps.length > 0;
+  const loginNext = hasRequestedApp ? `/paid-testers?app=${requestedAppId}` : "/paid-testers";
 
   return (
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-trust-600 text-xs font-semibold">PAID TESTERS</p>
+          <p className="text-spark-600 text-xs font-semibold">급구 · 유료 테스터</p>
           {!PAID_TESTERS_PUBLIC_ORDERING && (
             <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
               결제 오픈 대기
             </span>
           )}
         </div>
-        <h1 className="mt-1 text-3xl font-bold text-neutral-900">
-          테스터가 부족할 때, 1명당 {PRICE_LABEL}
+        <h1 className="mt-2 text-3xl leading-tight font-bold text-neutral-900">
+          테스터는 부탁하는 게 아니라,
+          <br />
+          <span className="text-trust-600">내 앱에 투자하는 겁니다</span>
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          품앗이로 못 채운 인원을 회사가 모집·관리하는 커뮤니티 테스터가 채웁니다. 1명당{" "}
-          {PRICE_LABEL}
-          (부가세 포함), 14일간 매일 실기기 체크인. 완주한 시트만 과금합니다.
+        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+          단톡방에 부탁하고 답을 기다리던 14일 대신, 매일 앱을 열고 스크린샷으로 증빙을 남기는
+          테스터와 14일을 채우세요. 회사가 모집·관리하는 커뮤니티 테스터가 1명당 {PRICE_LABEL}
+          (부가세 포함)에 참여합니다. 급구를 신청하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이
+          갑니다.
         </p>
 
-        <section className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <h2 className="text-sm font-bold text-amber-900">결제 금액은 어디에 쓰이나요</h2>
-          <p className="mt-2 text-sm leading-relaxed text-amber-900">
-            결제 금액은 14일을 완주한 테스터의 보상(시트당 최대 {formatKrw(SEAT_REWARD_MAX)} 크레딧
-            → 기프티콘·네이버페이 포인트)으로 돌아갑니다. Tester Match 는 그 사이에 드는 결제
-            수수료와 운영비용만 사용합니다. 수익을 늘리기 위한 서비스가 아니라, 테스터가 테스트하고
-            보상을 받아 가고 개발자가 Google Play 요건을 채우도록 잇는 서비스입니다.
-          </p>
-        </section>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {HIGHLIGHTS.map((h) => (
+            <div key={h.value} className="rounded-xl border border-neutral-200 bg-white p-4">
+              <p className="tabular text-lg font-bold text-neutral-900">{h.value}</p>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-600">{h.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <FeeBreakdown className="mt-8" />
+        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+          수익을 늘리려고 만든 서비스가 아닙니다. 개발자는 Google Play 요건을 채우고, 테스터는 하루
+          1분의 체크인으로 보상을 받아 가도록 둘 사이를 잇는 데 결제 금액을 씁니다.
+        </p>
 
         <section className="mt-10">
           <h2 className="text-lg font-bold text-neutral-900">진행 방식</h2>
@@ -176,7 +209,7 @@ export default async function PaidTestersPage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-neutral-900">신청하기</h2>
+          <h2 className="text-lg font-bold text-neutral-900">급구 신청하기</h2>
           {!user ? (
             <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
               <p className="text-sm text-neutral-600">
@@ -188,7 +221,7 @@ export default async function PaidTestersPage() {
                 </p>
               )}
               <Link
-                href="/auth/login?next=/paid-testers"
+                href={`/auth/login?next=${encodeURIComponent(loginNext)}`}
                 className="bg-trust-600 hover:bg-trust-700 mt-3 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
               >
                 로그인
@@ -208,7 +241,21 @@ export default async function PaidTestersPage() {
               </Link>
             </div>
           ) : (
-            <OrderForm apps={apps} balance={user.balance ?? 0} orderingOpen={orderingOpen} />
+            <>
+              {requestedAppUnavailable && (
+                <p className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  선택한 앱은 지금 급구를 신청할 수 없습니다(모집중 상태가 아님). 아래에서 신청할
+                  앱을 다시 골라주세요.
+                </p>
+              )}
+              <OrderForm
+                key={initialAppId ?? "none"}
+                apps={apps}
+                initialAppId={initialAppId}
+                balance={user.balance ?? 0}
+                orderingOpen={orderingOpen}
+              />
+            </>
           )}
         </section>
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
+import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 import {
   REDEMPTION_MAX_CREDITS,
   REDEMPTION_MIN_CREDITS,
@@ -13,7 +14,12 @@ import {
   REWARD_KINDS,
   REWARD_PROCESSING_BUSINESS_DAYS,
 } from "@/lib/rewards";
-import { SEAT_REWARD_MAX, SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
+import {
+  SEAT_REWARDS,
+  SEAT_REWARD_MAX,
+  SEAT_REWARD_MAX_AT_COMPLETION,
+  SEAT_REWARD_SUMMARY,
+} from "@/lib/seat-reward-rules";
 
 export const metadata = {
   alternates: { canonical: "/rewards" },
@@ -35,10 +41,21 @@ export default async function RewardsPage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <p className="text-trust-600 text-xs font-semibold">REWARDS</p>
-        <h1 className="mt-1 text-3xl font-bold text-neutral-900">테스트하고 보상을 받습니다</h1>
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
-          💰 유료 테스터 시트에 참여해 14일을 완주하면 크레딧이 적립됩니다. 크레딧은 회사가 지급하는
-          테스트 보상이며, 아래 보상으로만 바꿀 수 있습니다. 구매하거나 현금으로 바꿀 수는 없습니다.
+        <h1 className="mt-1 text-3xl leading-tight font-bold text-neutral-900">
+          하루 1분, 출시 전 앱을 먼저 쓰고
+          <br />
+          <span className="text-trust-600">커피 한 잔을 모읍니다</span>
+        </h1>
+        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+          💰 급구 시트에 참여하면 매일 앱을 열고 스크린샷 1장으로 체크인합니다. 하루 1분이면
+          충분합니다. 14일을 완주하면 앱 하나에 최대 {formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)}{" "}
+          크레딧(앱이 출시되면 +{SEAT_REWARDS.launch})이 쌓이고, {formatKrw(REDEMPTION_MIN_CREDITS)}{" "}
+          크레딧부터 커피 기프티콘이나 네이버페이 포인트로 바꿀 수 있습니다.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+          회사는 개발자가 내는 테스터 1명 이용료 {formatKrw(PAID_TESTER_PRICE_KRW)}원 가운데 가장 큰
+          몫을 여러분의 보상에 씁니다. 크레딧은 회사가 지급하는 테스트 보상이라 아래 보상으로만 바꿀
+          수 있고, 구매하거나 현금으로 바꿀 수는 없습니다.
         </p>
 
         <section className="mt-10">

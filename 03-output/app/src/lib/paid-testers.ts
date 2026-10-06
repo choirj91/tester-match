@@ -6,6 +6,8 @@
 export const PAID_TESTER_PRICE_KRW = 1100;
 export const PAID_TESTER_MIN_COUNT = 1;
 export const PAID_TESTER_MAX_COUNT = 30;
+/** 주문 폼 기본 인원 — Google 요건 12명 + 14일 사이 이탈 대비 2명 */
+export const PAID_TESTER_RECOMMENDED_COUNT = 14;
 
 export type PaidOrderStatus =
   | "pending"

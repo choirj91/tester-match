@@ -53,6 +53,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ ok: false, message: "잘못된 요청" }, { status: 400 });
   }
 
+  // 급구는 유료 테스터 결제가 확정될 때만 켜진다 — 앱 등록자가 직접 켜고 끌 수 없다
+  if (payload.is_boost !== undefined) {
+    return NextResponse.json(
+      { ok: false, message: "급구는 유료 테스터를 신청하면 켜집니다. 급구 메뉴에서 신청해주세요." },
+      { status: 403 },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
 
   // 닉네임 변경은 users 테이블 직접 갱신 (apps 컬럼 아님)
@@ -64,17 +72,6 @@ export async function PATCH(req: Request, { params }: Ctx) {
   // 공용 테스터 그룹 고정 (F-GRP-01) — 수정 시에도 클라이언트 값 무시
   if (Object.prototype.hasOwnProperty.call(appPatch, "google_group_url")) {
     (appPatch as { google_group_url?: string }).google_group_url = TESTER_GROUP_URL;
-  }
-
-  // 급구 자동 만료 — 7일 후 boost_deadline_at 세팅 / 해제 시 null
-  if (Object.prototype.hasOwnProperty.call(appPatch, "is_boost")) {
-    const patch = appPatch as { is_boost?: boolean; boost_deadline_at?: string | null };
-    if (patch.is_boost === true) {
-      const deadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      patch.boost_deadline_at = deadline.toISOString();
-    } else if (patch.is_boost === false) {
-      patch.boost_deadline_at = null;
-    }
   }
 
   if (Object.keys(appPatch).length > 0) {

@@ -366,6 +366,12 @@ export default async function BrowsePage({
                     급구 · <span className="tabular text-neutral-500">{boostApps.length}</span>
                   </h2>
                   <span className="text-[11px] text-neutral-400">매번 랜덤 순서</span>
+                  <Link
+                    href="/paid-testers"
+                    className="ml-auto text-[11px] font-semibold text-neutral-500 hover:text-neutral-700"
+                  >
+                    내 앱 급구 신청 →
+                  </Link>
                 </div>
                 {view === "card" ? <CardGrid apps={boostApps} seats={seats} /> : <ListView apps={boostApps} seats={seats} />}
               </section>
