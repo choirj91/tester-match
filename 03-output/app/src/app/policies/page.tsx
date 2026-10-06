@@ -25,7 +25,7 @@ const ITEMS = [
   {
     href: "/policies/credits" as const,
     title: "크레딧 운영 정책",
-    desc: "적립·사용·만료·페널티 등 크레딧 운영 규정.",
+    desc: "보상 적립·교환(기프티콘·네이버페이 포인트)·만료·페널티 등 크레딧 운영 규정. 구매·양도·현금 환급 불가.",
   },
 ];
 
@@ -37,7 +37,8 @@ export default async function PoliciesIndex() {
       <main className="mx-auto max-w-3xl px-6 py-12">
         <h1 className="text-3xl font-bold text-neutral-900">정책 안내</h1>
         <p className="mt-2 text-sm text-neutral-600">
-          모든 문서는 자체 초안 v0.1 이며, 정식 출시 전 변호사 검토 후 v1.0 시행 예정.
+          낰낰컴퍼니가 운영하는 Tester Match 의 이용 조건·개인정보 처리·환불·크레딧 운영 기준입니다. 변경 시
+          시행 7일 전에 게시판 공지로 안내합니다.
         </p>
 
         <ul className="mt-8 space-y-3">

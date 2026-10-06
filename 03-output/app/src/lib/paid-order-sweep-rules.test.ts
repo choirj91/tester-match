@@ -191,11 +191,11 @@ describe("decideCanceledOrderCheck — 취소된 주문에 들어온 결제 찾�
 });
 
 describe("expectedRefundKrw", () => {
-  const community = { status: "completed", fulfillment: "community" as const, tester_count: 5, amount_krw: 5000 };
+  const community = { status: "completed", fulfillment: "community" as const, tester_count: 5, amount_krw: 5500 }; // 1,100원 × 5
   const none = { completed: 0, forfeited: 0 };
 
   test("커뮤니티 주문은 완주하지 않은 시트만큼 환불 대상이다", () => {
-    expect(expectedRefundKrw(community, { completed: 3, forfeited: 0 })).toBe(2000);
+    expect(expectedRefundKrw(community, { completed: 3, forfeited: 0 })).toBe(2200);
   });
 
   test("전 시트 완주면 환불 대상이 없다", () => {
@@ -203,7 +203,7 @@ describe("expectedRefundKrw", () => {
   });
 
   test("몰수된 시트는 완주 상태여도 환불 대상이다", () => {
-    expect(expectedRefundKrw(community, { completed: 5, forfeited: 2 })).toBe(2000);
+    expect(expectedRefundKrw(community, { completed: 5, forfeited: 2 })).toBe(2200);
   });
 
   test("완주 수가 시트 수를 넘어도 음수가 되지 않는다", () => {
@@ -211,18 +211,18 @@ describe("expectedRefundKrw", () => {
   });
 
   test("완주 없이 취소된 주문은 전액 환불 대상이다", () => {
-    expect(expectedRefundKrw({ ...community, status: "canceled" }, none)).toBe(5000);
+    expect(expectedRefundKrw({ ...community, status: "canceled" }, none)).toBe(5500);
   });
 
   test("운영자 처리 주문은 취소·환불이면 전액, 완료면 0", () => {
     const operator = { ...community, fulfillment: "operator" as const };
-    expect(expectedRefundKrw({ ...operator, status: "canceled" }, none)).toBe(5000);
-    expect(expectedRefundKrw({ ...operator, status: "refunded" }, none)).toBe(5000);
+    expect(expectedRefundKrw({ ...operator, status: "canceled" }, none)).toBe(5500);
+    expect(expectedRefundKrw({ ...operator, status: "refunded" }, none)).toBe(5500);
     expect(expectedRefundKrw({ ...operator, status: "completed" }, none)).toBe(0);
   });
 
   test("전액 환불된 커뮤니티 주문은 전액이 환불 대상이다", () => {
-    expect(expectedRefundKrw({ ...community, status: "refunded" }, none)).toBe(5000);
+    expect(expectedRefundKrw({ ...community, status: "refunded" }, none)).toBe(5500);
   });
 });
 

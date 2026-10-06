@@ -10,11 +10,12 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { PAID_SEAT_LAUNCH_LEDGER_REF, PAID_SEAT_LEDGER_REF, appendLedger } from "@/lib/credits";
+import { PAID_SEAT_LAUNCH_LEDGER_REF, PAID_SEAT_LEDGER_REF, appendLedger, formatKrw } from "@/lib/credits";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { seatRewardDisputedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
 import { noteRefundFailure, refundSeats, settleOrderIfDone } from "@/lib/paid-seats";
+import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
 import {
   DISPUTE_CATEGORIES,
@@ -326,8 +327,8 @@ export async function forfeitSeatReward(
     title: "이의가 인용되었습니다",
     body:
       refund.mode === "credits"
-        ? "해당 시트의 테스터 보상은 지급되지 않으며 1,000 크레딧이 환급되었습니다."
-        : "해당 시트의 테스터 보상은 지급되지 않으며 1,000원은 영업일 3일 내 부분 취소됩니다.",
+        ? `해당 시트의 테스터 보상은 지급되지 않으며 ${formatKrw(PAID_TESTER_PRICE_KRW)} 크레딧이 복구되었습니다.`
+        : `해당 시트의 테스터 보상은 지급되지 않으며 ${formatKrw(PAID_TESTER_PRICE_KRW)}원은 영업일 3일 내 부분 취소됩니다.`,
     link: `/console/orders/${row.order_id}`,
   });
   await createNotification({

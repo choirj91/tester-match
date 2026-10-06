@@ -10,12 +10,14 @@ import {
 } from "@/lib/paid-seats";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { redemptionRequestedEmail } from "@/lib/email-templates";
+import { REWARD_CATALOG, REWARD_KINDS, rewardLedgerDescription } from "@/lib/rewards";
 import { CONTACT_EMAIL } from "@/lib/site";
 import { runAfterResponse } from "@/lib/wait-until";
 
 export const runtime = "edge";
 
 const BodySchema = z.object({
+  kind: z.enum(REWARD_KINDS).default("gifticon"),
   amount: z.coerce
     .number()
     .int()
@@ -30,7 +32,7 @@ const BodySchema = z.object({
   contact: z
     .string()
     .trim()
-    .regex(/^01[016789]-?\d{3,4}-?\d{4}$/, "기프티콘을 받을 휴대폰 번호를 입력해주세요 (예: 010-1234-5678)."),
+    .regex(/^01[016789]-?\d{3,4}-?\d{4}$/, "보상을 받을 휴대폰 번호를 입력해주세요 (예: 010-1234-5678)."),
   note: z.string().trim().max(200).default(""),
 });
 
@@ -40,7 +42,7 @@ async function sha256Hex(text: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** 기프티콘 교환 신청 — 원장 선차감 후 신청 레코드 (ADR-0012). */
+/** 보상 교환 신청(기프티콘·네이버페이 포인트) — 원장 선차감 후 신청 레코드 (ADR-0012, ADR-0017). */
 export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {
@@ -85,7 +87,7 @@ export async function POST(req: Request) {
     amount: -payload.amount,
     type: "spend",
     refType: REDEMPTION_LEDGER_REF,
-    description: "기프티콘 교환 신청",
+    description: rewardLedgerDescription(payload.kind),
     capRedeemable: true,
   });
   if (!ledger.ok) {
@@ -96,6 +98,7 @@ export async function POST(req: Request) {
     .from("credit_redemptions")
     .insert({
       user_id: user.id,
+      kind: payload.kind,
       amount: payload.amount,
       contact,
       contact_hash: contactHash,
@@ -111,7 +114,7 @@ export async function POST(req: Request) {
       amount: payload.amount,
       type: "refund",
       refType: REDEMPTION_LEDGER_REF,
-      description: "교환 신청 실패 환급",
+      description: "교환 신청 실패 복구",
     });
     if (!refund.ok) console.error("[redemptions/POST] refund after failure failed", refund.message);
     const message =
@@ -125,6 +128,7 @@ export async function POST(req: Request) {
     redemptionId: redemption.id,
     nickname: user.nickname,
     email: user.email,
+    kindLabel: REWARD_CATALOG[payload.kind].label,
     amount: payload.amount,
     contact,
     note: payload.note,

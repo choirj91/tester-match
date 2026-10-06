@@ -459,7 +459,7 @@ export async function createCreditsPaidOrder(args: {
     return {
       ok: false,
       message: refund.ok
-        ? "주문 확정에 실패해 크레딧을 환급했습니다. 다시 시도해주세요."
+        ? "주문 확정에 실패해 크레딧을 복구했습니다. 다시 시도해주세요."
         : "주문 확정에 실패했습니다. 관리자에게 문의해주세요.",
     };
   }

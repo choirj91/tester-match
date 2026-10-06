@@ -30,7 +30,7 @@ Google Play Closed Testing 12명/14일 요건을 해소하는 한국형 품앗�
 |---|---|---|
 | 1 | **한국 우선** (KRW, 한국어, KST). 영어권은 v2 | 시장 사이징·매출·UI 모두 한국 기준 |
 | 2 | **Cloudflare Pages + Supabase**. Vercel 채택 X | 상업 약관 위반·bandwidth 제한 |
-| 3 | **1원 = 1 크레딧, 1매칭 = 1,000원** (테스터 800 + 플랫폼 200) | 회계·환급·외부 전환(v3) 호환 깨짐 |
+| 3 | **1원 = 1 크레딧, 테스터 시트 1명 = 1,100원(부가세 포함)**. 크레딧은 보상 전용 — 구매·양도·현금 환급 불가, 기프티콘·네이버페이 포인트 교환만 (ADR-0017, ADR-0003 개정) | 회계·환불 깨짐, PG 심사에서 포인트충전·상품권 업종으로 판정 |
 
 근거: [01-source/decisions/](01-source/decisions/) — Context/Decision/Why/Consequences
 

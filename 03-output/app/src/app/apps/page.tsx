@@ -4,7 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { SiteHeader } from "@/components/site-header";
 import { APP_STATUS_LABEL, type AppStatus } from "@/lib/app-status";
-import { canOrderPaidTesters } from "@/lib/paid-testers";
+import { formatKrw } from "@/lib/credits";
+import { PAID_TESTERS_PUBLIC_ORDERING, PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 
 export const runtime = "edge";
 
@@ -54,17 +55,22 @@ export default async function AppsPage() {
           </Link>
         </div>
 
-        {canOrderPaidTesters(user) && (
+        {user && (
           <Link
             href="/paid-testers"
             className="border-trust-500/30 bg-trust-50 hover:border-trust-500 mt-6 block rounded-2xl border px-5 py-4 transition"
           >
             <p className="text-sm font-semibold text-neutral-900">
               테스터가 부족하신가요? — 유료 테스터 투입
+              {!PAID_TESTERS_PUBLIC_ORDERING && (
+                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                  결제 오픈 대기
+                </span>
+              )}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-neutral-600">
-              커뮤니티 테스터가 1명당 1,000원에 14일간 매일 스크린샷 체크인. 완주한 시트만
-              과금됩니다. →
+              회사가 모집·관리하는 커뮤니티 테스터가 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
+              원(부가세 포함)에 14일간 매일 스크린샷 체크인. 완주한 시트만 과금됩니다. →
             </p>
           </Link>
         )}

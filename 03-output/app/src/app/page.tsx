@@ -4,6 +4,9 @@ import { SiteHeader } from "@/components/site-header";
 import { AppScrollBanner } from "@/components/app-scroll-banner";
 import { OnboardingProgress } from "@/components/onboarding-progress";
 import { getCurrentUser } from "@/lib/auth";
+import { formatKrw } from "@/lib/credits";
+import { PAID_TESTERS_PUBLIC_ORDERING, PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
+import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = 'edge';
@@ -31,8 +34,8 @@ const TESTER_CARDS = [
     desc: "Google Play에 올라오기 전, 아직 세상에 공개되지 않은 앱을 당신이 먼저 씁니다. 출시 직전의 앱은 어디서도 볼 수 없습니다.",
   },
   {
-    title: "테스트하고 돈도 법니다",
-    desc: "곧 오픈되는 급구 서비스에서는 테스트 완주 시 100원이 지급됩니다. 새로운 것을 구경하면서 크레딧도 쌓이는 구조.",
+    title: "테스트하고 보상도 받습니다",
+    desc: `💰 유료 테스터 시트에 참여해 14일을 완주하면 크레딧이 쌓입니다 (시트당 최대 ${SEAT_REWARD_MAX}). 크레딧은 기프티콘이나 네이버페이 포인트로 바꿀 수 있습니다.`,
   },
   {
     title: "개발자에게 직접 닿습니다",
@@ -66,7 +69,11 @@ const STEPS = [
 const FAQ = [
   {
     q: "테스터로 참여하면 어떤 혜택이 있나요?",
-    a: "출시 전 앱을 누구보다 먼저 체험할 수 있고, 참여할수록 신뢰도 ★가 쌓입니다. 크레딧은 💰 유료 테스터 시트에 참여했을 때만 적립됩니다 (시트당 최대 700, 완주 후 지급). 크레딧은 내 앱의 테스터 시트 구매나 기프티콘 교환에 쓸 수 있습니다.",
+    a: `출시 전 앱을 누구보다 먼저 체험할 수 있고, 참여할수록 신뢰도 ★가 쌓입니다. 크레딧은 💰 유료 테스터 시트에 참여했을 때만 적립됩니다 (시트당 최대 ${SEAT_REWARD_MAX}, 완주 후 지급). 크레딧은 기프티콘·네이버페이 포인트로 바꾸거나 내 앱의 테스터 시트를 여는 데 쓸 수 있고, 구매하거나 현금으로 바꿀 수는 없습니다.`,
+  },
+  {
+    q: "유료 테스터 결제 금액은 어디에 쓰이나요?",
+    a: `테스터 1명당 ${formatKrw(PAID_TESTER_PRICE_KRW)}원(부가세 포함)이며, 완주한 시트만 과금됩니다. 결제 금액은 테스터 보상과 결제 수수료·운영비용에 쓰입니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
   },
   {
     q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
@@ -311,6 +318,36 @@ export default async function HomePage() {
               </Link>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* Paid testers */}
+      <section className="mx-auto max-w-4xl px-6 py-16">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              테스터가 부족할 때
+            </span>
+            {!PAID_TESTERS_PUBLIC_ORDERING && (
+              <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800">
+                결제 오픈 대기
+              </span>
+            )}
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-neutral-900">
+            유료 테스터 — 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}원
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-700">
+            품앗이로 못 채운 인원을 회사가 모집·관리하는 커뮤니티 테스터가 채웁니다. 14일간 매일 실기기
+            스크린샷 체크인, 완주한 시트만 과금. 결제 금액은 테스터 보상과 결제 수수료·운영비용에 쓰이며,
+            크레딧은 판매하지 않습니다.
+          </p>
+          <Link
+            href="/paid-testers"
+            className="mt-5 inline-flex rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+          >
+            유료 테스터 자세히 보기 →
+          </Link>
         </div>
       </section>
 

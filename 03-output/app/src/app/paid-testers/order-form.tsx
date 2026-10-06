@@ -12,6 +12,8 @@ type Props = {
   apps: Array<{ id: number; name: string }>;
   /** 보유 크레딧 — 결제 금액 이상이면 크레딧 결제 선택지 노출 */
   balance: number;
+  /** 주문 게이트 — false 면 폼은 보이되 신청 버튼 대신 "오픈 준비 중" 안내 (ADR-0017 오픈 대기) */
+  orderingOpen: boolean;
 };
 
 type PayWith = "card" | "credits";
@@ -25,7 +27,7 @@ const NOTICES = [
   "테스터에게 리뷰·별점을 요청하지 않습니다. 완주한 시트만 과금됩니다 — 결제 7일 내 못 채운 시트, 충원 마감 후 이탈한 시트, 이의가 인용된 시트는 환불됩니다.",
 ];
 
-export function OrderForm({ apps, balance }: Props) {
+export function OrderForm({ apps, balance, orderingOpen }: Props) {
   const router = useRouter();
   const [appId, setAppId] = useState<number>(apps[0]?.id ?? 0);
   const [count, setCount] = useState<number>(PAID_TESTER_MIN_COUNT);
@@ -152,7 +154,7 @@ export function OrderForm({ apps, balance }: Props) {
             checked={effectivePayWith === "card"}
             onChange={() => setPayWith("card")}
           />
-          신용·체크카드
+          신용·체크카드 (KG이니시스)
         </label>
         <label
           className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-neutral-400"}`}
@@ -164,7 +166,7 @@ export function OrderForm({ apps, balance }: Props) {
             checked={effectivePayWith === "credits"}
             onChange={() => setPayWith("credits")}
           />
-          보유 크레딧 사용 (잔액 {balance.toLocaleString("ko-KR")})
+          보상으로 적립한 크레딧 사용 (잔액 {balance.toLocaleString("ko-KR")})
           {!canUseCredits && " — 잔액 부족"}
         </label>
       </div>
@@ -196,12 +198,25 @@ export function OrderForm({ apps, balance }: Props) {
 
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
+      {!orderingOpen && (
+        <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+          카드 결제 오픈 준비 중입니다 (결제대행사 심사 진행 중). 오픈하면 게시판 공지로 알려드리고, 이
+          화면에서 바로 신청할 수 있습니다.
+        </p>
+      )}
+
       <button
         type="submit"
-        disabled={submitting || !appId || !allAgreed}
+        disabled={!orderingOpen || submitting || !appId || !allAgreed}
         className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
       >
-        {submitting ? "주문 생성 중…" : effectivePayWith === "credits" ? "크레딧으로 시트 열기" : "결제하기"}
+        {!orderingOpen
+          ? "결제 오픈 준비 중"
+          : submitting
+            ? "주문 생성 중…"
+            : effectivePayWith === "credits"
+              ? "크레딧으로 시트 열기"
+              : "결제하기"}
       </button>
     </form>
   );

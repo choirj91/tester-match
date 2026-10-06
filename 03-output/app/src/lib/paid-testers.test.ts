@@ -28,8 +28,8 @@ describe("paidTesterAmountKrw", () => {
     expect(paidTesterAmountKrw(1)).toBe(PAID_TESTER_PRICE_KRW);
   });
 
-  test("10명은 10,000원이다", () => {
-    expect(paidTesterAmountKrw(10)).toBe(10_000);
+  test("10명은 11,000원이다 (1,100원 × 10)", () => {
+    expect(paidTesterAmountKrw(10)).toBe(11_000);
   });
 });
 
@@ -48,7 +48,7 @@ describe("paidTesterOrderName", () => {
 });
 
 describe("newPaidOrderCode", () => {
-  test("포트원 결제 ID 규칙(KCP: ASCII, 최대 40자)을 만족한다", () => {
+  test("포트원 결제 ID 규칙(이니시스·KCP: ASCII, 최대 40자)을 만족한다", () => {
     const code = newPaidOrderCode();
     expect(code).toMatch(/^pt_[0-9a-f]{32}$/);
     expect(code.length).toBeLessThanOrEqual(40);
