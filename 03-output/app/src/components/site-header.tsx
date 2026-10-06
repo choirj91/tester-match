@@ -15,6 +15,7 @@ const NAV: readonly NavItem[] = [
   { href: "/my-tests", label: "내 테스트" },
   { href: "/my-reviews", label: "맞리뷰" },
   { href: "/apps", label: "내 앱" },
+  { href: "/rewards", label: "보상" },
   { href: "/credits", label: "크레딧" },
   { href: "/profile", label: "프로필" },
 ];

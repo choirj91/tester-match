@@ -15,6 +15,12 @@ export function SiteFooter() {
           <Link href="/stats" className="text-neutral-600 hover:text-neutral-900">
             활동 랭킹
           </Link>
+          <Link href="/paid-testers" className="text-neutral-600 hover:text-neutral-900">
+            유료 테스터
+          </Link>
+          <Link href="/rewards" className="text-neutral-600 hover:text-neutral-900">
+            테스터 보상
+          </Link>
           <Link href="/policies/terms" className="text-neutral-600 hover:text-neutral-900">
             이용약관
           </Link>
@@ -23,6 +29,9 @@ export function SiteFooter() {
           </Link>
           <Link href="/policies/refund" className="text-neutral-600 hover:text-neutral-900">
             환불 정책
+          </Link>
+          <Link href="/policies/credits" className="text-neutral-600 hover:text-neutral-900">
+            크레딧 운영 정책
           </Link>
           <Link href="/inquiries" className="text-neutral-600 hover:text-neutral-900">
             문의

@@ -12,7 +12,7 @@ import { screenshotStore } from "@/lib/screenshot-store";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureOrderSlots } from "@/lib/console-data";
-import { appendLedger } from "@/lib/credits";
+import { appendLedger, formatKrw } from "@/lib/credits";
 import { fetchAll } from "@/lib/fetch-all";
 import { createNotification, createNotificationsBulk } from "@/lib/notifications";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
@@ -587,7 +587,7 @@ export async function closeOrderSeats(
       title: `미충원 시트 ${unfilled}명 마감 — 환불 처리`,
       body:
         refund.mode === "credits"
-          ? `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")} 크레딧이 환급되었습니다.`
+          ? `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")} 크레딧이 복구되었습니다.`
           : `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")}원은 영업일 3일 내 결제 수단으로 부분 취소됩니다.`,
       link: `/console/orders/${orderId}`,
     });
@@ -609,8 +609,8 @@ function seatDropRefundBody(appName: string, refund: SeatRefundResult): string {
   const lead = `"${appName}" 시트 테스터가 완주하지 못했습니다.`;
   if (!refund.ok) return `${lead} 이 시트는 환불 대상이며 운영팀이 확인 후 처리합니다.`;
   return refund.mode === "credits"
-    ? `${lead} 1,000 크레딧이 환급되었습니다.`
-    : `${lead} 1,000원은 영업일 3일 내 부분 취소됩니다.`;
+    ? `${lead} ${formatKrw(PAID_TESTER_PRICE_KRW)} 크레딧이 복구되었습니다.`
+    : `${lead} ${formatKrw(PAID_TESTER_PRICE_KRW)}원은 영업일 3일 내 부분 취소됩니다.`;
 }
 
 /**

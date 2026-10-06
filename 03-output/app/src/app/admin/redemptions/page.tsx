@@ -2,12 +2,14 @@ import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { formatKrw } from "@/lib/credits";
+import { REWARD_CATALOG, type RewardKind } from "@/lib/rewards";
 import { RedemptionActions } from "./redemption-actions";
 
-export const metadata = { title: "기프티콘 교환" };
+export const metadata = { title: "보상 교환" };
 
 type Row = {
   id: number;
+  kind: RewardKind;
   amount: number;
   status: "requested" | "done" | "rejected";
   contact: string;
@@ -39,7 +41,7 @@ export default async function AdminRedemptionsPage() {
   const { data, error } = await supabase
     .from("credit_redemptions")
     .select(
-      "id, amount, status, contact, note, admin_note, created_at, processed_at, users!credit_redemptions_user_id_fkey(nickname, email)",
+      "id, kind, amount, status, contact, note, admin_note, created_at, processed_at, users!credit_redemptions_user_id_fkey(nickname, email)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
@@ -51,11 +53,11 @@ export default async function AdminRedemptionsPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">기프티콘 교환</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">보상 교환</h1>
         <p className="mt-1 text-sm text-neutral-600">
           대기 <strong>{pending.length}건</strong> · 발송 예정 금액{" "}
-          <strong>{formatKrw(pendingKrw)}원</strong>. 기프티콘을 연락처로 직접 보낸 뒤 [발송 완료].
-          신청 시 크레딧은 이미 차감돼 있고, 거절하면 자동 환급.
+          <strong>{formatKrw(pendingKrw)}원</strong>. 기프티콘·네이버페이 포인트 쿠폰을 연락처로 직접 보낸 뒤 [발송 완료].
+          신청 시 크레딧은 이미 차감돼 있고, 거절하면 자동 복구.
         </p>
 
         {error ? (
@@ -75,7 +77,7 @@ export default async function AdminRedemptionsPage() {
                         {LABEL[r.status]}
                       </span>
                       <p className="font-semibold text-neutral-900">
-                        {formatKrw(r.amount)} 크레딧 — {r.users?.nickname ?? "-"}
+                        {REWARD_CATALOG[r.kind]?.label ?? r.kind} {formatKrw(r.amount)} 크레딧 — {r.users?.nickname ?? "-"}
                       </p>
                     </div>
                     <p className="mt-1.5 text-xs text-neutral-600">

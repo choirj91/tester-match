@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import type { AppUser } from "@/lib/auth";
+import { CONTACT_EMAIL } from "@/lib/site";
 
 const NAV = [
   { href: "/policies/terms", label: "이용약관" },
@@ -45,9 +46,6 @@ export function PolicyLayout({ user, active, title, effectiveDate, children }: P
           <header className="border-b border-neutral-200 pb-6">
             <h1 className="text-3xl font-bold text-neutral-900">{title}</h1>
             <p className="mt-2 text-sm text-neutral-500">시행일: {effectiveDate}</p>
-            <div className="mt-4 rounded-lg bg-amber-500/10 px-4 py-3 text-xs text-amber-700">
-              <strong>법적 효력 안내:</strong> 본 문서는 자체 초안 v0.1 입니다. 정식 출시 전 변호사 검토를 거쳐 v1.0 시행 예정.
-            </div>
           </header>
 
           <div className="prose prose-neutral mt-8 max-w-none text-[15px] leading-relaxed text-neutral-800 [&_h2]:mt-10 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-neutral-900 [&_h3]:mt-6 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-neutral-900 [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_table]:my-4 [&_table]:w-full [&_table]:text-sm [&_th]:border [&_th]:border-neutral-200 [&_th]:bg-neutral-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_td]:border [&_td]:border-neutral-200 [&_td]:px-3 [&_td]:py-2 [&_strong]:font-semibold">
@@ -57,7 +55,7 @@ export function PolicyLayout({ user, active, title, effectiveDate, children }: P
           <footer className="mt-12 border-t border-neutral-200 pt-6 text-xs text-neutral-500">
             전체 정책: <Link href="/policies" className="underline hover:text-neutral-700">정책 인덱스</Link>
             {" · "}
-            문의: <a href="mailto:support@testermatch.com" className="underline hover:text-neutral-700">support@testermatch.com</a>
+            문의: <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-neutral-700">{CONTACT_EMAIL}</a>
           </footer>
         </article>
       </main>

@@ -95,7 +95,7 @@ describe("POST orders — 카드 결제", () => {
     expect(body).toMatchObject({ ok: true, paid: false });
     expect(body.order_code).toMatch(/^pt_[0-9a-f]{32}$/);
     expect(inserts(calls)).toHaveLength(1);
-    expect(inserts(calls)[0].values).toMatchObject({ order_code: body.order_code, tester_count: 3, amount_krw: 3000 });
+    expect(inserts(calls)[0].values).toMatchObject({ order_code: body.order_code, tester_count: 3, amount_krw: 3300 });
   });
 
   test.each([true, null])("크레딧이 차감된 주문(또는 확인 불가: %j)은 잇지 않고 새 주문을 만든다", async (creditsPaid) => {

@@ -9,6 +9,7 @@ import {
   REDEMPTION_MIN_CREDITS,
   REDEMPTION_UNIT_CREDITS,
 } from "@/lib/paid-seats";
+import { REWARD_CATALOG, type RewardKind } from "@/lib/rewards";
 import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 import { RedemptionForm } from "./redemption-form";
 
@@ -34,7 +35,7 @@ export default async function CreditsPage() {
       .in("status", ["held", "disputed"]),
     supabase
       .from("credit_redemptions")
-      .select("id, amount, status, created_at, processed_at")
+      .select("id, kind, amount, status, created_at, processed_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10),
@@ -46,7 +47,7 @@ export default async function CreditsPage() {
   const REDEMPTION_LABEL: Record<string, string> = {
     requested: "처리 대기",
     done: "발송 완료",
-    rejected: "거절 (환급)",
+    rejected: "거절 (복구)",
   };
 
   return (
@@ -56,9 +57,9 @@ export default async function CreditsPage() {
         <header>
           <h1 className="text-2xl font-bold text-neutral-900">크레딧</h1>
           <p className="mt-1 text-sm text-neutral-600">
-            💰 크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 구매자 확정 후 지급. 내 앱
-            테스터 구매(1,000 = 1명) 또는{" "}
-            {REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")} 이상 모아 기프티콘 교환.
+            💰 크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 구매자 확정 후 지급.{" "}
+            {REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")} 이상 모으면 기프티콘·네이버페이 포인트로 바꾸거나,
+            내 앱의 테스터 시트를 여는 데 쓸 수 있습니다. 구매·양도·현금 환급은 안 됩니다.
           </p>
         </header>
 
@@ -77,14 +78,14 @@ export default async function CreditsPage() {
               {formatKrw(user.balance)} <span className="text-lg font-semibold">크레딧</span>
             </p>
             <p className="mt-2 text-xs text-neutral-600">
-              테스터 구매에 사용 가능 ·{" "}
+              내 앱 테스터 시트 열기에 사용 가능 ·{" "}
               <Link href="/paid-testers" className="underline underline-offset-2">
                 내 앱에 테스터 투입 →
               </Link>
             </p>
           </div>
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">기프티콘 교환 가능</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">보상 교환 가능</p>
             <p className="mt-2 text-4xl font-bold text-amber-700 tabular">
               {formatKrw(redeemable)} <span className="text-lg font-semibold">크레딧</span>
             </p>
@@ -93,7 +94,12 @@ export default async function CreditsPage() {
         </div>
 
         <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-bold text-neutral-900">🎁 기프티콘 교환</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-base font-bold text-neutral-900">🎁 보상 교환 — 기프티콘 · 네이버페이 포인트</h2>
+            <Link href="/rewards" className="text-xs text-neutral-500 underline underline-offset-2">
+              보상 안내 →
+            </Link>
+          </div>
           <div className="mt-3">
             <RedemptionForm
               redeemable={redeemable}
@@ -106,7 +112,8 @@ export default async function CreditsPage() {
               {redemptions.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-2">
                   <span>
-                    {formatKrw(r.amount)} 크레딧 · {new Date(r.created_at).toLocaleDateString("ko-KR")}
+                    {REWARD_CATALOG[r.kind as RewardKind]?.label ?? r.kind} {formatKrw(r.amount)} 크레딧 ·{" "}
+                    {new Date(r.created_at).toLocaleDateString("ko-KR")}
                   </span>
                   <span className="text-xs font-semibold text-neutral-600">
                     {REDEMPTION_LABEL[r.status] ?? r.status}

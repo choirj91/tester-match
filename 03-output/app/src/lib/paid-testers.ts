@@ -1,9 +1,9 @@
 /**
  * 유료 운영자 테스터 상품 (ADR-0011) — 상수·헬퍼.
- * 단가는 ADR-0003 잠금 결정(1매칭 = 1,000원)을 따른다.
+ * 단가는 잠금 결정 3(ADR-0017: 테스터 시트 1명 = 1,100원, 부가세 포함)을 따른다.
  */
 
-export const PAID_TESTER_PRICE_KRW = 1000;
+export const PAID_TESTER_PRICE_KRW = 1100;
 export const PAID_TESTER_MIN_COUNT = 1;
 export const PAID_TESTER_MAX_COUNT = 30;
 
@@ -75,7 +75,7 @@ export function isReviewOrderer(user: OrderGateUser): boolean {
 
 /**
  * 주문 코드 — 포트원 결제 ID(paymentId)로 그대로 쓴다.
- * 결제 ID 규칙(NHN KCP): ASCII 만, 최대 40자 → "pt_" + 32자리 hex = 35자.
+ * 결제 ID 규칙(KG이니시스·NHN KCP 모두 안전): ASCII 만, 최대 40자 → "pt_" + 32자리 hex = 35자.
  */
 export function newPaidOrderCode(): string {
   return `pt_${crypto.randomUUID().replace(/-/g, "")}`;

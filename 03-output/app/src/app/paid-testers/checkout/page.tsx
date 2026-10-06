@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { canOrderPaidTesters, paidTesterOrderName } from "@/lib/paid-testers";
+import { formatKrw } from "@/lib/credits";
+import {
+  PAID_TESTER_PRICE_KRW,
+  canOrderPaidTesters,
+  paidTesterOrderName,
+} from "@/lib/paid-testers";
+import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 import { PayButton } from "./pay-button";
 
 export const metadata = {
@@ -61,8 +67,22 @@ export default async function CheckoutPage({
             {appName} — 유료 테스터 {order.tester_count}명 (14일)
           </p>
           <p className="mt-1 text-neutral-600">
-            결제 금액 <strong>{order.amount_krw.toLocaleString("ko-KR")}원</strong>
+            {order.tester_count}명 × {formatKrw(PAID_TESTER_PRICE_KRW)}원 = 결제 금액{" "}
+            <strong>{formatKrw(order.amount_krw)}원</strong> (부가세 포함)
           </p>
+          <p className="mt-1 text-xs text-neutral-500">
+            판매자 낰낰컴퍼니 · 신용·체크카드 (KG이니시스) · 주문번호 {order.order_code}
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+          결제 금액은 14일을 완주한 테스터의 보상(시트당 최대 {formatKrw(SEAT_REWARD_MAX)} 크레딧 →
+          기프티콘·네이버페이 포인트)으로 돌아가고, Tester Match 는 결제 수수료와 운영비용만
+          사용합니다. 완주한 시트만 과금되며, 못 채운 시트·이탈 시트는{" "}
+          <Link href="/policies/refund" className="underline underline-offset-2">
+            환불 정책
+          </Link>
+          에 따라 환불됩니다.
         </div>
 
         {storeId && channelKey ? (
@@ -74,7 +94,6 @@ export default async function CheckoutPage({
             amount={order.amount_krw}
             customerEmail={user.email}
             customerName={user.nickname}
-            customerId={`tm_user_${user.id}`}
           />
         ) : (
           <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed text-amber-900">

@@ -6,7 +6,7 @@ export const metadata = { title: "개인정보처리방침" };
 export default async function PrivacyPage() {
   const user = await getCurrentUser();
   return (
-    <PolicyLayout user={user} active="/policies/privacy" title="개인정보처리방침" effectiveDate="2026년 5월 5일">
+    <PolicyLayout user={user} active="/policies/privacy" title="개인정보처리방침" effectiveDate="2026년 10월 13일">
       <h2>제1조 (수집하는 개인정보 항목)</h2>
       <table>
         <thead>
@@ -16,7 +16,8 @@ export default async function PrivacyPage() {
           <tr><td>필수</td><td>이메일, Google 프로필(이름·사진)</td><td>Google 계정으로 회원가입</td></tr>
           <tr><td>필수</td><td>이메일, 비밀번호(암호화 저장), 닉네임, 카카오톡 닉네임</td><td>이메일로 회원가입</td></tr>
           <tr><td>자동</td><td>IP, 브라우저, 디바이스 정보</td><td>서비스 이용 중</td></tr>
-          <tr><td>결제</td><td>결제 수단 식별값(PG 거래 ID)</td><td>결제 시</td></tr>
+          <tr><td>결제</td><td>결제 수단 식별값(PG 거래 ID), 주문 금액·주문번호</td><td>결제 시</td></tr>
+          <tr><td>결제</td><td>구매자 이름(닉네임)·이메일·휴대폰 번호 — 결제창 호출 시 결제대행사(KG이니시스)에 구매자 정보로 전달. 휴대폰 번호는 회사 서버·DB 에 저장하지 않음</td><td>카드 결제 시</td></tr>
           <tr><td>문의</td><td>문의 제목·내용 (회원이 직접 입력)</td><td>1:1 문의 접수 시</td></tr>
           <tr><td>선택</td><td>닉네임, 카카오톡 닉네임(커뮤니티 오픈채팅 회원 확인·안내용, 비공개), 타임존, 관심 카테고리</td><td>프로필 설정</td></tr>
           <tr><td>선택</td><td>디바이스 모델·OS·Play Integrity 결과</td><td>디바이스 등록</td></tr>
@@ -28,8 +29,8 @@ export default async function PrivacyPage() {
       <p>
         <strong>유료 테스터 시트 관련 추가 수집:</strong> 시트 참여 테스터가 체크인 시 업로드하는
         앱 실행 화면 스크린샷(비공개 저장소 보관, 해당 앱 등록자와 운영자에게만 공개, 중도 이탈 시
-        삭제·주문 종료 후 1년 보관), 기프티콘 교환 신청 시 입력하는 수신 연락처(휴대폰 번호 또는
-        메신저 ID — 발송 목적 외 사용하지 않으며 처리 완료 후 1년 보관), 구매 전 유의사항 동의 시각.
+        삭제·주문 종료 후 1년 보관), 보상 교환(기프티콘·네이버페이 포인트) 신청 시 입력하는 수신
+        휴대폰 번호(발송 목적 외 사용하지 않으며 처리 완료 후 1년 보관), 구매 전 유의사항 동의 시각.
         스크린샷에 본인 또는 타인의 개인정보가 포함되지 않도록 주의해 주세요.
       </p>
 
@@ -74,7 +75,7 @@ export default async function PrivacyPage() {
           <tr><td>Supabase Inc.</td><td>DB·인증·스토리지 호스팅</td><td>EU/US</td></tr>
           <tr><td>Cloudflare Inc.</td><td>웹 호스팅·DNS·CDN·WAF</td><td>Global Edge</td></tr>
           <tr><td>Resend / Brevo</td><td>이메일 발송</td><td>US/EU</td></tr>
-          <tr><td>NHN KCP(주)</td><td>신용·체크카드 결제 처리</td><td>한국</td></tr>
+          <tr><td>KG이니시스(주)</td><td>신용·체크카드 결제 처리 (구매자 이름·이메일·휴대폰 번호 전달)</td><td>한국</td></tr>
           <tr><td>(주)코리아포트원</td><td>결제 연동 (결제 요청·조회 중계)</td><td>한국</td></tr>
           <tr><td>Slack Technologies, LLC</td><td>문의 접수 알림 — 운영팀 내부 메신저로 닉네임·문의 제목·내용 일부 전달 (이메일 등 연락처 제외)</td><td>US</td></tr>
           <tr><td>Stripe Inc. (v2)</td><td>해외 결제 — v2 영어권 확장 시</td><td>US/EU</td></tr>

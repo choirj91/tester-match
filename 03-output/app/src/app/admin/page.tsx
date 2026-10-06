@@ -33,8 +33,8 @@ const TILES = [
   },
   {
     href: "/admin/redemptions" as const,
-    title: "기프티콘 교환",
-    desc: "유료 시트 완주 크레딧의 기프티콘 교환 신청 처리. 수동 발송 후 [발송 완료], 거절 시 자동 환급 (ADR-0012).",
+    title: "보상 교환",
+    desc: "유료 시트 완주 크레딧의 기프티콘·네이버페이 포인트 교환 신청 처리. 수동 발송 후 [발송 완료], 거절 시 자동 복구 (ADR-0012, ADR-0017).",
   },
   {
     href: "/admin/paid-orders" as const,
