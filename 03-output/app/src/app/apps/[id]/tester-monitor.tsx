@@ -1,11 +1,15 @@
+import { Check, Info } from "lucide-react";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/state";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
 import { RemindButton } from "./remind-button";
 
-const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
-  active: { text: "진행중", tone: "bg-surface-1 text-ink-900" },
-  completed: { text: "완주", tone: "bg-success-50 text-success-700" },
-  opted_out: { text: "옵트아웃", tone: "bg-surface-1 text-ink-600" },
-  penalized: { text: "페널티", tone: "bg-danger-50 text-danger-700" },
-  pending: { text: "대기", tone: "bg-surface-1 text-ink-700" },
+const MATCH_STATUS_LABEL: Record<string, { text: string; tone: BadgeTone }> = {
+  active: { text: "진행중", tone: "ink" },
+  completed: { text: "완주", tone: "success" },
+  opted_out: { text: "옵트아웃", tone: "outline" },
+  penalized: { text: "페널티", tone: "danger" },
+  pending: { text: "대기", tone: "outline" },
 };
 
 export type MonitorRow = {
@@ -58,27 +62,27 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
   ).length;
 
   return (
-    <section className="mt-8">
+    <section className="mt-12 border-t border-ink-900 pt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-ink-900">
+        <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">
           테스터 모니터링{" "}
-          <span className="tabular text-ink-600">{rows.length}</span>
+          <span className="font-mono text-[22px] text-ink-600 tabular-nums">{rows.length}</span>
         </h2>
         {notCheckedToday > 0 && (
           <RemindButton appId={appId} pendingCount={notCheckedToday} />
         )}
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <StatTiles className="mt-5">
         <MiniStat label="설치 확인" value={`${installed}/${rows.length}`} />
         <MiniStat label="오늘 체크인" value={`${checkedToday}/${rows.length}`} />
         <MiniStat label="24시간 내 접속" value={`${seen24h}/${rows.length}`} />
         <MiniStat label="진행중" value={`${active.length}명`} />
-      </dl>
+      </StatTiles>
 
-      <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
+      <div className="mt-6">
         {rows.length > 0 ? (
-          <ul className="divide-y divide-ink-200">
+          <ul className="m-0 list-none divide-y divide-ink-200 border border-ink-900 bg-white p-0">
             {rows.map((r) => {
               const label = MATCH_STATUS_LABEL[r.status] ?? MATCH_STATUS_LABEL.pending;
               const days = new Set(r.checkins.map((c) => c.day_n));
@@ -95,25 +99,26 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
               return (
                 <li key={r.matchId} className="px-5 py-4">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
+                    <p className="min-w-0 flex-1 truncate text-[15px] font-bold text-ink-900">
                       {r.nickname}
-                      <span className="ml-2 text-xs font-normal text-ink-600">
-                        신뢰 <span className="tabular">{r.trustScore}</span>
+                      <span className="ml-2 text-[13px] font-normal text-ink-600">
+                        신뢰도 <span className="tabular">{r.trustScore}</span>
                       </span>
                     </p>
-                    <span
-                      className={`shrink-0  px-2.5 py-1 text-xs font-semibold ${label.tone}`}
-                    >
+                    <Badge tone={label.tone} className="shrink-0">
                       {label.text}
-                    </span>
+                    </Badge>
                   </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-700">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-700">
                     <span>
                       {r.installedAt ? (
-                        <span className="font-semibold text-success-700">📲 설치 확인 ✓</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-success-700">
+                          설치 확인
+                          <Check className="size-3.5" strokeWidth={2.2} aria-hidden="true" />
+                        </span>
                       ) : (
-                        <span className="text-warning-700">📲 설치 미확인</span>
+                        <span className="text-warning-700">설치 미확인</span>
                       )}
                     </span>
                     <span>
@@ -132,22 +137,25 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
                     <span>
                       체크인{" "}
                       {checkedTodayRow ? (
-                        <span className="font-semibold text-success-700">오늘 완료 ✓</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-success-700">
+                          오늘 완료
+                          <Check className="size-3.5" strokeWidth={2.2} aria-hidden="true" />
+                        </span>
                       ) : (
                         <span className="text-ink-600">{relativeTime(lastCheckin)}</span>
                       )}
                     </span>
-                    <span className="tabular text-ink-600">{days.size}/14일</span>
+                    <span className="tabular text-ink-700">{days.size}/14일</span>
                   </div>
 
                   {/* 14일 그리드 */}
-                  <div className="mt-2 flex gap-1" aria-label={`체크인 ${days.size}/14일`}>
+                  <div className="mt-2.5 flex gap-1" role="img" aria-label={`체크인 ${days.size}/14일`}>
                     {Array.from({ length: 14 }, (_, i) => i + 1).map((d) => (
                       <span
                         key={d}
                         title={`Day ${d}`}
-                        className={`h-2 flex-1  ${
-                          days.has(d) ? "bg-ink-900" : "bg-surface-1"
+                        className={`h-2.5 flex-1 border border-ink-900 ${
+                          days.has(d) ? "bg-ink-900" : "bg-white"
                         }`}
                       />
                     ))}
@@ -157,26 +165,22 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
             })}
           </ul>
         ) : (
-          <div className="px-6 py-10 text-center text-sm text-ink-600">
-            아직 참여한 테스터가 없습니다.
-          </div>
+          <EmptyState title="아직 참여한 테스터가 없습니다." />
         )}
       </div>
 
-      <p className="mt-2 text-[11px] leading-relaxed text-ink-600">
-        ℹ️ Google Play 는 개별 테스터의 실제 설치·실행 여부를 개발자에게 제공하지 않습니다
-        (공개/비공개 테스트 무관). 위 지표는 Tester Match 의 설치 자가확인·플랫폼 접속·일일
-        체크인 기록입니다. 공식 옵트인 수는 Play Console 대시보드에서 확인하세요.
+      <p className="mt-3 flex gap-2 text-[13px] leading-relaxed text-ink-600">
+        <Info className="mt-0.5 size-4 shrink-0 text-ink-900" strokeWidth={1.8} aria-hidden="true" />
+        <span>
+          Google Play 는 개별 테스터의 실제 설치·실행 여부를 개발자에게 제공하지 않습니다
+          (공개/비공개 테스트 무관). 위 지표는 Tester Match 의 설치 자가확인·플랫폼 접속·일일
+          체크인 기록입니다. 공식 옵트인 수는 Play Console 대시보드에서 확인하세요.
+        </span>
       </p>
     </section>
   );
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-ink-200 bg-white px-4 py-3">
-      <dt className="text-xs text-ink-600">{label}</dt>
-      <dd className="mt-1 text-base font-semibold text-ink-900 tabular">{value}</dd>
-    </div>
-  );
+  return <StatTile rule label={label} value={<span className="font-mono">{value}</span>} />;
 }

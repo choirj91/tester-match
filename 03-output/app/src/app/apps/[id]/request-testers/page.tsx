@@ -69,15 +69,18 @@ export default async function RequestTestersPage({ params }: Props) {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href={`/apps/${appId}`} className="text-sm text-ink-600 hover:text-ink-900">
+      <main className="mx-auto max-w-3xl px-5 pt-12 pb-[88px]">
+        <Link
+          href={`/apps/${appId}`}
+          className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600"
+        >
           ← {app.name}
         </Link>
 
-        <div className="mt-4">
-          <h1 className="text-2xl font-bold text-ink-900">테스터 요청하기</h1>
-          <p className="mt-1 text-sm text-ink-700">
-            <span className="font-medium">{app.name}</span> · 선택한 회원에게 사이트 알림으로 테스트 참여 요청을 보냅니다 (앱당 하루 1회, 최대 50명).
+        <div className="mt-2">
+          <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">테스터 요청하기</h1>
+          <p className="mt-2 text-[15px] text-ink-700">
+            <span className="font-bold text-ink-900">{app.name}</span> · 선택한 회원에게 사이트 알림으로 테스트 참여 요청을 보냅니다 (앱당 하루 1회, 최대 50명).
           </p>
         </div>
 

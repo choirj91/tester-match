@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
 import { formatKrw } from "@/lib/credits";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 
@@ -24,39 +25,28 @@ export function BoostCard({ appId, isBoost, deadlineAt, canOrder }: Props) {
     : null;
 
   return (
-    <section
-      className={`mt-8  border p-6  ${
-        isBoost ? "border-accent-600 bg-accent-50" : "border-ink-200 bg-white"
-      }`}
-    >
+    <section className="mt-12 border-t border-ink-900 pt-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-ink-900">급구</h2>
-            {isBoost && (
-              <span className="bg-accent-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase">
-                BOOST
-              </span>
-            )}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">급구</h2>
+            {isBoost && <Badge tone="accent">BOOST</Badge>}
           </div>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-700">
+          <p className="mt-2 text-[15px] leading-relaxed text-ink-700">
             {isBoost
               ? `매칭 목록 맨 위 급구 칸에 표시 중입니다${until ? ` (${until}까지)` : ""}. 빈 유료 시트가 남아 있으면 자동으로 연장됩니다.`
               : `급구는 유료 테스터를 신청하면 켜집니다. 결제하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이 갑니다. 1명당 ${formatKrw(PAID_TESTER_PRICE_KRW)}원(부가세 포함), 못 채우거나 완주하지 못한 시트는 환불됩니다.`}
           </p>
           {!canOrder && (
-            <p className="mt-1 text-xs text-ink-600">
+            <p className="mt-1 text-[13px] text-ink-600">
               모집중 상태인 앱만 급구를 신청할 수 있습니다.
             </p>
           )}
         </div>
         {canOrder && (
-          <Link
-            href={`/paid-testers?app=${appId}`}
-            className="bg-accent-600 hover:bg-accent-700 shrink-0 px-4 py-2.5 text-center text-sm font-semibold text-white transition"
-          >
+          <ButtonLink href={`/paid-testers?app=${appId}`} className="shrink-0">
             {isBoost ? "테스터 더 모집하기" : "급구 신청하기"}
-          </Link>
+          </ButtonLink>
         )}
       </div>
     </section>

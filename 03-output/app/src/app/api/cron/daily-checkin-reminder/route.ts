@@ -100,8 +100,8 @@ export async function GET(request: Request) {
         type: "match_reminder",
         title: p.paidSeat
           ? p.paidSeat.lastChance
-            ? "⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
-            : "💰 유료 시트 체크인이 남았습니다"
+            ? "오늘 체크인하지 않으면 유료 시트가 해제됩니다"
+            : "유료 시트 체크인이 남았습니다"
           : "오늘 체크인을 완료해주세요",
         body: p.paidSeat
           ? `"${p.name}" ${p.dayN}일차 — ${paidSeatNudgeLines(p).slice(0, 2).join(" ")}`

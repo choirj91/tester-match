@@ -25,7 +25,8 @@ export function DeleteAppButton({ id }: { id: number }) {
       type="button"
       onClick={onClick}
       disabled={busy}
-      className="border border-danger-700 bg-white px-3 py-2 text-sm font-semibold text-danger-700 hover:bg-danger-50 disabled:opacity-50"
+      aria-busy={busy || undefined}
+      className="inline-flex min-h-11 items-center justify-center border-[1.5px] border-danger-700 bg-white px-4 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50 disabled:cursor-not-allowed disabled:border-ink-200 disabled:text-ink-600"
     >
       {busy ? "삭제 중..." : "삭제"}
     </button>

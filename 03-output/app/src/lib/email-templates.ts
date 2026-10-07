@@ -61,9 +61,9 @@ export function dailyCheckinReminderEmail(args: {
   const free = args.items.filter((i) => !i.paidSeat);
   const urgent = paid.some((i) => i.paidSeat?.lastChance);
   const subject = urgent
-    ? "[Tester Match] ⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
+    ? "[Tester Match] 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
     : paid.length > 0
-      ? `[Tester Match] 💰 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
+      ? `[Tester Match] 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
       : `[Tester Match] 오늘 체크인할 앱 ${args.items.length}개`;
 
   const paidHtml = paid
@@ -75,7 +75,7 @@ export function dailyCheckinReminderEmail(args: {
         .map((l) => `<p style="margin:3px 0;font-size:14px;">${escapeHtml(l)}</p>`)
         .join("");
       return `<div style="margin:0 0 12px;padding:14px 16px;border-radius:12px;${tone}">
-        <p style="margin:0 0 6px;font-weight:700;">💰 ${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
+        <p style="margin:0 0 6px;font-weight:700;">${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
       </div>`;
     })
     .join("");
@@ -107,7 +107,7 @@ export function dailyCheckinReminderEmail(args: {
   `);
   const text = [
     `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.items.length}개:`,
-    ...paid.map((i) => `💰 ${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
+    ...paid.map((i) => `${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
     ...free.map((a) => `- ${a.name} (${a.dayN}일차)`),
     "",
     `체크인: ${APP_URL}/my-tests`,
@@ -161,7 +161,7 @@ export function paidOrderAdminEmail(args: {
   amountKrw: number;
 }): Email {
   const amount = args.amountKrw.toLocaleString("ko-KR");
-  const subject = `[Tester Match] 💰 유료 테스터 결제 — ${args.appName} ${args.testerCount}명 (${amount}원)`;
+  const subject = `[Tester Match] 유료 테스터 결제 — ${args.appName} ${args.testerCount}명 (${amount}원)`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">유료 테스터 주문이 결제되었습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
@@ -323,7 +323,7 @@ export function redemptionRequestedEmail(args: {
 }): Email {
   const amount = args.amount.toLocaleString("ko-KR");
   const kind = escapeHtml(args.kindLabel);
-  const subject = `[Tester Match] 🎁 ${args.kindLabel} 교환 신청 — ${args.nickname} ${amount} 크레딧`;
+  const subject = `[Tester Match] ${args.kindLabel} 교환 신청 — ${args.nickname} ${amount} 크레딧`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">보상 교환 신청이 들어왔습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
@@ -353,7 +353,7 @@ export function seatRewardDisputedEmail(args: {
   reason: string;
 }): Email {
   const amount = args.amount.toLocaleString("ko-KR");
-  const subject = `[Tester Match] ⚠️ 시트 보상 이의 제기 — 주문 #${args.orderId} (${amount} 크레딧)`;
+  const subject = `[Tester Match] 시트 보상 이의 제기 — 주문 #${args.orderId} (${amount} 크레딧)`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">구매자가 시트 보상에 이의를 제기했습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">

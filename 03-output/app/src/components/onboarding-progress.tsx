@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 export type OnboardingSteps = {
   signedUp: boolean;
@@ -88,7 +89,7 @@ export function OnboardingProgress({ steps }: { steps: OnboardingSteps }) {
                         : "bg-ink-200 text-ink-600"
                     }`}
                   >
-                    {done ? "✓" : i + 1}
+                    {done ? <Check className="h-4 w-4" aria-label="완료" /> : i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p

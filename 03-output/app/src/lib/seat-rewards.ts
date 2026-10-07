@@ -540,7 +540,7 @@ export async function grantLaunchBonuses(
     await createNotification({
       userId: r.tester_user_id,
       type: "seat_reward",
-      title: `🎉 출시 보너스 +${SEAT_REWARDS.launch} 크레딧`,
+      title: `출시 보너스 +${SEAT_REWARDS.launch} 크레딧`,
       body: `테스트에 참여한 "${appNameByOrder.get(r.order_id) ?? "앱"}"이 정식 출시되었습니다. 덕분입니다!`,
       link: "/credits",
     });

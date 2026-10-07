@@ -23,7 +23,7 @@ export function CopyGroupEmailButton() {
       onClick={copy}
       className="mt-2 border border-ink-900 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
     >
-      {copied ? "✓ 복사됨" : "그룹 이메일 복사"}
+      {copied ? "복사됨" : "그룹 이메일 복사"}
     </button>
   );
 }

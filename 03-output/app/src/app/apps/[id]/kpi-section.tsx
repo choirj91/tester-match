@@ -1,3 +1,5 @@
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
+
 type Match = {
   status: string;
   opted_in_at: string | null;
@@ -66,26 +68,21 @@ export function KpiSection({ matches }: { matches: Match[] }) {
   const recent7 = buckets.reduce((s, b) => s + b.count, 0);
 
   return (
-    <section className="mt-8">
-      <h2 className="text-lg font-semibold text-ink-900">참여 지표</h2>
-      <p className="mt-0.5 text-xs text-ink-600">
+    <section className="mt-12 border-t border-ink-900 pt-8">
+      <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">참여 지표</h2>
+      <p className="mt-1 text-[13px] text-ink-600">
         총 매칭 · 완주율 · 이탈률 · 평균 체크인 진행률
       </p>
 
-      <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-4">
-        <KpiCard label="총 매칭" value={total} sub={`최근 7일 +${recent7}`} tone="neutral" />
-        <KpiCard label="완주율" value={`${completionRate}%`} sub={`${completed}/${total}`} tone="mint" />
-        <KpiCard label="이탈률" value={`${dropRate}%`} sub={`${dropped}건`} tone="crimson" />
-        <KpiCard
-          label="활성 진행률"
-          value={`${avgProgress}%`}
-          sub={`${active}명 활성`}
-          tone="trust"
-        />
-      </div>
+      <StatTiles className="mt-5">
+        <KpiTile label="총 매칭" value={total} sub={`최근 7일 +${recent7}`} tone="neutral" />
+        <KpiTile label="완주율" value={`${completionRate}%`} sub={`${completed}/${total}`} tone="success" />
+        <KpiTile label="이탈률" value={`${dropRate}%`} sub={`${dropped}건`} tone="danger" />
+        <KpiTile label="활성 진행률" value={`${avgProgress}%`} sub={`${active}명 활성`} tone="neutral" />
+      </StatTiles>
 
-      <div className="mt-4 border border-ink-200 bg-white p-6">
-        <p className="mb-4 text-sm font-semibold text-ink-700">일별 신규 매칭 (최근 7일)</p>
+      <div className="mt-6 border border-ink-900 bg-white p-5">
+        <p className="mb-4 text-sm font-bold text-ink-900">일별 신규 매칭 (최근 7일)</p>
         <div className="flex items-end gap-1.5" style={{ height: "72px" }}>
           {buckets.map((b, i) => {
             const barH = Math.max(
@@ -94,11 +91,9 @@ export function KpiSection({ matches }: { matches: Match[] }) {
             );
             return (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <span className="text-[11px] font-semibold text-ink-600">{b.count}</span>
+                <span className="font-mono text-[11px] text-ink-700 tabular-nums">{b.count}</span>
                 <div
-                  className={`w-full  transition-all ${
-                    b.isToday ? "bg-ink-900" : "bg-surface-1"
-                  }`}
+                  className={`w-full border border-ink-900 ${b.isToday ? "bg-ink-900" : "bg-white"}`}
                   style={{ height: `${barH}px` }}
                 />
               </div>
@@ -109,16 +104,14 @@ export function KpiSection({ matches }: { matches: Match[] }) {
           {buckets.map((b, i) => (
             <div key={i} className="flex flex-1 flex-col items-center">
               <span
-                className={`text-[10px] ${
+                className={`font-mono text-[11px] tabular-nums ${
                   b.isToday ? "font-bold text-ink-900" : "text-ink-600"
                 }`}
               >
                 {b.label}
               </span>
               <span
-                className={`text-[9px] ${
-                  b.isToday ? "font-semibold text-ink-900" : "text-ink-600"
-                }`}
+                className={`text-[11px] ${b.isToday ? "font-bold text-ink-900" : "text-ink-600"}`}
               >
                 {b.sub}
               </span>
@@ -130,7 +123,7 @@ export function KpiSection({ matches }: { matches: Match[] }) {
   );
 }
 
-function KpiCard({
+function KpiTile({
   label,
   value,
   sub,
@@ -139,21 +132,23 @@ function KpiCard({
   label: string;
   value: string | number;
   sub: string;
-  tone: "mint" | "crimson" | "trust" | "neutral";
+  tone: "success" | "danger" | "neutral";
 }) {
   const toneClass = {
-    mint: "text-success-700",
-    crimson: "text-danger-700",
-    trust: "text-ink-900",
+    success: "text-success-700",
+    danger: "text-danger-700",
     neutral: "text-ink-900",
   }[tone];
   return (
-    <div className="border border-ink-200 bg-white p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-600">
-        {label}
-      </p>
-      <p className={`mt-1 text-2xl font-bold tabular ${toneClass}`}>{value}</p>
-      <p className="mt-0.5 text-[11px] text-ink-600">{sub}</p>
-    </div>
+    <StatTile
+      rule
+      label={label}
+      value={
+        <>
+          <span className={`font-mono ${toneClass}`}>{value}</span>
+          <span className="mt-0.5 block font-mono text-xs font-normal text-ink-600">{sub}</span>
+        </>
+      }
+    />
   );
 }

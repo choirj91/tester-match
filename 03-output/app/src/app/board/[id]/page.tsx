@@ -9,6 +9,7 @@ import { PostActions } from "./post-actions";
 import { AdminBadge } from "@/components/admin-badge";
 import { Linkify } from "@/components/linkify";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
+import { Badge } from "@/components/ui/badge";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -108,31 +109,30 @@ export default async function PostDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd) }}
       />
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/board" className="text-sm text-ink-600 hover:text-ink-900">
+      <main className="mx-auto max-w-3xl px-5 pt-12 pb-[88px]">
+        <Link href="/board" className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600">
           ← 게시판
         </Link>
 
-        <article className="mt-4">
-          <span className="bg-surface-1 px-2 py-0.5 text-xs font-semibold text-ink-900">
-            {post.category}
-          </span>
-          <h1 className="mt-3 text-3xl font-bold text-ink-900">{post.title}</h1>
-          <p className="mt-2 text-xs text-ink-600">
-            {author?.nickname ?? "—"} · {new Date(post.created_at).toLocaleString("ko-KR")} · 조회{" "}
+        <article className="mt-2">
+          <Badge tone="outline">{post.category}</Badge>
+          <h1 className="mt-3 font-display text-h1 font-semibold break-words text-ink-900">{post.title}</h1>
+          <p className="mt-2 text-[13px] text-ink-600">
+            {author?.nickname ?? "—"} ·{" "}
+            <span className="tabular">{new Date(post.created_at).toLocaleString("ko-KR")}</span> · 조회{" "}
             <span className="tabular">{viewCount}</span>
           </p>
 
-          <div className="mt-8 whitespace-pre-wrap text-base leading-relaxed text-ink-900">
+          <div className="mt-8 border-t border-ink-900 pt-8 text-base leading-[1.8] break-words whitespace-pre-wrap text-ink-900">
             <Linkify text={post.body} />
           </div>
 
           {isOwner && <PostActions id={post.id} />}
         </article>
 
-        <section className="mt-12">
-          <h2 className="text-lg font-semibold text-ink-900">
-            댓글 <span className="tabular">{comments?.length ?? 0}</span>
+        <section className="mt-12 border-t border-ink-900 pt-8">
+          <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">
+            댓글 <span className="font-mono text-[22px] tabular-nums">{comments?.length ?? 0}</span>
           </h2>
           {user ? (
             <CommentList
@@ -155,7 +155,7 @@ export default async function PostDetailPage({ params }: Props) {
             />
           ) : (
             <div className="mt-4">
-              <p className="text-sm text-ink-600">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <p className="text-sm text-ink-700">댓글을 작성하려면 로그인이 필요합니다.</p>
               {(comments ?? []).length > 0 && (
                 <ul className="mt-4 divide-y divide-ink-200">
                   {(comments ?? []).slice(0, 20).map((c) => {
@@ -164,7 +164,7 @@ export default async function PostDetailPage({ params }: Props) {
                       : c.users_public_profile;
                     return (
                       <li key={c.id} className="py-3">
-                        <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700">
+                        <p className="inline-flex items-center gap-1.5 text-[13px] font-bold text-ink-900">
                           {a?.nickname ?? "—"}
                           {a?.role === "admin" && <AdminBadge />}
                         </p>

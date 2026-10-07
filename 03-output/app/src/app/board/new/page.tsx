@@ -13,11 +13,11 @@ export default async function NewPostPage() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/board" className="text-sm text-ink-600 hover:text-ink-900">
+      <main className="mx-auto max-w-3xl px-5 pt-12 pb-[88px]">
+        <Link href="/board" className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600">
           ← 게시판
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-ink-900">글 쓰기</h1>
+        <h1 className="mt-2 font-display text-h1 font-semibold text-ink-900">글 쓰기</h1>
         <div className="mt-8">
           <PostForm isAdmin={user.role === "admin"} />
         </div>

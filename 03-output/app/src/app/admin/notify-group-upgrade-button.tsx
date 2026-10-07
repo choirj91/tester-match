@@ -44,7 +44,7 @@ export function NotifyGroupUpgradeButton() {
           }`}
         >
           {result.ok
-            ? `✓ 대상 ${result.candidates}건 · 발송 ${result.sent}건 · 스킵(기발송) ${result.skipped}건`
+            ? `대상 ${result.candidates}건 · 발송 ${result.sent}건 · 스킵(기발송) ${result.skipped}건`
             : (result.message ?? "발송 실패")}
         </p>
       )}

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchAll } from "@/lib/fetch-all";
 import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
 
 export const metadata = {
   title: "활동 랭킹",
@@ -11,20 +12,30 @@ export const metadata = {
     "Tester Match 커뮤니티 활동 통계 — 앱 등록, 테스트 참여, 14일 완주 랭킹과 방문자 현황.",
 };
 
-function Medal({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-base">🥇</span>;
-  if (rank === 2) return <span className="text-base">🥈</span>;
-  if (rank === 3) return <span className="text-base">🥉</span>;
-  return <span className="tabular w-5 text-center text-sm text-ink-600">{rank}</span>;
+function RankNo({ rank }: { rank: number }) {
+  return (
+    <span
+      className={`w-6 shrink-0 text-center font-mono text-sm tabular-nums ${
+        rank <= 3 ? "font-bold text-ink-900" : "text-ink-600"
+      }`}
+    >
+      {String(rank).padStart(2, "0")}
+    </span>
+  );
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="border border-ink-200 bg-white p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-ink-600">{label}</p>
-      <p className="mt-1 text-3xl font-bold tabular text-ink-900">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-ink-600">{sub}</p>}
-    </div>
+    <StatTile
+      rule
+      label={label}
+      value={
+        <>
+          <span className="font-mono">{value}</span>
+          {sub && <span className="mt-0.5 block font-sans text-xs font-normal text-ink-600">{sub}</span>}
+        </>
+      }
+    />
   );
 }
 
@@ -54,23 +65,27 @@ function RankingList({
 }) {
   return (
     <section>
-      <h2 className="text-lg font-bold text-ink-900">{title}</h2>
-      <p className="mt-0.5 text-xs text-ink-600">{sub}</p>
-      <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
+      <h2 className="m-0 border-t-[1.5px] border-ink-900 pt-3 text-[17px] font-bold text-ink-900">{title}</h2>
+      <p className="mt-0.5 text-[13px] text-ink-600">{sub}</p>
+      <div className="mt-3">
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-ink-600">{emptyText}</p>
+          <p className="border-t border-ink-200 px-1 py-8 text-center text-sm text-ink-700">{emptyText}</p>
         ) : (
-          <ul className="divide-y divide-ink-200">
+          <ol className="m-0 list-none divide-y divide-ink-200 border-t border-ink-200 p-0">
             {rows.map((u, i) => (
               <li key={u.id}>
                 <Link
                   href={`/u/${u.id}`}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-1"
+                  className="flex min-h-11 items-center gap-3 px-1 py-2.5 no-underline hover:bg-surface-1"
                 >
-                  <Medal rank={i + 1} />
+                  <RankNo rank={i + 1} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink-900">{u.nickname}</p>
-                    {showStar && <p className="text-xs text-accent-600">★{u.trust_score}</p>}
+                    {showStar && (
+                      <p className="text-xs text-ink-600">
+                        신뢰도 <span className="tabular">{u.trust_score}</span>
+                      </p>
+                    )}
                   </div>
                   <span className={`shrink-0 tabular text-sm font-bold ${accent}`}>
                     {u.count}
@@ -79,7 +94,7 @@ function RankingList({
                 </Link>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
       </div>
     </section>
@@ -210,44 +225,45 @@ export default async function PublicStatsPage() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-5xl px-6 py-12">
-        <h1 className="text-2xl font-bold text-ink-900">활동 랭킹</h1>
-        <p className="mt-2 text-sm text-ink-700">
+      <main className="mx-auto max-w-5xl px-5 pt-12 pb-[88px]">
+        <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">활동 랭킹</h1>
+        <p className="mt-2 text-[15px] text-ink-700">
           Tester Match 커뮤니티의 활동 통계입니다. 닉네임을 클릭하면 등록한 앱을 볼 수 있습니다.
         </p>
 
         {/* 크레딧은 유료 시트 참여로만 적립된다 (ADR-0014) */}
         <Link
           href="/browse"
-          className="mt-6 block border border-warning-700 bg-warning-50 p-5 transition hover:border-warning-700"
+          className="group mt-6 block border border-ink-900 bg-white p-5 no-underline hover:bg-surface-1"
         >
-          <p className="text-sm font-bold text-ink-900">
-            💰 크레딧은 유료 시트 테스트로 적립됩니다
+          <p className="text-[15px] font-bold text-ink-900">
+            크레딧은 유료 시트 테스트로 적립됩니다
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-700">
-            {SEAT_REWARD_SUMMARY}. 매칭 목록에서 💰 배지가 붙은 앱에 참여하세요. 이 랭킹은 활동
-            기록이며 별도 크레딧 보상은 없습니다. →
+          <p className="mt-1 text-sm leading-relaxed text-ink-700">
+            {SEAT_REWARD_SUMMARY}. 매칭 목록에서 유료 시트 배지가 붙은 앱에 참여하세요. 이 랭킹은 활동
+            기록이며 별도 크레딧 보상은 없습니다.{" "}
+            <span className="group-hover:text-accent-600">→</span>
           </p>
         </Link>
 
         {/* 전체 현황 */}
-        <section className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatTiles className="mt-10">
           <StatCard label="전체 사용자" value={totalUsers ?? 0} sub="명" />
           <StatCard label="등록 앱" value={totalApps ?? 0} sub="개" />
           <StatCard label="전체 매칭" value={totalMatches ?? 0} sub="건" />
           <StatCard label="14일 완주" value={completedMatches ?? 0} sub="건" />
-        </section>
+        </StatTiles>
 
         {/* 방문자 현황 */}
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink-900">방문자 현황</h2>
-          <p className="mt-0.5 text-xs text-ink-600">기기별 일 1회 집계 (KST)</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <section className="mt-12 border-t border-ink-900 pt-8">
+          <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">방문자 현황</h2>
+          <p className="mt-1 text-[13px] text-ink-600">기기별 일 1회 집계 (KST)</p>
+          <StatTiles className="mt-5">
             <StatCard label="오늘 방문자" value={todayVisitors} sub="고유 기기 수" />
             <StatCard label="7일 방문자" value={weekVisitors} sub="최근 1주 누계" />
-          </div>
-          <div className="mt-4 overflow-hidden border border-ink-200 bg-white p-6">
-            <p className="mb-5 text-sm font-semibold text-ink-700">일별 방문자 추이</p>
+          </StatTiles>
+          <div className="mt-6 border border-ink-900 bg-white p-5">
+            <p className="mb-5 text-sm font-bold text-ink-900">일별 방문자 추이</p>
             <div className="flex items-end gap-1.5" style={{ height: "96px" }}>
               {weeklyData.map(({ date, visitors, isToday }) => {
                 const barH = Math.max(
@@ -256,9 +272,9 @@ export default async function PublicStatsPage() {
                 );
                 return (
                   <div key={date} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[11px] font-semibold text-ink-600">{visitors}</span>
+                    <span className="font-mono text-[11px] text-ink-700 tabular-nums">{visitors}</span>
                     <div
-                      className={`w-full  ${isToday ? "bg-ink-900" : "bg-surface-1"}`}
+                      className={`w-full border border-ink-900 ${isToday ? "bg-ink-900" : "bg-white"}`}
                       style={{ height: `${barH}px` }}
                     />
                   </div>
@@ -269,15 +285,15 @@ export default async function PublicStatsPage() {
               {weeklyData.map(({ date, label, sub, isToday }) => (
                 <div key={date} className="flex flex-1 flex-col items-center">
                   <span
-                    className={`text-[10px] leading-tight ${
+                    className={`font-mono text-[11px] leading-tight tabular-nums ${
                       isToday ? "font-bold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {label}
                   </span>
                   <span
-                    className={`text-[9px] leading-tight ${
-                      isToday ? "font-semibold text-ink-900" : "text-ink-600"
+                    className={`text-[11px] leading-tight ${
+                      isToday ? "font-bold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {sub}
@@ -289,31 +305,34 @@ export default async function PublicStatsPage() {
         </section>
 
         {/* 랭킹 3종 */}
-        <div className="mt-10 grid gap-8 lg:grid-cols-3">
-          <RankingList
-            title="앱 등록 많은 순"
-            sub="삭제된 앱 제외 · TOP 20"
-            rows={byApps}
-            unit="개"
-            accent="text-ink-900"
-          />
-          <RankingList
-            title="테스트 참여 많은 순"
-            sub="전체 매칭 횟수 기준 · TOP 20"
-            rows={byMatches}
-            unit="회"
-            accent="text-ink-900"
-          />
-          <RankingList
-            title="신뢰도 높은 순"
-            sub="매일 체크인 +1점 · 최대 1,000점 · TOP 20"
-            rows={byTrust}
-            unit="점"
-            accent="text-accent-600"
-            showStar={false}
-            emptyText="아직 집계 중입니다. 매일 체크인으로 신뢰도를 쌓아보세요!"
-          />
-        </div>
+        <section className="mt-12 border-t border-ink-900 pt-8">
+          <h2 className="m-0 font-display text-h2 font-semibold text-ink-900">랭킹</h2>
+          <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-8">
+            <RankingList
+              title="앱 등록 많은 순"
+              sub="삭제된 앱 제외 · TOP 20"
+              rows={byApps}
+              unit="개"
+              accent="text-ink-900"
+            />
+            <RankingList
+              title="테스트 참여 많은 순"
+              sub="전체 매칭 횟수 기준 · TOP 20"
+              rows={byMatches}
+              unit="회"
+              accent="text-ink-900"
+            />
+            <RankingList
+              title="신뢰도 높은 순"
+              sub="매일 체크인 +1점 · 최대 1,000점 · TOP 20"
+              rows={byTrust}
+              unit="점"
+              accent="text-ink-900"
+              showStar={false}
+              emptyText="아직 집계 중입니다. 매일 체크인으로 신뢰도를 쌓아보세요!"
+            />
+          </div>
+        </section>
       </main>
     </>
   );

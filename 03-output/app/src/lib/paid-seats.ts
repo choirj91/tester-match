@@ -93,7 +93,7 @@ export function orderSettlement(args: {
 /** 오픈채팅 공지 텍스트 */
 export function seatNoticeText(args: { appName: string; appId: number; seats: number }): string {
   return [
-    `💰 유료 테스트 시트 오픈 — ${args.appName}`,
+    `유료 테스트 시트 오픈 — ${args.appName}`,
     "",
     `남은 시트 ${args.seats}명 · ${SEAT_REWARD_SUMMARY}`,
     "14일 중 12일 이상 출석하면 완주 — 구매자 확정 후 지급, 기프티콘 교환 가능.",
@@ -357,7 +357,7 @@ export async function activatePaidOrder(
     users.map((u) => u.id),
     {
       type: "paid_seat_open",
-      title: `💰 유료 시트 오픈 — ${args.appName.slice(0, 40)} ${args.seats}명`,
+      title: `유료 시트 오픈 — ${args.appName.slice(0, 40)} ${args.seats}명`,
       body: `${SEAT_REWARD_SUMMARY}. 매일 체크인 + 스크린샷 1장, 기프티콘 교환 가능. 선착순.`,
       link,
     },

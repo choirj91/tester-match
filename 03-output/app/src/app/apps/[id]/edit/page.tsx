@@ -33,15 +33,15 @@ export default async function EditAppPage({ params }: Props) {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-2xl px-6 py-12">
+      <main className="mx-auto max-w-2xl px-5 pt-12 pb-[88px]">
         <Link
           href={`/apps/${app.id}`}
-          className="text-sm text-ink-600 hover:text-ink-900"
+          className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600"
         >
           ← 앱 상세
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-ink-900">앱 수정</h1>
-        <p className="mt-2 text-sm text-ink-700">
+        <h1 className="mt-2 font-display text-h1 font-semibold text-ink-900">앱 수정</h1>
+        <p className="mt-2 text-[15px] text-ink-700">
           변경한 내용은 매칭 큐에 즉시 반영됩니다.
         </p>
 

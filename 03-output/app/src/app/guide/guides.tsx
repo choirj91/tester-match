@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Notice, type NoticeKind } from "@/components/ui/notice";
 
 export type Guide = {
   slug: string;
@@ -10,20 +11,20 @@ export type Guide = {
 };
 
 const A = ({ href, children }: { href: string; children: ReactNode }) => (
-  <Link href={href} className="text-ink-900 underline-offset-2 hover:underline">
+  <Link href={href} className="text-ink-900 underline underline-offset-2 hover:text-accent-600">
     {children}
   </Link>
 );
 
 const Img = ({ src, alt }: { src: string; alt: string }) => (
   // eslint-disable-next-line @next/next/no-img-element
-  <img src={src} alt={alt} className="my-6 w-full border border-ink-200 bg-white" loading="lazy" />
+  <img src={src} alt={alt} className="my-6 w-full border border-ink-900 bg-white" loading="lazy" />
 );
 
-const Tip = ({ children }: { children: ReactNode }) => (
-  <div className="my-5 border border-ink-200 bg-surface-1 px-4 py-3 text-[13px] leading-6">
+const Tip = ({ kind = "info", children }: { kind?: NoticeKind; children: ReactNode }) => (
+  <Notice kind={kind} className="my-6 [&_p]:mt-0">
     {children}
-  </div>
+  </Notice>
 );
 
 export const GUIDES: Guide[] = [
@@ -131,7 +132,7 @@ export const GUIDES: Guide[] = [
             링크(웹/Android). 순서는 그룹 가입이 먼저입니다.
           </li>
         </ol>
-        <h2>⚠️ 가장 큰 함정: 그룹의 &ldquo;종류&rdquo;</h2>
+        <h2>가장 큰 함정: 그룹의 &ldquo;종류&rdquo;</h2>
         <p>
           Play Console 은 <code>@googlegroups.com</code> 으로 끝나는{" "}
           <strong>일반(consumer) 그룹만 안정적으로 인식</strong>합니다. Google Workspace 의
@@ -149,7 +150,7 @@ export const GUIDES: Guide[] = [
           흔합니다.
         </p>
         <Tip>
-          💡 Tester Match 에 앱을 등록하면 <strong>공용 테스터 그룹</strong>을 그대로 쓸 수
+          Tester Match 에 앱을 등록하면 <strong>공용 테스터 그룹</strong>을 그대로 쓸 수
           있습니다. 커뮤니티 테스터들이 이미 가입돼 있어 Console 에 이메일 한 줄만 넣으면
           끝. <A href="/apps/new">앱 등록에서 그룹 이메일 복사하기</A>
         </Tip>
@@ -321,8 +322,8 @@ export const GUIDES: Guide[] = [
             나쁘면 노출 자체가 줄어듭니다.
           </li>
         </ul>
-        <Tip>
-          ⚠️ <strong>리뷰 대가 제공은 Google Play 정책 위반입니다.</strong> 크레딧·기프티콘
+        <Tip kind="caution">
+          <strong>리뷰 대가 제공은 Google Play 정책 위반입니다.</strong> 크레딧·기프티콘
           등 무엇이든 별점·리뷰의 조건으로 걸면 앱 삭제·계정 제재 사유가 됩니다. 부탁은
           &ldquo;써보시고 솔직한 의견을 남겨주세요&rdquo;까지만. Tester Match 가 리뷰
           보상 기능을 만들지 않는 이유이기도 합니다.
@@ -332,16 +333,16 @@ export const GUIDES: Guide[] = [
   },
   {
     slug: "trust-score-and-credits",
-    title: "신뢰도 ★ 와 크레딧 — Tester Match 보상 시스템 안내",
+    title: "신뢰도와 크레딧 — Tester Match 보상 시스템 안내",
     description:
-      "닉네임 옆 ★ 숫자는 무엇이고 어떻게 오르나요? 체크인 +1 규칙, 이탈 페널티, 크레딧이 쌓이는 방법까지 한 번에 설명합니다.",
+      "닉네임 옆 신뢰도 숫자는 무엇이고 어떻게 오르나요? 체크인 +1 규칙, 이탈 페널티, 크레딧이 쌓이는 방법까지 한 번에 설명합니다.",
     date: "2026-08-14",
     body: (
       <>
-        <h2>★ 숫자의 정체</h2>
+        <h2>신뢰도 숫자의 정체</h2>
         <p>
           모든 회원은 <strong>신뢰도 50점</strong>으로 시작합니다. 점수는 게시판·댓글·매칭
-          목록 어디서나 닉네임 옆 ★로 보이고, <A href="/stats">활동 랭킹</A>에서 순위로도
+          목록 어디서나 닉네임 옆 &ldquo;신뢰도 n&rdquo;으로 보이고, <A href="/stats">활동 랭킹</A>에서 순위로도
           확인할 수 있습니다. 이 점수의 목적은 하나 — <strong>&ldquo;이 사람과 매칭하면
           14일을 완주할 수 있을까?&rdquo;</strong>에 대한 답입니다.
         </p>
@@ -362,18 +363,18 @@ export const GUIDES: Guide[] = [
         <h2>크레딧</h2>
         <p>
           크레딧은 <strong>1크레딧 = 1원</strong> 가치의 서비스 내 포인트입니다.{" "}
-          <strong>유료 테스터 시트</strong>(매칭 목록의 💰 배지)에 참여해야만 쌓입니다 —
+          <strong>유료 테스터 시트</strong>(매칭 목록의 유료 시트 배지)에 참여해야만 쌓입니다 —
           설치 인증 100, 출석 하루 20, 7일 연속 +50, 완주(12일 이상) +120, 개근 +50, 앱이 정식
           출시되면 +100. 시트 하나에 최대 <strong>700크레딧</strong>입니다. 완주 후 앱 등록자가
           확정하거나 3일이 지나면 지급되고, 기프티콘·네이버페이 포인트 교환(5,000부터)이나 내 앱의
           테스터 시트 열기(1,100 = 1명)에 쓸 수 있습니다. 크레딧은 구매·양도·현금 환급이 안 됩니다.
         </p>
         <p>
-          품앗이(무료) 참여와 활동 랭킹은 크레딧이 아니라 <strong>신뢰도 ★</strong>로 보상합니다.
+          품앗이(무료) 참여와 활동 랭킹은 크레딧이 아니라 <strong>신뢰도</strong>로 보상합니다.
           자세한 기준은 <A href="/policies/credits">크레딧 정책</A>을 확인하세요.
         </p>
         <Tip>
-          🙋 자주 묻는 질문 — <strong>&ldquo;점수가 깎였는데 억울해요&rdquo;</strong>:
+          자주 묻는 질문 — <strong>&ldquo;점수가 깎였는데 억울해요&rdquo;</strong>:
           모든 증감은 원장에 기록됩니다. 문의를 주시면 관리자가 이력을 확인하고 잘못된
           감점은 정정해드립니다.
         </Tip>

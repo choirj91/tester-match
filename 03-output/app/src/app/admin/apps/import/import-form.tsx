@@ -250,7 +250,7 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
           onClick={handleCopy}
           className="shrink-0 border border-warning-700 bg-white px-3 py-1.5 text-xs font-semibold text-warning-700 hover:bg-warning-50"
         >
-          {copied ? "복사됨 ✓" : "JSON 복사"}
+          {copied ? "복사됨" : "JSON 복사"}
         </button>
       </div>
 

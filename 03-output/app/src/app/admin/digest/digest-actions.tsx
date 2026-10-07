@@ -24,7 +24,7 @@ export function DigestActions({ message, openChatUrl }: { message: string; openC
           copied ? "bg-success-700" : "bg-ink-900 hover:bg-black"
         }`}
       >
-        {copied ? "✓ 복사됨 — 이제 오픈채팅에 붙여넣기" : "1. 메시지 복사"}
+        {copied ? "복사됨 — 이제 오픈채팅에 붙여넣기" : "1. 메시지 복사"}
       </button>
       <a
         href={openChatUrl}

@@ -273,7 +273,7 @@ describe("dailyCheckinReminderEmail", () => {
       testerNickname: "테스터",
       items: [build("가계부", true, days([1, 2])), build("메모장", false, [])],
     });
-    expect(mail.subject).toBe("[Tester Match] ⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다");
+    expect(mail.subject).toBe("[Tester Match] 오늘 체크인하지 않으면 유료 시트가 해제됩니다");
   });
 
   test("급하지 않은 유료 시트는 유료 시트 개수 제목", () => {
@@ -282,7 +282,7 @@ describe("dailyCheckinReminderEmail", () => {
       testerNickname: "테스터",
       items: [build("가계부", true, days([1, 2, 3, 4])), build("메모장", false, [])],
     });
-    expect(mail.subject).toBe("[Tester Match] 💰 유료 시트 오늘 체크인이 남았습니다 (1개)");
+    expect(mail.subject).toBe("[Tester Match] 유료 시트 오늘 체크인이 남았습니다 (1개)");
   });
 
   test("품앗이만 있으면 기존 제목과 5일 연속 페널티 안내만 나간다", () => {

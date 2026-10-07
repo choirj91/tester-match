@@ -9,9 +9,7 @@ import { TESTER_GROUP_EMAIL } from "@/lib/tester-group";
 export const metadata = { title: "사용자 통계" };
 
 function Medal({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-base">🥇</span>;
-  if (rank === 2) return <span className="text-base">🥈</span>;
-  if (rank === 3) return <span className="text-base">🥉</span>;
+  if (rank <= 3) return <span className="tabular w-5 text-center text-sm font-bold text-ink-900">{rank}</span>;
   return <span className="tabular w-5 text-center text-sm text-ink-600">{rank}</span>;
 }
 

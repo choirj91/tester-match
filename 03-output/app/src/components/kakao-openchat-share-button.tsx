@@ -130,7 +130,7 @@ export function KakaoOpenchatShareButton({
                   {copied ? "다시 복사" : "복사하기"}
                 </button>
                 {copied && (
-                  <span className="text-xs font-semibold text-success-700">✓ 클립보드에 복사되었습니다</span>
+                  <span className="text-xs font-semibold text-success-700">클립보드에 복사되었습니다</span>
                 )}
                 {copyFailed && (
                   <span className="text-xs font-semibold text-danger-700">복사 실패 — 위 문구를 직접 선택해 복사해주세요</span>

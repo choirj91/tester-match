@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ButtonLink } from "@/components/ui/button";
 
 export function PostActions({ id }: { id: number }) {
   const router = useRouter();
@@ -23,17 +23,15 @@ export function PostActions({ id }: { id: number }) {
 
   return (
     <div className="mt-8 flex items-center gap-2 border-t border-ink-200 pt-4">
-      <Link
-        href={`/board/${id}/edit`}
-        className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
-      >
+      <ButtonLink href={`/board/${id}/edit`} variant="secondary" size="sm">
         수정
-      </Link>
+      </ButtonLink>
       <button
         type="button"
         onClick={onDelete}
         disabled={busy}
-        className="border border-danger-700 bg-white px-3 py-1.5 text-xs font-semibold text-danger-700 hover:bg-danger-50 disabled:opacity-50"
+        aria-busy={busy || undefined}
+        className="inline-flex min-h-11 items-center justify-center border-[1.5px] border-danger-700 bg-white px-4 text-sm font-medium text-danger-700 transition-colors hover:bg-danger-50 disabled:cursor-not-allowed disabled:border-ink-200 disabled:text-ink-600"
       >
         {busy ? "삭제 중..." : "삭제"}
       </button>
