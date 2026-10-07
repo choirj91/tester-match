@@ -1,70 +1,67 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { WaitlistForm } from "@/components/waitlist-form";
-import { SiteHeader } from "@/components/site-header";
 import { AppScrollBanner } from "@/components/app-scroll-banner";
+import { SiteHeader } from "@/components/site-header";
 import { OnboardingProgress } from "@/components/onboarding-progress";
+import { ButtonLink } from "@/components/ui/button";
+import { PaymentPendingBadge } from "@/components/ui/badge";
+import { MoneyUseBar } from "@/components/ui/money-use-bar";
+import { MONEY_USE } from "@/lib/money-use";
+import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
+import { Steps } from "@/components/ui/steps";
 import { getCurrentUser } from "@/lib/auth";
+import { formatKrw } from "@/lib/credits";
+import { PAID_SEAT_FILL_DAYS, REDEMPTION_MIN_CREDITS } from "@/lib/paid-seats";
+import {
+  PAID_TESTERS_PUBLIC_ORDERING,
+  PAID_TESTER_MAX_COUNT,
+  PAID_TESTER_MIN_COUNT,
+  PAID_TESTER_PRICE_KRW,
+  PAID_TESTER_RECOMMENDED_COUNT,
+  paidTesterAmountKrw,
+} from "@/lib/paid-testers";
+import {
+  SEAT_MIN_CHECKIN_DAYS,
+  SEAT_REWARDS,
+  SEAT_REWARD_MAX,
+  SEAT_REWARD_MAX_AT_COMPLETION,
+  SEAT_TOTAL_DAYS,
+} from "@/lib/seat-reward-rules";
+import { PLAY_CLOSED_TEST_TESTERS } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-// ── 문제 카드 ────────────────────────────────────────────────────────
-const PAINS = [
-  {
-    title: "지인 부탁은 피드백이 아닙니다",
-    desc: "호의로 설치한 앱은 진짜로 쓰이지 않습니다. 잘 됐어 — 한 마디로 끝나는 테스트는 출시에 도움이 되지 않습니다.",
-  },
-  {
-    title: "채팅방 모집, 14일을 버티지 못합니다",
-    desc: "처음엔 열정적이다가 3일 후엔 읽씹. 여러 명이 모였다고 해서 끝까지 남아있지 않습니다. 한 명 빠지면 다시 처음부터.",
-  },
-  {
-    title: "숫자만 채우면 피드백이 비어있습니다",
-    desc: "Google Play 요건을 통과해도, 진짜 피드백 없이 출시한 앱은 혼자입니다. 테스터의 수가 아니라 테스터의 진심이 필요합니다.",
-  },
-];
+const PRICE = `${formatKrw(PAID_TESTER_PRICE_KRW)}원`;
 
-// ── 테스터 혜택 ──────────────────────────────────────────────────────
-const TESTER_CARDS = [
-  {
-    title: "가장 먼저 봅니다",
-    desc: "Google Play에 올라오기 전, 아직 세상에 공개되지 않은 앱을 당신이 먼저 씁니다. 출시 직전의 앱은 어디서도 볼 수 없습니다.",
-  },
-  {
-    title: "테스트하고 돈도 법니다",
-    desc: "곧 오픈되는 급구 서비스에서는 테스트 완주 시 100원이 지급됩니다. 새로운 것을 구경하면서 크레딧도 쌓이는 구조.",
-  },
-  {
-    title: "개발자에게 직접 닿습니다",
-    desc: "당신의 피드백이 출시 전 앱을 바꿉니다. 리뷰 한 줄보다 14일의 실제 사용이 개발자에게는 훨씬 더 큰 도움입니다.",
-  },
-];
-
-// ── How it works ─────────────────────────────────────────────────────
 const STEPS = [
+  { title: "앱 등록", desc: "비공개 테스트 링크와 간단한 설명을 올립니다." },
+  { title: "매칭 · 급구", desc: "품앗이로 모으고, 모자란 인원은 급구로 채웁니다." },
   {
-    n: "01",
-    who: "개발자",
-    title: "앱 등록",
-    desc: "초대 링크와 한 줄 소개. 30초면 진짜 테스터들이 볼 수 있는 매칭 목록에 올라갑니다.",
+    title: `${SEAT_TOTAL_DAYS}일 체크인`,
+    desc: `테스터가 매일 1분, 스크린샷으로 증빙합니다. ${SEAT_MIN_CHECKIN_DAYS}일 이상이면 완주.`,
   },
-  {
-    n: "02",
-    who: "테스터",
-    title: "앱 선택",
-    desc: "관심 가는 앱을 골라 참여 신청. 14일 동안 실제로 씁니다. 어려운 조건 없이, 쓰기만 하면 됩니다.",
-  },
-  {
-    n: "03",
-    who: "함께",
-    title: "출시 준비 완료",
-    desc: "14일이 지나면 개발자는 Google Play 출시 요건을 채우고, 테스터는 다음 앱을 기다립니다.",
-  },
-];
+  { title: "출시 · 맞테스트", desc: "출시하고, 나를 도운 개발자의 앱도 테스트해 줍니다." },
+] as const;
 
-// ── FAQ ──────────────────────────────────────────────────────────────
+const CREDIT_RULE_LINES = [
+  "보상으로만 적립됩니다",
+  "구매할 수 없습니다",
+  "양도할 수 없습니다",
+  "현금으로 환급할 수 없습니다",
+] as const;
+
 const FAQ = [
   {
     q: "테스터로 참여하면 어떤 혜택이 있나요?",
-    a: "출시 전 앱을 누구보다 먼저 체험할 수 있고, 참여할수록 신뢰도 ★가 쌓입니다. 크레딧은 💰 유료 테스터 시트에 참여했을 때만 적립됩니다 (시트당 최대 700, 완주 후 지급). 크레딧은 내 앱의 테스터 시트 구매나 기프티콘 교환에 쓸 수 있습니다.",
+    a: `출시 전 앱을 누구보다 먼저 체험할 수 있고, 참여할수록 신뢰도가 쌓입니다. 크레딧은 유료 테스터 시트에 참여했을 때만 적립됩니다 (시트당 최대 ${SEAT_REWARD_MAX}, 완주 후 지급). 크레딧은 기프티콘·네이버페이 포인트로 바꾸거나 내 앱의 테스터 시트를 여는 데 쓸 수 있고, 구매하거나 현금으로 바꿀 수는 없습니다.`,
+  },
+  {
+    q: "급구는 무료 아니었나요?",
+    a: "급구는 이제 유료 테스터를 신청한 앱에 함께 켜집니다. 결제하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이 갑니다. 앱 등록과 품앗이 테스트 참여는 지금처럼 무료입니다.",
+  },
+  {
+    q: "급구(유료 테스터) 결제 금액은 어디에 쓰이나요?",
+    a: `테스터 1명당 ${PRICE}(부가세 포함)이며, 못 채우거나 완주하지 못한 시트는 환불됩니다. 회사는 이 금액 가운데 최대 ${formatKrw(SEAT_REWARD_MAX)}원을 14일을 완주한 테스터의 보상(기프티콘·네이버페이 포인트) 비용으로 쓰고, 부가세 ${formatKrw(MONEY_USE.vat)}원과 카드 수수료 약 ${formatKrw(MONEY_USE.cardFee)}원을 뺀 ${formatKrw(MONEY_USE.operating)}원을 서버·보상 발송·문의 응대 같은 운영에 씁니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
   },
   {
     q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
@@ -82,9 +79,7 @@ const FAQ = [
     q: "iOS 도 지원하나요?",
     a: "v1 은 Android Closed Testing 만 지원합니다. iOS TestFlight 는 별도 정책 검토 후 v2 에서 지원 예정입니다.",
   },
-];
-
-// ── 메인 ─────────────────────────────────────────────────────────────
+] as const;
 
 const HOME_JSON_LD = {
   "@context": "https://schema.org",
@@ -109,6 +104,18 @@ const ORG_JSON_LD = {
   url: "https://tester-match.knockknock.company",
   logo: "https://tester-match.knockknock.company/og-image.svg",
 };
+
+function ArrowLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-11 items-center gap-2 self-start border-b-[1.5px] border-ink-900 text-[15px] font-medium text-ink-900 no-underline hover:border-accent-600 hover:text-accent-600"
+    >
+      {children}
+      <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+    </Link>
+  );
+}
 
 export default async function HomePage() {
   const user = await getCurrentUser();
@@ -135,8 +142,12 @@ export default async function HomePage() {
     };
   }
 
+  // 비로그인이면 로그인부터 (로그인 페이지는 돌아갈 경로를 받지 않는다)
+  const registerHref = user ? "/apps/new" : "/auth/login";
+  const browseHref = user ? "/browse" : "/auth/login";
+
   return (
-    <main className="min-h-screen">
+    <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
@@ -149,223 +160,169 @@ export default async function HomePage() {
 
       {onboarding && <OnboardingProgress steps={onboarding} />}
 
-      {/* Hero */}
-      <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">
-        <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
-          베타 오픈 준비 중
-        </span>
-        <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-5xl">
-          당신의 앱을 처음으로 열어볼
-          <br />
-          <span className="text-trust-600">진짜 테스터가 필요합니다</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-neutral-600">
-          처음 세상에 나오는 앱의 긴장감과,
-          <br className="hidden sm:block" />
-          아무도 모르는 앱을 가장 먼저 발견하는 기쁨이 만나는 곳.
-        </p>
-
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {user ? (
-            <>
-              <Link
-                href="/apps/new"
-                className="rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-              >
-                내 앱 등록하기
-              </Link>
-              <Link
-                href="/browse"
-                className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                테스트할 앱 보기
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/auth/login"
-                className="rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-              >
-                Google로 시작하기
-              </Link>
-              <a
-                href="#waitlist"
-                className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
-              >
-                사전 등록만 하기
-              </a>
-            </>
-          )}
+      {/* 히어로 */}
+      <section className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(460px,100%),1fr))] items-start gap-14 px-5 pt-16 pb-12">
+        <div className="flex flex-col gap-6">
+          <p className="m-0 font-mono text-[13px] tracking-[0.02em] text-ink-600">
+            GOOGLE PLAY 비공개 테스트 · 테스터 {PLAY_CLOSED_TEST_TESTERS}명 × {SEAT_TOTAL_DAYS}일
+          </p>
+          <h1 className="m-0 font-display text-display font-semibold text-ink-900">
+            부탁은 투자로,
+            <br />
+            하루 1분은 보상으로
+          </h1>
+          <p className="m-0 max-w-[520px] text-lead text-ink-700">
+            개발자끼리 서로의 앱을 테스트하는 품앗이는 무료입니다. 모자란 인원은 회사가 모집·관리하는
+            커뮤니티 테스터로 채우고, 가격과 돈의 쓰임은 영수증처럼 전부 공개합니다.
+          </p>
+          <div className="flex flex-col gap-3 pt-2 min-[481px]:flex-row min-[481px]:flex-wrap">
+            <ButtonLink href={registerHref} size="lg">
+              내 앱 등록하기
+            </ButtonLink>
+            <ButtonLink href={browseHref} size="lg" variant="secondary">
+              테스트 참여하기
+            </ButtonLink>
+          </div>
+          <StatTiles className="border-t border-ink-900 pt-5">
+            <StatTile label="품앗이" value="무료" />
+            <StatTile label="급구 · 테스터 1명" value={PRICE} />
+            <StatTile label="완주 기준" value={`${SEAT_TOTAL_DAYS}일 중 ${SEAT_MIN_CHECKIN_DAYS}일`} />
+          </StatTiles>
         </div>
+
+        <Receipt
+          className="max-w-[420px] justify-self-center"
+          title="급구 · 유료 테스터"
+          badge={!PAID_TESTERS_PUBLIC_ORDERING && <PaymentPendingBadge />}
+          meta="판매자 낰낰컴퍼니 · 부가세 포함 가격"
+          footer={
+            <>
+              판매·환불 주체는 낰낰컴퍼니입니다.{" "}
+              <Link href="/policies/refund" className="text-ink-900 underline hover:text-accent-600">
+                환불 정책
+              </Link>{" "}
+              ·{" "}
+              <Link href="/policies/terms" className="text-ink-900 underline hover:text-accent-600">
+                이용약관
+              </Link>
+            </>
+          }
+        >
+          <ReceiptDivider />
+          <ReceiptRows>
+            <ReceiptRow label="테스터 1명" value={PRICE} />
+            <ReceiptRow
+              label={`기본 ${PAID_TESTER_RECOMMENDED_COUNT}명 (${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택)`}
+              value={`${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`}
+            />
+            <ReceiptRow label="진행 기간" value={`${SEAT_TOTAL_DAYS}일`} />
+            <ReceiptRow label="충원 기간" value={`결제 후 ${PAID_SEAT_FILL_DAYS}일`} />
+          </ReceiptRows>
+          <ReceiptDivider />
+          <MoneyUseBar />
+          <ReceiptDivider />
+          <ReceiptRows className="gap-1.5 text-[13px]">
+            <ReceiptRow label="못 채운 시트" value="환불" tone="accent" />
+            <ReceiptRow label="완주하지 못한 시트" value="환불" tone="accent" />
+          </ReceiptRows>
+        </Receipt>
       </section>
 
-      {/* 앱 스크롤 배너 */}
-      <section className="bg-neutral-50 py-12">
-        <div className="mb-8 px-6 text-center">
-          <p className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
-            지금 테스터를 기다리는 앱들
-          </p>
-          <h2 className="mt-2 text-xl font-bold text-neutral-900 sm:text-2xl">
+      {/* 지금 테스터를 기다리는 앱들 — 예전 홈의 좌우로 흐르는 카드 배너 (마우스를 올리면 멈춤, 동작 줄이기 설정이면 정지) */}
+      <section aria-labelledby="waiting-apps-title" className="border-y border-ink-200 bg-surface-1 py-12">
+        <div className="mx-auto mb-8 flex max-w-[1200px] flex-col gap-2 px-5 text-center">
+          <p className="m-0 font-mono text-[13px] tracking-[0.02em] text-ink-600">지금 테스터를 기다리는 앱들</p>
+          <h2
+            id="waiting-apps-title"
+            className="m-0 font-display text-h2 font-semibold tracking-[-0.01em] text-ink-900"
+          >
             세상에 나오기 직전, 이 앱들을 가장 먼저 써볼 수 있습니다
           </h2>
         </div>
         <AppScrollBanner />
-        <div className="mt-8 text-center">
-          <Link
-            href={user ? "/browse" : "/auth/login"}
-            className="inline-flex rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50"
-          >
-            전체 앱 보기 →
-          </Link>
+        <div className="mt-8 flex justify-center px-5">
+          <ButtonLink href={browseHref} variant="secondary">
+            전체 앱 보기
+            <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+          </ButtonLink>
         </div>
       </section>
 
-      {/* Problem */}
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
-          테스터를 구하기 어려운 진짜 이유
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-base text-neutral-600">
-          사람이 없는 게 아닙니다. 14일을 실제로 써줄 사람을 만나기 어려운 겁니다.
-        </p>
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {PAINS.map((p) => (
-            <div
-              key={p.title}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-            >
-              <h3 className="text-base font-semibold text-neutral-900">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* For testers */}
-      <section className="bg-neutral-50 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-12 text-center">
-            <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
-              테스터에게
-            </span>
-            <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
-              세상에 나오기 전 앱,
+      {/* 두 사용자 */}
+      <section className="mx-auto max-w-[1200px] px-5 pb-14">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(440px,100%),1fr))] border-t border-ink-900">
+          <article className="flex flex-col gap-3.5 border-b border-ink-900 py-9 min-[921px]:pr-8">
+            <span className="font-mono text-xs tracking-[0.04em] text-accent-600">01 · 개발자</span>
+            <h2 className="m-0 font-display text-h1 font-semibold text-ink-900">
+              테스터는 부탁하는 게 아니라,
               <br />
-              <span className="text-trust-600">당신이 가장 먼저 씁니다</span>
+              내 앱에 투자하는 겁니다
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">
-              개발자가 아니어도 괜찮습니다.
-              <br />
-              새로운 것을 먼저 써보고 싶은 사람이라면 누구에게나 열려 있습니다.
+            <p className="m-0 max-w-[460px] text-[15px] leading-[1.75] text-ink-700">
+              앱을 등록하면 품앗이로 매칭되고, 모자란 인원은 급구로 채웁니다. {SEAT_TOTAL_DAYS}일 동안
+              테스터의 체크인 증빙을 콘솔에서 매일 확인합니다. 못 채운 시트와 완주하지 못한 시트는
+              환불됩니다.
             </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {TESTER_CARDS.map((c) => (
-              <div
-                key={c.title}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-              >
-                <h3 className="text-base font-semibold text-neutral-900">{c.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
-              </div>
-            ))}
-          </div>
+            <ArrowLink href="/paid-testers">테스터 모으기</ArrowLink>
+          </article>
+          <article className="flex flex-col gap-3.5 border-b border-ink-900 py-9 min-[921px]:pl-8">
+            <span className="font-mono text-xs tracking-[0.04em] text-accent-600">02 · 테스터</span>
+            <h2 className="m-0 font-display text-h1 font-semibold text-ink-900">
+              하루 1분, 출시 전 앱을 먼저 쓰고
+              <br />
+              커피 한 잔을 모읍니다
+            </h2>
+            <p className="m-0 max-w-[460px] text-[15px] leading-[1.75] text-ink-700">
+              매일 앱을 열고 스크린샷 한 장으로 체크인합니다. 유료 시트를 완주하면 회사가 크레딧을
+              지급하고(최대 {formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)}, 앱 출시 시 +{SEAT_REWARDS.launch}),{" "}
+              {formatKrw(REDEMPTION_MIN_CREDITS)}부터 기프티콘·네이버페이 포인트로 교환합니다.
+            </p>
+            <ArrowLink href={browseHref}>매칭 목록 보기</ArrowLink>
+          </article>
         </div>
       </section>
 
-      {/* For developers */}
-      <section className="bg-trust-50 py-20">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="mb-3 text-center">
-            <span className="inline-flex items-center rounded-full bg-trust-100 px-3 py-1 text-xs font-semibold text-trust-700">
-              개발자에게
-            </span>
-          </div>
-          <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
-            진짜 쓰는 테스터 한 명이
-            <br />
-            <span className="text-trust-600">지인 여럿보다 낫습니다</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-neutral-600">
-            Tester Match의 테스터는 형식적으로 설치만 하지 않습니다.
-            14일 동안 실제로 앱을 사용하고, 체크인으로 사용 여부를 스스로 확인합니다.
-            당신의 앱은 이미 나올 준비가 됐습니다. 남은 건 진짜 테스터입니다.
-          </p>
-          <div className="mt-10 text-center">
-            {user ? (
-              <Link
-                href="/apps/new"
-                className="inline-flex rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-              >
-                내 앱 등록하기 →
-              </Link>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="inline-flex rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-              >
-                Google로 시작하기 →
-              </Link>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
-          어떻게 동작하나요
+      {/* 진행 방식 */}
+      <section className="mx-auto flex max-w-[1200px] flex-col gap-6 px-5 pb-14">
+        <h2 className="m-0 font-display text-h2 font-semibold tracking-[-0.01em] text-ink-900">
+          등록부터 출시까지
         </h2>
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
-          {STEPS.map((step) => (
-            <div
-              key={step.n}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-center gap-2">
-                <span className="tabular text-sm font-bold text-trust-600">{step.n}</span>
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
-                  {step.who}
-                </span>
-              </div>
-              <h3 className="mt-3 text-lg font-semibold text-neutral-900">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{step.desc}</p>
+        <Steps items={STEPS} />
+      </section>
+
+      {/* 자주 묻는 질문 — 레퍼런스에 없는 기존 섹션, 괘선 목록으로 유지 */}
+      <section className="mx-auto flex max-w-[1200px] flex-col gap-6 px-5 pb-14">
+        <h2 className="m-0 font-display text-h2 font-semibold tracking-[-0.01em] text-ink-900">
+          자주 묻는 질문
+        </h2>
+        <dl className="m-0 border-t border-ink-900">
+          {FAQ.map((item) => (
+            <div key={item.q} className="border-b border-ink-200 py-5">
+              <dt className="text-base font-bold text-ink-900">{item.q}</dt>
+              <dd className="m-0 mt-2 max-w-[760px] text-[15px] text-ink-700">{item.a}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </section>
 
-      {/* FAQ */}
-      <section className="bg-neutral-50 py-20">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-2xl font-bold text-neutral-900 sm:text-3xl">자주 묻는 질문</h2>
-          <dl className="mt-8 space-y-6">
-            {FAQ.map((item) => (
-              <div key={item.q} className="border-b border-neutral-200 pb-6">
-                <dt className="text-base font-semibold text-neutral-900">Q. {item.q}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-neutral-600">{item.a}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      </section>
-
-      {/* Waitlist */}
-      {!user && (
-        <section id="waitlist" className="py-20">
-          <div className="mx-auto max-w-md px-6 text-center">
-            <h2 className="text-2xl font-bold text-neutral-900">베타 초대를 받아보세요</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              정식 오픈 시 가장 먼저 알려드립니다. 이메일 외 정보는 수집하지 않습니다.
+      {/* 크레딧 규칙 — 페이지의 반전 섹션 하나 */}
+      <section className="bg-surface-ink text-white">
+        <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))] items-center gap-7 px-5 py-11">
+          <div className="flex flex-col gap-2">
+            <h2 className="m-0 font-display text-h2 font-semibold tracking-[-0.01em]">크레딧은 보상입니다</h2>
+            <p className="m-0 max-w-[440px] text-[15px] text-ink-300">
+              유료 시트를 완주한 테스터에게 회사가 지급합니다. 돈처럼 다루지 않습니다.
             </p>
-            <div className="mt-6">
-              <WaitlistForm />
-            </div>
           </div>
-        </section>
-      )}
-
+          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-x-6 gap-y-2.5 p-0 font-mono text-sm">
+            {CREDIT_RULE_LINES.map((line) => (
+              <li key={line} className="border-b border-ink-700 py-2.5">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
     </main>
   );
 }

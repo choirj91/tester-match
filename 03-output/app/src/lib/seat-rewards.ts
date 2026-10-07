@@ -10,11 +10,12 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { PAID_SEAT_LAUNCH_LEDGER_REF, PAID_SEAT_LEDGER_REF, appendLedger } from "@/lib/credits";
+import { PAID_SEAT_LAUNCH_LEDGER_REF, PAID_SEAT_LEDGER_REF, appendLedger, formatKrw } from "@/lib/credits";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { seatRewardDisputedEmail } from "@/lib/email-templates";
 import { createNotification } from "@/lib/notifications";
 import { noteRefundFailure, refundSeats, settleOrderIfDone } from "@/lib/paid-seats";
+import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 import { CONTACT_EMAIL, SITE_URL } from "@/lib/site";
 import {
   DISPUTE_CATEGORIES,
@@ -68,7 +69,7 @@ async function holdSeatReward(
     userId: args.testerUserId,
     type: "seat_reward",
     title: `완주! ${amountLabel} 크레딧 확정 대기`,
-    body: `"${appName}" 유료 시트 ${breakdown.days}일 출석 완료 (설치 ${breakdown.install} + 출석 ${breakdown.attendance} + 보너스 ${breakdown.streak + breakdown.completion + breakdown.perfect}). 구매자가 확인하면 바로, 응답이 없으면 ${SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다. 앱이 정식 출시되면 +${SEAT_REWARDS.launch}.`,
+    body: `"${appName}" 유료 시트 ${breakdown.days}일 출석 완료 (설치 ${breakdown.install} + 출석 ${breakdown.attendance} + 보너스 ${breakdown.streak + breakdown.completion + breakdown.perfect}). 개발자가 확인하면 바로, 응답이 없으면 ${SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다. 앱이 정식 출시되면 +${SEAT_REWARDS.launch}.`,
     link: "/credits",
   });
   if (order) {
@@ -262,7 +263,7 @@ export async function disputeSeatReward(
     userId: row.tester_user_id,
     type: "seat_reward",
     title: "보상에 이의가 제기되었습니다",
-    body: `구매자 이의: ${DISPUTE_CATEGORIES[category]} — "${reason.slice(0, 120)}". 운영팀이 스크린샷 증빙을 확인해 ${DISPUTE_DECISION_DAYS}일 안에 판정하며, 기한 내 판정이 없으면 자동 지급됩니다. 소명은 문의 메일로 보내주세요.`,
+    body: `개발자 이의: ${DISPUTE_CATEGORIES[category]} — "${reason.slice(0, 120)}". 운영팀이 스크린샷 증빙을 확인해 ${DISPUTE_DECISION_DAYS}일 안에 판정하며, 기한 내 판정이 없으면 자동 지급됩니다. 소명은 문의 메일로 보내주세요.`,
     link: "/credits",
   });
   const tmpl = seatRewardDisputedEmail({
@@ -326,8 +327,8 @@ export async function forfeitSeatReward(
     title: "이의가 인용되었습니다",
     body:
       refund.mode === "credits"
-        ? "해당 시트의 테스터 보상은 지급되지 않으며 1,000 크레딧이 환급되었습니다."
-        : "해당 시트의 테스터 보상은 지급되지 않으며 1,000원은 영업일 3일 내 부분 취소됩니다.",
+        ? `해당 시트의 테스터 보상은 지급되지 않으며 ${formatKrw(PAID_TESTER_PRICE_KRW)} 크레딧이 복구되었습니다.`
+        : `해당 시트의 테스터 보상은 지급되지 않으며 ${formatKrw(PAID_TESTER_PRICE_KRW)}원은 영업일 3일 내 부분 취소됩니다.`,
     link: `/console/orders/${row.order_id}`,
   });
   await createNotification({
@@ -539,7 +540,7 @@ export async function grantLaunchBonuses(
     await createNotification({
       userId: r.tester_user_id,
       type: "seat_reward",
-      title: `🎉 출시 보너스 +${SEAT_REWARDS.launch} 크레딧`,
+      title: `출시 보너스 +${SEAT_REWARDS.launch} 크레딧`,
       body: `테스트에 참여한 "${appNameByOrder.get(r.order_id) ?? "앱"}"이 정식 출시되었습니다. 덕분입니다!`,
       link: "/credits",
     });

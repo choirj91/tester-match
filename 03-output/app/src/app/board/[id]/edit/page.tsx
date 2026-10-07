@@ -30,11 +30,11 @@ export default async function EditPostPage({ params }: Props) {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href={`/board/${post.id}`} className="text-sm text-neutral-500 hover:text-neutral-900">
+      <main className="mx-auto max-w-3xl px-5 pt-12 pb-[88px]">
+        <Link href={`/board/${post.id}`} className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600">
           ← 글 보기
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">글 수정</h1>
+        <h1 className="mt-2 font-display text-h1 font-semibold text-ink-900">글 수정</h1>
         <div className="mt-8">
           <EditPostForm
             id={post.id}

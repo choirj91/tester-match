@@ -21,7 +21,7 @@ type ManualStatus = Exclude<InquiryStatus, "answered">;
 const MANUAL_STATUSES: ManualStatus[] = ["open", "in_progress", "closed"];
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-1 focus:ring-trust-600";
+  "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-accent-600";
 
 export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Props) {
   const router = useRouter();
@@ -74,9 +74,9 @@ export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Prop
 
   return (
     <div className="mt-4 space-y-4">
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-sm font-bold text-neutral-900">답변</h2>
-        {answer && <p className="tabular mt-1 text-xs text-neutral-400">최근 등록 {answeredAt}</p>}
+      <section className="border border-ink-200 bg-white p-6">
+        <h2 className="text-sm font-bold text-ink-900">답변</h2>
+        {answer && <p className="tabular mt-1 text-xs text-ink-600">최근 등록 {answeredAt}</p>}
         <textarea
           value={answerText}
           onChange={(e) => setAnswerText(e.target.value)}
@@ -86,23 +86,23 @@ export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Prop
           className={`${inputClass} mt-3`}
         />
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="tabular text-xs text-neutral-400">
+          <p className="tabular text-xs text-ink-600">
             {answerText.length.toLocaleString("ko-KR")} / {INQUIRY_ANSWER_MAX.toLocaleString("ko-KR")}
           </p>
           <button
             type="button"
             disabled={busy}
             onClick={submitAnswer}
-            className="bg-trust-600 hover:bg-trust-700 rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="bg-ink-900 hover:bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             {answer ? "답변 수정 등록" : "답변 등록"}
           </button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-sm font-bold text-neutral-900">상태</h2>
-        <p className="mt-1 text-xs text-neutral-500">
+      <section className="border border-ink-200 bg-white p-6">
+        <h2 className="text-sm font-bold text-ink-900">상태</h2>
+        <p className="mt-1 text-xs text-ink-600">
           &ldquo;{INQUIRY_STATUSES.answered}&rdquo;는 답변을 등록하면 자동으로 바뀝니다.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -114,10 +114,10 @@ export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Prop
               onClick={() =>
                 void send({ action: "status", status: key }, `상태를 "${INQUIRY_STATUSES[key]}"로 바꿨습니다.`)
               }
-              className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition disabled:opacity-60 ${
+              className={` px-3.5 py-2 text-xs font-semibold transition disabled:opacity-60 ${
                 status === key
-                  ? "bg-neutral-900 text-white"
-                  : "border border-neutral-300 text-neutral-700 hover:border-neutral-500"
+                  ? "bg-ink-900 text-white"
+                  : "border border-ink-900 text-ink-700 hover:border-ink-900"
               }`}
             >
               {INQUIRY_STATUSES[key]}
@@ -126,9 +126,9 @@ export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Prop
         </div>
       </section>
 
-      <section className="rounded-2xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-sm font-bold text-neutral-900">내부 메모</h2>
-        <p className="mt-1 text-xs text-neutral-500">작성자에게 보이지 않습니다.</p>
+      <section className="border border-ink-200 bg-white p-6">
+        <h2 className="text-sm font-bold text-ink-900">내부 메모</h2>
+        <p className="mt-1 text-xs text-ink-600">작성자에게 보이지 않습니다.</p>
         <textarea
           value={memoText}
           onChange={(e) => setMemoText(e.target.value)}
@@ -141,15 +141,15 @@ export function InquiryAdminPanel({ id, status, answer, answeredAt, memo }: Prop
             type="button"
             disabled={busy}
             onClick={() => void send({ action: "memo", memo: memoText.trim() }, "메모를 저장했습니다.")}
-            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:border-neutral-500 disabled:opacity-50"
+            className="border border-ink-900 px-4 py-2 text-sm font-semibold text-ink-700 hover:border-ink-900 disabled:opacity-50"
           >
             메모 저장
           </button>
         </div>
       </section>
 
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
-      {notice && <p className="text-sm font-medium text-emerald-700">{notice}</p>}
+      {error && <p className="text-sm font-medium text-danger-700">{error}</p>}
+      {notice && <p className="text-sm font-medium text-success-700">{notice}</p>}
     </div>
   );
 }

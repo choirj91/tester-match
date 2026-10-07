@@ -12,7 +12,7 @@ import { screenshotStore } from "@/lib/screenshot-store";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ensureOrderSlots } from "@/lib/console-data";
-import { appendLedger } from "@/lib/credits";
+import { appendLedger, formatKrw } from "@/lib/credits";
 import { fetchAll } from "@/lib/fetch-all";
 import { createNotification, createNotificationsBulk } from "@/lib/notifications";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
@@ -93,10 +93,10 @@ export function orderSettlement(args: {
 /** 오픈채팅 공지 텍스트 */
 export function seatNoticeText(args: { appName: string; appId: number; seats: number }): string {
   return [
-    `💰 유료 테스트 시트 오픈 — ${args.appName}`,
+    `유료 테스트 시트 오픈 — ${args.appName}`,
     "",
     `남은 시트 ${args.seats}명 · ${SEAT_REWARD_SUMMARY}`,
-    "14일 중 12일 이상 출석하면 완주 — 구매자 확정 후 지급, 기프티콘 교환 가능.",
+    "14일 중 12일 이상 출석하면 완주 — 개발자 확정 후 지급, 기프티콘 교환 가능.",
     "매일 앱 실행 + 체크인 + 스크린샷 1장. 리뷰·별점 작성은 금지.",
     `${SITE_URL}/browse/${args.appId}`,
   ].join("\n");
@@ -357,7 +357,7 @@ export async function activatePaidOrder(
     users.map((u) => u.id),
     {
       type: "paid_seat_open",
-      title: `💰 유료 시트 오픈 — ${args.appName.slice(0, 40)} ${args.seats}명`,
+      title: `유료 시트 오픈 — ${args.appName.slice(0, 40)} ${args.seats}명`,
       body: `${SEAT_REWARD_SUMMARY}. 매일 체크인 + 스크린샷 1장, 기프티콘 교환 가능. 선착순.`,
       link,
     },
@@ -587,7 +587,7 @@ export async function closeOrderSeats(
       title: `미충원 시트 ${unfilled}명 마감 — 환불 처리`,
       body:
         refund.mode === "credits"
-          ? `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")} 크레딧이 환급되었습니다.`
+          ? `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")} 크레딧이 복구되었습니다.`
           : `"${order.apps?.name ?? "앱"}" ${reason}. ${refund.amount.toLocaleString("ko-KR")}원은 영업일 3일 내 결제 수단으로 부분 취소됩니다.`,
       link: `/console/orders/${orderId}`,
     });
@@ -609,8 +609,8 @@ function seatDropRefundBody(appName: string, refund: SeatRefundResult): string {
   const lead = `"${appName}" 시트 테스터가 완주하지 못했습니다.`;
   if (!refund.ok) return `${lead} 이 시트는 환불 대상이며 운영팀이 확인 후 처리합니다.`;
   return refund.mode === "credits"
-    ? `${lead} 1,000 크레딧이 환급되었습니다.`
-    : `${lead} 1,000원은 영업일 3일 내 부분 취소됩니다.`;
+    ? `${lead} ${formatKrw(PAID_TESTER_PRICE_KRW)} 크레딧이 복구되었습니다.`
+    : `${lead} ${formatKrw(PAID_TESTER_PRICE_KRW)}원은 영업일 3일 내 부분 취소됩니다.`;
 }
 
 /**

@@ -1,7 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Camera, Check } from "lucide-react";
+import { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/form";
 
 type Props = {
   matchId: number;
@@ -15,6 +19,7 @@ type Props = {
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 const MAX_DIMENSION = 1600;
+const COMMENT_MAX = 200;
 
 function deadlineLabel(iso: string): string {
   return new Date(iso).toLocaleString("ko-KR", {
@@ -45,6 +50,10 @@ async function shrinkIfNeeded(file: File): Promise<File> {
   }
 }
 
+/**
+ * 오늘 체크인 — 유료 시트는 [오늘 체크인] → 스크린샷 선택 → 자동 제출 (탭 2번).
+ * 한 줄 피드백은 선택 사항이라 버튼을 누르기 전에 미리 적어 둔다 (제출 중간에 묻지 않는다).
+ */
 export function CheckInButton({
   matchId,
   alreadyCheckedToday,
@@ -54,96 +63,118 @@ export function CheckInButton({
 }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [comment, setComment] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const commentId = useId();
 
   if (expired) {
     return (
-      <button
-        type="button"
-        disabled
-        className="rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-500"
-      >
+      <Button variant="secondary" size="md" disabled>
         체크인 기간 만료
-      </button>
+      </Button>
     );
   }
 
   if (alreadyCheckedToday) {
     return (
-      <button
-        type="button"
-        disabled
-        className="rounded-lg bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500"
-      >
-        ✓ 오늘 체크인 완료
-      </button>
+      <Badge tone="success" className="min-h-11 gap-1.5">
+        <Check className="size-4" strokeWidth={2} aria-hidden="true" />
+        오늘 체크인 완료
+      </Badge>
     );
   }
 
   async function submit(file: File | null) {
     setBusy(true);
+    setError(null);
     const init: RequestInit = { method: "POST" };
     if (paidSeat) {
       if (!file) {
-        alert("앱 실행 화면 스크린샷 1장을 첨부해주세요.");
+        setError("앱 실행 화면 스크린샷 1장을 첨부해주세요.");
         setBusy(false);
         return;
       }
-      const comment =
-        window.prompt("오늘 써본 느낌 한 줄 (선택) — 앱 등록자에게 전달되는 피드백이에요", "") ?? "";
       const form = new FormData();
       form.append("screenshot", await shrinkIfNeeded(file));
-      form.append("comment", comment.slice(0, 200));
+      form.append("comment", comment.slice(0, COMMENT_MAX));
       init.body = form;
     }
     const res = await fetch(`/api/matches/${matchId}/checkins`, init);
     const data = (await res.json().catch(() => ({}))) as { message?: string };
     if (!res.ok) {
-      alert(data.message ?? "체크인에 실패했습니다.");
+      setError(data.message ?? "체크인에 실패했습니다.");
       setBusy(false);
       return;
     }
     router.refresh();
   }
 
+  const errorLine = error && (
+    <p role="alert" className="text-danger-700 m-0 text-[13px]">
+      {error}
+    </p>
+  );
+
   if (paidSeat) {
     return (
-      <div className="flex flex-col items-end gap-1">
+      <div className="flex w-full flex-col gap-2">
         <input
           ref={fileRef}
           type="file"
           accept="image/png,image/jpeg,image/webp"
           className="hidden"
+          data-testid="checkin-file"
           onChange={(e) => {
             const file = e.target.files?.[0] ?? null;
             e.target.value = "";
             void submit(file);
           }}
         />
-        <button
-          type="button"
+        <Button
+          size="md"
           onClick={() => fileRef.current?.click()}
-          disabled={busy}
-          className="rounded-lg bg-trust-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          loading={busy}
+          className="self-start"
         >
-          {busy ? "업로드 중..." : "📷 스크린샷 올리고 체크인"}
-        </button>
-        <span className="text-[10px] text-neutral-400">
-          앱 실행 화면 1장 · 알림·개인정보는 가려주세요
-          {deadlineIso && ` · 오늘 마감 ${deadlineLabel(deadlineIso)}`}
+          <Camera className="size-[18px]" strokeWidth={1.8} aria-hidden="true" />
+          오늘 체크인
+        </Button>
+        <span className="text-ink-600 text-xs">
+          스크린샷 1장을 고르면 바로 제출됩니다 · 앱 실행 화면 1장 · 알림·개인정보는 가려주세요
+          {deadlineIso && (
+            <>
+              {" · 오늘 마감 "}
+              <span className="font-mono tabular-nums">{deadlineLabel(deadlineIso)}</span>
+            </>
+          )}
         </span>
+        <details className="text-ink-700 text-sm">
+          <summary className="text-ink-900 hover:text-accent-600 inline-flex min-h-11 cursor-pointer items-center underline">
+            한 줄 피드백 남기기 (선택)
+          </summary>
+          <label htmlFor={commentId} className="text-ink-600 mt-1 block text-xs">
+            오늘 써본 느낌 한 줄 — 앱 등록자에게 전달되는 피드백이에요
+          </label>
+          <Input
+            id={commentId}
+            value={comment}
+            maxLength={COMMENT_MAX}
+            onChange={(e) => setComment(e.target.value)}
+            className="mt-1.5"
+          />
+        </details>
+        {errorLine}
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={() => void submit(null)}
-      disabled={busy}
-      className="rounded-lg bg-trust-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
-    >
-      {busy ? "처리 중..." : "오늘 체크인"}
-    </button>
+    <div className="flex flex-col gap-2">
+      <Button size="md" onClick={() => void submit(null)} loading={busy}>
+        오늘 체크인
+      </Button>
+      {errorLine}
+    </div>
   );
 }

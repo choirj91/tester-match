@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/state";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
 import { getCurrentUser } from "@/lib/auth";
 import { listConsoleOrders } from "@/lib/console-data";
 import { CONSOLE_TOTAL_DAYS, attendanceRate } from "@/lib/console";
@@ -19,36 +23,39 @@ export default async function ConsoleHomePage() {
   const done = orders.filter((o) => o.status === "completed").length;
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <h1 className="text-xl font-bold">{isAdmin ? "전체 주문" : "내 유료 테스터"}</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        주문을 열면 테스터별 14일 출석표와 실행 스크린샷을 확인할 수 있습니다.
-      </p>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">
+          {isAdmin ? "전체 주문" : "내 유료 테스터"}
+        </h1>
+        <p className="m-0 text-sm text-ink-600">
+          주문을 열면 테스터별 14일 출석표와 실행 스크린샷을 확인할 수 있습니다.
+        </p>
+      </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-3">
+      <StatTiles>
         {[
           { label: "진행 중", value: active },
           { label: "충원 대기", value: waiting },
           { label: "완료", value: done },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
-            <p className="text-xs text-neutral-500">{s.label}</p>
-            <p className="mt-1 text-2xl font-bold">{s.value}</p>
-          </div>
+          <StatTile key={s.label} rule label={s.label} value={<span className="font-mono">{s.value}</span>} />
         ))}
-      </div>
+      </StatTiles>
 
       {orders.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">
-          아직 주문이 없습니다.{" "}
-          {!isAdmin && (
-            <Link href="/paid-testers" className="text-trust-600 underline underline-offset-2">
-              유료 테스터 신청하기
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          title="아직 주문이 없습니다."
+          action={
+            !isAdmin && (
+              <ButtonLink href="/paid-testers" variant="secondary">
+                유료 테스터 신청하기
+              </ButtonLink>
+            )
+          }
+        />
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
           {orders.map((o) => {
             const rate = attendanceRate(
               Array.from({ length: o.doneCount }, () => ({ status: "done" as const })),
@@ -59,33 +66,31 @@ export default async function ConsoleHomePage() {
               <li key={o.id}>
                 <Link
                   href={`/console/orders/${o.id}`}
-                  className="block rounded-xl border border-neutral-200 bg-white p-5 transition hover:border-trust-500 hover:shadow-sm"
+                  className="block border border-ink-900 bg-white p-5 text-ink-900 no-underline transition-colors hover:bg-surface-1"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-base font-semibold">
+                      <p className="m-0 truncate text-base font-semibold">
                         {o.apps?.name ?? "삭제된 앱"}{" "}
-                        <span className="text-sm font-normal text-neutral-500">
+                        <span className="font-mono text-sm font-normal text-ink-600 tabular-nums">
                           · 테스터 {o.tester_count}명 · {formatKrw(o.amount_krw)}원
                         </span>
                       </p>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="m-0 mt-1 font-mono text-xs text-ink-600 tabular-nums">
                         {isAdmin && o.users ? `${o.users.nickname} · ` : ""}
                         {o.order_code} · 주문{" "}
                         {new Date(o.created_at).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
                       </p>
                     </div>
-                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
-                      {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
-                    </span>
+                    <Badge tone="outline">{PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}</Badge>
                   </div>
-                  <div className="mt-4 flex items-center gap-4 text-xs text-neutral-600">
-                    <span className="w-24 shrink-0 font-semibold">
+                  <div className="mt-4 flex items-center gap-4 font-mono text-xs text-ink-700 tabular-nums">
+                    <span className="w-24 shrink-0 font-medium">
                       {o.dayN ? `D+${o.dayN} / ${CONSOLE_TOTAL_DAYS}` : "개시 전"}
                     </span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-neutral-100">
+                    <div className="h-2 flex-1 border border-ink-900 bg-white">
                       <div
-                        className="h-full rounded-full bg-trust-600"
+                        className="h-full bg-ink-900"
                         style={{ width: `${o.dayN ? (o.dayN / CONSOLE_TOTAL_DAYS) * 100 : 0}%` }}
                       />
                     </div>

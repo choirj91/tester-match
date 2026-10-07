@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { escapeSlackText, inquirySlackPayload, isSlackWebhookUrl, postSlackMessage } from "./slack";
+import {
+  dailyReportSlackPayload,
+  escapeSlackText,
+  inquirySlackPayload,
+  isSlackWebhookUrl,
+  opsSlackWebhookUrl,
+  postSlackMessage,
+} from "./slack";
 
 const WEBHOOK = "https://hooks.slack.com/services/T000/B000/XXXX";
 
@@ -117,5 +124,53 @@ describe("inquirySlackPayload", () => {
     expect(section.startsWith("첫 줄 가")).toBe(true);
     expect(section.length).toBe(301);
     expect(section.endsWith("…")).toBe(true);
+  });
+});
+
+describe("opsSlackWebhookUrl", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test("prefers the ops webhook and falls back to the inquiry webhook", () => {
+    vi.stubEnv("SLACK_OPS_WEBHOOK_URL", "");
+    vi.stubEnv("SLACK_INQUIRY_WEBHOOK_URL", "https://hooks.slack.com/services/T/B/inquiry");
+    expect(opsSlackWebhookUrl()).toBe("https://hooks.slack.com/services/T/B/inquiry");
+    vi.stubEnv("SLACK_OPS_WEBHOOK_URL", "https://hooks.slack.com/services/T/B/ops");
+    expect(opsSlackWebhookUrl()).toBe("https://hooks.slack.com/services/T/B/ops");
+  });
+});
+
+describe("dailyReportSlackPayload", () => {
+  const base = { dateLabel: "2026-10-07", activeOrders: 2, autoCanceledCount: 1, yearlyPaidCount: 3 };
+
+  test("says there is nothing to act on when there are no alerts", () => {
+    const payload = dailyReportSlackPayload({ ...base, alerts: [] });
+    expect(payload.text).toContain("2026-10-07");
+    expect(payload.text).toContain("이상 없음");
+    expect(JSON.stringify(payload)).toContain("진행 중 주문 2건");
+  });
+
+  test("lists alerts escaped and counts them in the headline", () => {
+    const payload = dailyReportSlackPayload({
+      ...base,
+      alerts: ["주문 <앱> 확인 필요 <!channel>", "크레딧 이상 · 잔액 0 미만: 1명 (#3 -100)"],
+    });
+    const json = JSON.stringify(payload);
+    expect(payload.text).toContain("확인 필요 2건");
+    expect(json).not.toContain("<!channel>");
+    expect(json).toContain("&lt;앱&gt;");
+    expect(json).toContain("크레딧 이상");
+    expect(json).toContain("/admin/paid-orders");
+  });
+
+  test("keeps every section under Slack's 3,000-character limit even with long alerts", () => {
+    const alerts = Array.from({ length: 25 }, (_, i) => `주문 ${i}: ${"<메모>".repeat(200)}`);
+    const payload = dailyReportSlackPayload({ ...base, alerts });
+    const sections = (payload.blocks ?? []) as Array<{ type: string; text?: { text: string } }>;
+    for (const block of sections) {
+      if (block.text) expect(block.text.text.length).toBeLessThanOrEqual(3000);
+    }
+    expect(JSON.stringify(payload)).toContain("외 5건");
   });
 });

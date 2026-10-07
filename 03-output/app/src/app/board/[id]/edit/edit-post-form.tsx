@@ -1,11 +1,11 @@
 "use client";
 
+import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { POST_CATEGORIES, type PostCategory } from "@/lib/validators/post";
-
-const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
+import { Button } from "@/components/ui/button";
+import { Field, Input, Select, Textarea } from "@/components/ui/form";
 
 type Initial = { category: string; title: string; body: string };
 
@@ -40,63 +40,58 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">카테고리</span>
-        <div className="mt-2">
-          {/* "질문" 분류는 없어졌다 — 예전 질문 글을 고칠 때 첫 항목(이야기)이 아니라 "자유"로 둔다 */}
-          <select
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
+      <Field label="카테고리">
+        {({ id: fieldId }) => (
+          /* "질문" 분류는 없어졌다 — 예전 질문 글을 고칠 때 첫 항목(이야기)이 아니라 "자유"로 둔다 */
+          <Select
+            id={fieldId}
             name="category"
             defaultValue={initial.category === "질문" ? "자유" : initial.category}
-            className={inputClass}
           >
             {POST_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
-          </select>
-        </div>
-      </label>
-      <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">제목</span>
-        <div className="mt-2">
-          <input
+          </Select>
+        )}
+      </Field>
+      <Field label="제목">
+        {({ id: fieldId }) => (
+          <Input
+            id={fieldId}
             name="title"
             type="text"
             required
             maxLength={120}
             defaultValue={initial.title}
-            className={inputClass}
           />
-        </div>
-      </label>
-      <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">본문</span>
-        <div className="mt-2">
-          <textarea
+        )}
+      </Field>
+      <Field label="본문">
+        {({ id: fieldId }) => (
+          <Textarea
+            id={fieldId}
             name="body"
             rows={12}
             required
             maxLength={10000}
             defaultValue={initial.body}
-            className={`${inputClass} resize-y`}
+            className="resize-y"
           />
-        </div>
-      </label>
+        )}
+      </Field>
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="flex items-center gap-1.5 bg-danger-50 px-3 py-2.5 text-sm text-danger-700">
+          <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
           {error}
         </p>
       )}
       <div className="flex items-center justify-end gap-3">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
-        >
+        <Button type="submit" loading={submitting} className="w-full sm:w-auto">
           {submitting ? "저장 중..." : "저장"}
-        </button>
+        </Button>
       </div>
     </form>
   );

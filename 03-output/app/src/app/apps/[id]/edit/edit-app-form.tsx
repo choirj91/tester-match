@@ -1,9 +1,14 @@
 "use client";
 
+import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EDITABLE_APP_STATUSES } from "@/lib/app-status";
 import { TESTER_GROUP_URL, PLAY_GROUP_EMAIL } from "@/lib/tester-group";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field, Input, Select, Textarea } from "@/components/ui/form";
+import { Notice } from "@/components/ui/notice";
 
 type Initial = {
   nickname: string;
@@ -15,9 +20,6 @@ type Initial = {
   required_testers: number;
   status: "matching" | "reviewing" | "launched" | "paused";
 };
-
-const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 disabled:bg-neutral-50";
 
 export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
   const router = useRouter();
@@ -58,135 +60,128 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-6">
       <Field label="닉네임">
-        <input
-          name="nickname"
-          type="text"
-          defaultValue={initial.nickname}
-          maxLength={32}
-          required
-          className={inputClass}
-        />
+        {({ id }) => (
+          <Input
+            id={id}
+            name="nickname"
+            type="text"
+            defaultValue={initial.nickname}
+            maxLength={32}
+            required
+          />
+        )}
       </Field>
 
       <Field label="앱 이름">
-        <input
-          name="name"
-          type="text"
-          defaultValue={initial.name}
-          maxLength={100}
-          required
-          className={inputClass}
-        />
+        {({ id }) => (
+          <Input
+            id={id}
+            name="name"
+            type="text"
+            defaultValue={initial.name}
+            maxLength={100}
+            required
+          />
+        )}
       </Field>
 
       <Field label="안드로이드 링크">
-        <input
-          name="store_invite_url"
-          type="url"
-          defaultValue={initial.store_invite_url}
-          required
-          className={inputClass}
-        />
+        {({ id }) => (
+          <Input
+            id={id}
+            name="store_invite_url"
+            type="url"
+            defaultValue={initial.store_invite_url}
+            required
+          />
+        )}
       </Field>
 
       <Field label="웹 참여 링크">
-        <input
-          name="web_invite_url"
-          type="url"
-          defaultValue={initial.web_invite_url}
-          required
-          className={inputClass}
-        />
+        {({ id }) => (
+          <Input
+            id={id}
+            name="web_invite_url"
+            type="url"
+            defaultValue={initial.web_invite_url}
+            required
+          />
+        )}
       </Field>
 
       {/* 공용 테스터 그룹 (고정) */}
-      <div className="rounded-2xl border border-mint-500/30 bg-mint-500/5 p-4">
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
-            자동 설정
-          </span>
-          <p className="text-sm font-semibold text-neutral-900">Google 그룹 — 공용 테스터 그룹</p>
+      <div className="border border-ink-900 bg-white p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="success">자동 설정</Badge>
+          <p className="text-[15px] font-bold text-ink-900">Google 그룹 — 공용 테스터 그룹</p>
         </div>
-        <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
-          저장 시 공용 그룹 <strong className="font-semibold text-neutral-800">{PLAY_GROUP_EMAIL}</strong> 으로
+        <p className="mt-2 text-sm leading-relaxed text-ink-700">
+          저장 시 공용 그룹 <strong className="break-all font-semibold text-ink-900">{PLAY_GROUP_EMAIL}</strong> 으로
           설정됩니다. Play Console 비공개 테스트 트랙의 테스터 목록에 이 그룹 이메일을 등록해주세요.
           Tester Match 회원은 자동으로 이 그룹에 가입되어 있습니다.
         </p>
         {initial.google_group_url && initial.google_group_url !== TESTER_GROUP_URL && (
-          <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-800">
+          <Notice kind="caution" className="mt-3">
             현재 개별 그룹(<span className="break-all">{initial.google_group_url}</span>)을 쓰고 있습니다.
             저장하면 공용 그룹으로 변경되니, Play Console 테스터 목록에도 공용 그룹 이메일을 추가해주세요.
-          </p>
+          </Notice>
         )}
       </div>
 
       <Field label="목표 테스터 수">
-        <input
-          name="required_testers"
-          type="number"
-          min={0}
-          max={100}
-          defaultValue={initial.required_testers}
-          required
-          className={`${inputClass} tabular`}
-        />
+        {({ id }) => (
+          <Input
+            id={id}
+            name="required_testers"
+            type="number"
+            min={0}
+            max={100}
+            defaultValue={initial.required_testers}
+            required
+            className="font-mono tabular-nums"
+          />
+        )}
       </Field>
 
       <Field label="앱 설명">
-        <textarea
-          name="short_description"
-          rows={3}
-          defaultValue={initial.short_description}
-          required
-          className={`${inputClass} resize-y`}
-        />
+        {({ id }) => (
+          <Textarea
+            id={id}
+            name="short_description"
+            rows={3}
+            defaultValue={initial.short_description}
+            required
+            className="resize-y"
+          />
+        )}
       </Field>
 
       <Field label="상태">
-        <select name="status" defaultValue={initial.status} className={inputClass}>
-          {EDITABLE_APP_STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+        {({ id }) => (
+          <Select id={id} name="status" defaultValue={initial.status}>
+            {EDITABLE_APP_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+        )}
       </Field>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="flex items-center gap-1.5 bg-danger-50 px-3 py-2.5 text-sm text-danger-700">
+          <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
           {error}
         </p>
       )}
 
       <div className="flex items-center justify-end gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
-        >
+        <Button type="submit" loading={submitting} className="w-full sm:w-auto">
           {submitting ? "저장 중..." : "저장"}
-        </button>
+        </Button>
       </div>
     </form>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="text-sm font-semibold text-neutral-900">{label}</span>
-      {hint && <span className="mt-0.5 block text-xs text-neutral-500">{hint}</span>}
-      <div className="mt-2">{children}</div>
-    </label>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCronAuth } from "@/lib/cron-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { emptyReferralSummary, grantReferralRewards, settledReferralCount } from "@/lib/referrals";
 import {
   grantLaunchBonuses,
   releaseDueRewards,
@@ -12,6 +13,8 @@ const RELEASES_PER_CALL = 5;
 const HOLD_REPAIRS_PER_CALL = 2;
 const EARN_REPAIRS_PER_CALL = 5;
 const LAUNCH_BONUSES_PER_CALL = 4;
+/** 추천 보너스 1건 = 심사·지급 함수 1 + (지급이면) 알림 2 서브리퀘스트. 후보 조회는 2 (후보 함수, 알림 대상) */
+const REFERRAL_REWARDS_PER_CALL = 5;
 /** 지급 시도가 전부 실패해 서브리퀘스트를 이미 쓴 호출에서의 보정 한도 */
 const STRAINED_HOLD_REPAIRS = 1;
 const STRAINED_EARN_REPAIRS = 2;
@@ -21,6 +24,7 @@ const STRAINED_EARN_REPAIRS = 2;
  *   1. 구매자 3일 무응답 보류 → 자동 확정, 이의 7일 미판정 → 자동 지급
  *   2. 보정: 보류 누락 생성, released 인데 적립 누락 채움
  *   3. 출시 보너스: 앱이 "출시 완료"가 된 시트 테스터에게 +100
+ *   4. 친구 추천: 피추천인의 첫 시트가 확정되면 DB 함수가 심사 — 지급(양쪽 신뢰도 +10) 또는 무효 (ADR-0019, 크레딧 없음)
  * 요청당 처리량에 상한이 있어 응답의 more 가 true 면 다시 호출한다 (워크플로우가 반복). 전부 멱등.
  * 진전이 없으면 more 를 내지 않는다 — 막힌 건 하나 때문에 무한 반복하지 않는다.
  */
@@ -55,6 +59,10 @@ export async function GET(request: Request) {
   const launch = strained
     ? { granted: 0, remaining: 0 }
     : await grantLaunchBonuses(supabase, LAUNCH_BONUSES_PER_CALL);
+  // 추천 보너스도 출시 보너스처럼 지급 시도가 막힌 호출에서는 건너뛴다 — 확정된 시트는 남으니 다음 호출이 잇는다
+  const referral = strained
+    ? emptyReferralSummary()
+    : await grantReferralRewards(supabase, { limit: REFERRAL_REWARDS_PER_CALL });
   return NextResponse.json({
     ok: true,
     released: 0,
@@ -63,12 +71,15 @@ export async function GET(request: Request) {
     repairedHolds,
     repairedEarn,
     launchGranted: launch.granted,
+    referral,
     // 지급 시도가 전부 실패한 호출은 반복하지 않는다 (같은 건을 다시 잡을 뿐) — 리포트의 "자동 확정 지연" 경보로 드러난다
     more:
       !strained &&
       (repairedHolds === HOLD_REPAIRS_PER_CALL ||
         repairedEarn === EARN_REPAIRS_PER_CALL ||
-        (launch.granted > 0 && launch.remaining > 0)),
+        (launch.granted > 0 && launch.remaining > 0) ||
+        // 지급·무효 모두 최종 상태라 진전이다 — 실패만 있었으면 반복하지 않는다
+        (settledReferralCount(referral) > 0 && referral.remaining > 0)),
   });
 }
 

@@ -43,12 +43,12 @@ const ROW2: AppItem[] = [
 function AppCard({ name, desc }: AppItem) {
   return (
     <div
-      className="mx-2 flex w-64 shrink-0 flex-col rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm"
+      className="mx-2 flex w-64 shrink-0 flex-col border border-ink-200 bg-white p-4"
       style={{ width: "260px" }}
     >
-      <p className="truncate text-sm font-semibold text-neutral-900">{name}</p>
-      <p className="mt-1.5 line-clamp-3 flex-1 text-xs leading-relaxed text-neutral-500">{desc}</p>
-      <span className="mt-3 inline-block self-start rounded-full bg-trust-50 px-2 py-0.5 text-[10px] font-semibold text-trust-600">
+      <p className="truncate text-sm font-semibold text-ink-900">{name}</p>
+      <p className="mt-1.5 line-clamp-3 flex-1 text-xs leading-relaxed text-ink-600">{desc}</p>
+      <span className="mt-3 inline-block self-start bg-surface-1 px-2 py-0.5 text-[10px] font-semibold text-ink-900">
         출시 준비 중
       </span>
     </div>

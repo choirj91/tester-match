@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
@@ -23,7 +24,7 @@ const ITEMS = [
   {
     href: "/policies/credits" as const,
     title: "크레딧 운영 정책",
-    desc: "적립·사용·만료·페널티 등 크레딧 운영 규정.",
+    desc: "보상 적립·교환(기프티콘·네이버페이 포인트)·만료·페널티 등 크레딧 운영 규정. 구매·양도·현금 환급 불가.",
   },
 ];
 
@@ -32,24 +33,31 @@ export default async function PoliciesIndex() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-bold text-neutral-900">정책 안내</h1>
-        <p className="mt-2 text-sm text-neutral-600">
-          모든 문서는 자체 초안 v0.1 이며, 정식 출시 전 변호사 검토 후 v1.0 시행 예정.
+      <main className="mx-auto max-w-[760px] px-5 pt-12 pb-16">
+        <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">정책 안내</h1>
+        <p className="m-0 mt-3 text-base leading-[1.8] text-ink-700">
+          낰낰컴퍼니가 운영하는 Tester Match 의 이용 조건·개인정보 처리·환불·크레딧 운영 기준입니다. 변경 시
+          시행 7일 전에 게시판 공지로 안내합니다.
         </p>
 
-        <ul className="mt-8 space-y-3">
+        <ul className="m-0 mt-8 list-none border-t-[1.5px] border-ink-900 p-0">
           {ITEMS.map((item) => (
-            <li key={item.href}>
+            <li key={item.href} className="border-b border-ink-900">
               <Link
                 href={item.href}
-                className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-trust-600"
+                className="group flex items-center justify-between gap-4 py-5 text-ink-900 no-underline"
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900">{item.title}</h2>
-                  <p className="mt-1 text-sm text-neutral-600">{item.desc}</p>
+                  <h2 className="m-0 font-display text-h3 font-semibold text-ink-900 group-hover:text-accent-600">
+                    {item.title}
+                  </h2>
+                  <p className="m-0 mt-1 text-[15px] text-ink-700">{item.desc}</p>
                 </div>
-                <span className="text-trust-600">→</span>
+                <ArrowRight
+                  className="size-5 shrink-0 text-ink-900 group-hover:text-accent-600"
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
               </Link>
             </li>
           ))}

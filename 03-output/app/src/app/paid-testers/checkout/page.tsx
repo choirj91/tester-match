@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { FeeBreakdown } from "@/components/fee-breakdown";
 import { SiteHeader } from "@/components/site-header";
+import { Notice } from "@/components/ui/notice";
+import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { canOrderPaidTesters, paidTesterOrderName } from "@/lib/paid-testers";
+import { formatKrw } from "@/lib/credits";
+import {
+  PAID_TESTER_PRICE_KRW,
+  canOrderPaidTesters,
+  paidTesterOrderName,
+} from "@/lib/paid-testers";
+import { SEAT_TOTAL_DAYS } from "@/lib/seat-reward-rules";
 import { PayButton } from "./pay-button";
 
 export const metadata = {
@@ -54,16 +63,35 @@ export default async function CheckoutPage({
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-lg px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">결제</h1>
-        <div className="mt-4 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm">
-          <p className="font-semibold text-neutral-900">
-            {appName} — 유료 테스터 {order.tester_count}명 (14일)
-          </p>
-          <p className="mt-1 text-neutral-600">
-            결제 금액 <strong>{order.amount_krw.toLocaleString("ko-KR")}원</strong>
-          </p>
-        </div>
+      <main className="mx-auto flex max-w-lg flex-col gap-6 px-5 py-12">
+        <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">결제</h1>
+        <Receipt
+          title={`${appName} — 유료 테스터 ${order.tester_count}명 (${SEAT_TOTAL_DAYS}일)`}
+          meta={`판매자 낰낰컴퍼니 · 신용·체크카드 (KG이니시스) · 주문번호 ${order.order_code}`}
+          footer={
+            <>
+              환불 기준 전체는{" "}
+              <Link href="/policies/refund" className="text-ink-900 underline hover:text-accent-600">
+                환불 정책
+              </Link>
+              을 따릅니다.
+            </>
+          }
+        >
+          <ReceiptDivider />
+          <ReceiptRows>
+            <ReceiptRow
+              label={`${order.tester_count}명 × ${formatKrw(PAID_TESTER_PRICE_KRW)}원`}
+              value={`${formatKrw(order.amount_krw)}원`}
+            />
+          </ReceiptRows>
+          <ReceiptDivider />
+          <ReceiptRows>
+            <ReceiptRow strong label="결제 금액 (부가세 포함)" value={`${formatKrw(order.amount_krw)}원`} />
+          </ReceiptRows>
+        </Receipt>
+
+        <FeeBreakdown />
 
         {storeId && channelKey ? (
           <PayButton
@@ -74,16 +102,15 @@ export default async function CheckoutPage({
             amount={order.amount_krw}
             customerEmail={user.email}
             customerName={user.nickname}
-            customerId={`tm_user_${user.id}`}
           />
         ) : (
-          <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed text-amber-900">
+          <Notice kind="caution">
             결제 수단 연동이 아직 완료되지 않았습니다. 잠시 후 다시 시도하시거나{" "}
-            <Link href="/paid-testers" className="underline underline-offset-2">
+            <Link href="/paid-testers" className="text-ink-900 underline hover:text-accent-600">
               유료 테스터 페이지
             </Link>
             에서 문의해주세요.
-          </div>
+          </Notice>
         )}
       </main>
     </>

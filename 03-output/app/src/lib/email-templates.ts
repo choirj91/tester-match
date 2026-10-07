@@ -1,4 +1,5 @@
 import { paidSeatNudgeLines, type ReminderItem } from "@/lib/checkin-reminder";
+import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -60,9 +61,9 @@ export function dailyCheckinReminderEmail(args: {
   const free = args.items.filter((i) => !i.paidSeat);
   const urgent = paid.some((i) => i.paidSeat?.lastChance);
   const subject = urgent
-    ? "[Tester Match] ⚠️ 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
+    ? "[Tester Match] 오늘 체크인하지 않으면 유료 시트가 해제됩니다"
     : paid.length > 0
-      ? `[Tester Match] 💰 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
+      ? `[Tester Match] 유료 시트 오늘 체크인이 남았습니다 (${paid.length}개)`
       : `[Tester Match] 오늘 체크인할 앱 ${args.items.length}개`;
 
   const paidHtml = paid
@@ -74,7 +75,7 @@ export function dailyCheckinReminderEmail(args: {
         .map((l) => `<p style="margin:3px 0;font-size:14px;">${escapeHtml(l)}</p>`)
         .join("");
       return `<div style="margin:0 0 12px;padding:14px 16px;border-radius:12px;${tone}">
-        <p style="margin:0 0 6px;font-weight:700;">💰 ${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
+        <p style="margin:0 0 6px;font-weight:700;">${escapeHtml(i.name)} — ${i.dayN}일차</p>${lines}
       </div>`;
     })
     .join("");
@@ -106,7 +107,7 @@ export function dailyCheckinReminderEmail(args: {
   `);
   const text = [
     `${args.testerNickname} 님, 오늘 체크인이 필요한 앱 ${args.items.length}개:`,
-    ...paid.map((i) => `💰 ${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
+    ...paid.map((i) => `${i.name} (${i.dayN}일차) — ${paidSeatNudgeLines(i).join(" ")}`),
     ...free.map((a) => `- ${a.name} (${a.dayN}일차)`),
     "",
     `체크인: ${APP_URL}/my-tests`,
@@ -160,13 +161,13 @@ export function paidOrderAdminEmail(args: {
   amountKrw: number;
 }): Email {
   const amount = args.amountKrw.toLocaleString("ko-KR");
-  const subject = `[Tester Match] 💰 유료 테스터 결제 — ${args.appName} ${args.testerCount}명 (${amount}원)`;
+  const subject = `[Tester Match] 유료 테스터 결제 — ${args.appName} ${args.testerCount}명 (${amount}원)`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">유료 테스터 주문이 결제되었습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
       <tr><td style="padding:6px 0;color:#64748b;">앱</td><td><strong>${escapeHtml(args.appName)}</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">구매자</td><td>${escapeHtml(args.buyerNickname)} (${escapeHtml(args.buyerEmail)})</td></tr>
-      <tr><td style="padding:6px 0;color:#64748b;">인원</td><td>${args.testerCount}명 × 1,000원</td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">인원</td><td>${args.testerCount}명 × ${PAID_TESTER_PRICE_KRW.toLocaleString("ko-KR")}원</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">금액</td><td><strong>${amount}원</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">주문번호</td><td>${args.orderCode}</td></tr>
     </table>
@@ -192,14 +193,24 @@ export function paidOrderReceiptEmail(args: {
   testerCount: number;
   amountKrw: number;
   orderCode: string;
+  /** false = 심사·시험용 주문 — 시트를 열지 않아 급구·전 회원 알림이 없다 */
+  seatsOpened: boolean;
 }): Email {
   const amount = args.amountKrw.toLocaleString("ko-KR");
   const subject = `[Tester Match] 유료 테스터 신청 완료 — ${args.appName}`;
+  const progress = args.seatsOpened
+    ? "급구 노출과 전 회원 알림이 나갔고, 커뮤니티 테스터가 시트를 채우면 14일간 매일 스크린샷 체크인합니다."
+    : "심사·시험용 주문이라 시트를 열지 않았습니다. 급구 표시와 전 회원 알림은 실제 주문에서만 나갑니다.";
+  const footer = args.seatsOpened
+    ? `테스터 참여 현황과 매일의 스크린샷은 콘솔에서 확인할 수 있습니다. 완주한 시트만 과금되며,
+      결제 후 7일 내 채워지지 않은 시트는 자동 환불됩니다. Play Console 비공개 테스트 트랙에
+      공용 테스터 그룹(tester-match@googlegroups.com)이 등록돼 있는지 꼭 확인해주세요.`
+    : "주문 내용은 콘솔에서 확인할 수 있습니다. 결제 취소·환불은 운영팀이 처리합니다.";
   const html = layoutHtml(`
     <p style="margin:0 0 12px;"><strong>${escapeHtml(args.buyerNickname)}</strong> 님,</p>
     <p style="margin:0 0 16px;">
       <strong>${escapeHtml(args.appName)}</strong> 유료 테스터 신청이 완료되었습니다.
-      급구 노출과 전 회원 알림이 나갔고, 커뮤니티 테스터가 시트를 채우면 14일간 매일 스크린샷 체크인합니다.
+      ${progress}
     </p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
       <tr><td style="padding:6px 0;color:#64748b;">인원</td><td>${args.testerCount}명</td></tr>
@@ -207,9 +218,7 @@ export function paidOrderReceiptEmail(args: {
       <tr><td style="padding:6px 0;color:#64748b;">주문번호</td><td>${args.orderCode}</td></tr>
     </table>
     <p style="margin:0 0 16px;font-size:13px;color:#64748b;">
-      테스터 참여 현황과 매일의 스크린샷은 콘솔에서 확인할 수 있습니다. 완주한 시트만 과금되며,
-      결제 후 7일 내 채워지지 않은 시트는 자동 환불됩니다. Play Console 비공개 테스트 트랙에
-      공용 테스터 그룹(tester-match@googlegroups.com)이 등록돼 있는지 꼭 확인해주세요.
+      ${footer}
     </p>
     <p style="margin:24px 0 0;">
       <a href="${APP_URL}/paid-testers"
@@ -301,20 +310,24 @@ export function paidOrdersDailyReportEmail(args: {
   return { subject, html, text };
 }
 
-/** 기프티콘 교환 신청 — 관리자 알림 (ADR-0012) */
+/** 보상 교환 신청(기프티콘·네이버페이 포인트) — 관리자 알림 (ADR-0012, ADR-0017) */
 export function redemptionRequestedEmail(args: {
   redemptionId: number;
   nickname: string;
   email: string;
+  /** 보상 종류 이름 (기프티콘 / 네이버페이 포인트) */
+  kindLabel: string;
   amount: number;
   contact: string;
   note: string;
 }): Email {
   const amount = args.amount.toLocaleString("ko-KR");
-  const subject = `[Tester Match] 🎁 기프티콘 교환 신청 — ${args.nickname} ${amount} 크레딧`;
+  const kind = escapeHtml(args.kindLabel);
+  const subject = `[Tester Match] ${args.kindLabel} 교환 신청 — ${args.nickname} ${amount} 크레딧`;
   const html = layoutHtml(`
-    <p style="margin:0 0 16px;font-weight:700;">기프티콘 교환 신청이 들어왔습니다.</p>
+    <p style="margin:0 0 16px;font-weight:700;">보상 교환 신청이 들어왔습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+      <tr><td style="padding:6px 0;color:#64748b;">보상</td><td><strong>${kind}</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">신청자</td><td>${escapeHtml(args.nickname)} (${escapeHtml(args.email)})</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">금액</td><td><strong>${amount} 크레딧</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">수신 연락처</td><td>${escapeHtml(args.contact)}</td></tr>
@@ -328,7 +341,7 @@ export function redemptionRequestedEmail(args: {
       </a>
     </p>
   `);
-  const text = `기프티콘 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
+  const text = `${args.kindLabel} 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
   return { subject, html, text };
 }
 
@@ -340,7 +353,7 @@ export function seatRewardDisputedEmail(args: {
   reason: string;
 }): Email {
   const amount = args.amount.toLocaleString("ko-KR");
-  const subject = `[Tester Match] ⚠️ 시트 보상 이의 제기 — 주문 #${args.orderId} (${amount} 크레딧)`;
+  const subject = `[Tester Match] 시트 보상 이의 제기 — 주문 #${args.orderId} (${amount} 크레딧)`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">구매자가 시트 보상에 이의를 제기했습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">

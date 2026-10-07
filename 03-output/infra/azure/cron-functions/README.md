@@ -19,6 +19,8 @@
 | `APP_URL` | `https://tester-match.knockknock.company` (리다이렉트를 따라가지 않는다 — 정확한 호스트) |
 | `CRON_SECRET` | Key Vault 참조 (앱과 같은 값) |
 | `CRON_TIMERS_ENABLED` | `1` 일 때만 실제 호출. **GitHub `cron.yml` 을 끈 다음에** 켠다 — 같은 날 두 번 돌면 리마인더 메일이 중복된다 |
+| `SLACK_OPS_WEBHOOK_URL` | Key Vault 참조 (선택). 있으면 작업 실행마다 결과 한 줄을 Slack 으로 보낸다 — 응답의 숫자·참거짓·배열 길이만, 문자열은 오류 `message` 만. 비어 있으면 보내지 않는다 |
+| `CRON_SLACK_MODE` | `all`(기본) 또는 `failures` — 실패한 실행만 받으려면 `failures` |
 
 `host.json` 의 `functionTimeout` 은 1시간 — 반복 작업 최악 40회 × 60초 + 리포트 1회를 담는다.
 

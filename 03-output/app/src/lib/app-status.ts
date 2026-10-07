@@ -16,13 +16,13 @@ export const APP_STATUS_LABEL: Record<
   AppStatus,
   { text: string; tone: string }
 > = {
-  draft: { text: "대기", tone: "bg-neutral-100 text-neutral-700" },
-  matching: { text: "모집중", tone: "bg-trust-50 text-trust-700" },
-  reviewing: { text: "심사중", tone: "bg-amber-500/10 text-amber-500" },
-  launched: { text: "출시 완료", tone: "bg-mint-500/10 text-mint-500" },
-  completed: { text: "심사중", tone: "bg-amber-500/10 text-amber-500" }, // 레거시
-  paused: { text: "일시정지", tone: "bg-neutral-100 text-neutral-500" },
-  deleted: { text: "삭제됨", tone: "bg-neutral-100 text-neutral-500" },
+  draft: { text: "대기", tone: "bg-surface-1 text-ink-700" },
+  matching: { text: "모집중", tone: "bg-surface-1 text-ink-900" },
+  reviewing: { text: "심사중", tone: "bg-warning-50 text-warning-700" },
+  launched: { text: "출시 완료", tone: "bg-success-50 text-success-700" },
+  completed: { text: "심사중", tone: "bg-warning-50 text-warning-700" }, // 레거시
+  paused: { text: "일시정지", tone: "bg-surface-1 text-ink-600" },
+  deleted: { text: "삭제됨", tone: "bg-surface-1 text-ink-600" },
 };
 
 /** /browse 정렬 우선순위 (모집중 → 심사중 → 출시 완료). 기타 상태는 노출 안 함. */

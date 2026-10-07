@@ -92,7 +92,7 @@ export async function GET(request: Request) {
     users.map((u) => u.id),
     {
       type: "weekly_hot",
-      title: "📈 이번 주 게시판 인기글",
+      title: "이번 주 게시판 인기글",
       body,
       link,
     },

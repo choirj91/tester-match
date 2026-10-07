@@ -33,8 +33,8 @@ const TILES = [
   },
   {
     href: "/admin/redemptions" as const,
-    title: "기프티콘 교환",
-    desc: "유료 시트 완주 크레딧의 기프티콘 교환 신청 처리. 수동 발송 후 [발송 완료], 거절 시 자동 환급 (ADR-0012).",
+    title: "보상 교환",
+    desc: "유료 시트 완주 크레딧의 기프티콘·네이버페이 포인트 교환 신청 처리. 수동 발송 후 [발송 완료], 거절 시 자동 복구 (ADR-0012, ADR-0017).",
   },
   {
     href: "/admin/paid-orders" as const,
@@ -56,8 +56,8 @@ export default async function AdminHomePage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">관리자</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">관리자</h1>
+          <p className="mt-1 text-sm text-ink-700">
             운영자 전용 도구. 일반 사용자는 접근할 수 없습니다.
           </p>
         </header>
@@ -67,10 +67,10 @@ export default async function AdminHomePage() {
             <li key={t.href}>
               <Link
                 href={t.href}
-                className="hover:border-trust-600 block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition"
+                className="hover:border-ink-900 block border border-ink-200 bg-white p-6 transition"
               >
-                <h2 className="text-lg font-semibold text-neutral-900">{t.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{t.desc}</p>
+                <h2 className="text-lg font-semibold text-ink-900">{t.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-700">{t.desc}</p>
               </Link>
             </li>
           ))}

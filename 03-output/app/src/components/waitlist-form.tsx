@@ -42,13 +42,13 @@ export function WaitlistForm() {
         onChange={(e) => setEmail(e.target.value)}
         disabled={status === "submitting"}
         placeholder="you@example.com"
-        className="flex-1 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 disabled:opacity-50"
+        className="flex-1 border border-ink-900 bg-white px-4 py-3 text-sm placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600 disabled:opacity-50"
         aria-label="이메일 주소"
       />
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 active:bg-trust-800 disabled:opacity-50"
+        className="bg-ink-900 px-5 py-3 text-sm font-semibold text-white hover:bg-black active:bg-black disabled:opacity-50"
       >
         {status === "submitting" ? "등록 중..." : "사전 등록"}
       </button>
@@ -56,7 +56,7 @@ export function WaitlistForm() {
         <p
           role="status"
           className={`mt-2 text-sm sm:absolute sm:mt-14 ${
-            status === "success" ? "text-mint-500" : "text-crimson-500"
+            status === "success" ? "text-success-700" : "text-danger-700"
           }`}
         >
           {message}

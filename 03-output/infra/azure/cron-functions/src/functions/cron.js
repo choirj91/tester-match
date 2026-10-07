@@ -1,5 +1,6 @@
 import { app } from "@azure/functions";
 import { callCron } from "../cron-client.js";
+import { reportCronRun } from "../slack-report.js";
 
 /**
  * tester-match 정기 작업 — .github/workflows/cron.yml 과 같은 일정 (UTC, NCRONTAB 6필드).
@@ -8,6 +9,7 @@ import { callCron } from "../cron-client.js";
  *
  * 앱 설정: APP_URL (https://tester-match.knockknock.company), CRON_SECRET (Key Vault 참조),
  *          CRON_TIMERS_ENABLED=1 일 때만 실제로 호출 (병행 기간 이중 실행 방지 — 1-5단계에서 켠다).
+ *          SLACK_OPS_WEBHOOK_URL 이 있으면 실행마다 결과 한 줄을 Slack 으로 (CRON_SLACK_MODE=failures 면 실패만).
  */
 
 const JOBS = [
@@ -29,6 +31,16 @@ function env() {
   return { appUrl: process.env.APP_URL, secret: process.env.CRON_SECRET };
 }
 
+/** 실행 결과를 Slack 으로 — 보고 실패는 작업 결과에 영향을 주지 않는다 */
+async function report(context, name, startedAt, steps) {
+  await reportCronRun({
+    webhookUrl: process.env.SLACK_OPS_WEBHOOK_URL,
+    mode: process.env.CRON_SLACK_MODE,
+    run: { name, durationMs: Date.now() - startedAt, steps },
+    log: (m) => context.log(m),
+  });
+}
+
 function enabled(context, name) {
   if (process.env.CRON_TIMERS_ENABLED === "1") return true;
   context.log(`${name}: skipped (CRON_TIMERS_ENABLED is not 1)`);
@@ -41,7 +53,9 @@ for (const job of JOBS) {
     runOnStartup: false,
     handler: async (_timer, context) => {
       if (!enabled(context, job.name)) return;
+      const startedAt = Date.now();
       const result = await callCron({ ...env(), path: job.path, loop: job.loop, log: (m) => context.log(m) });
+      await report(context, job.name, startedAt, [result]);
       if (!result.ok) throw new Error(`${job.name} failed (HTTP ${result.lastStatus}, round ${result.rounds})`);
     },
   });
@@ -54,10 +68,15 @@ app.timer("paid-orders-report", {
   handler: async (_timer, context) => {
     if (!enabled(context, "paid-orders-report")) return;
     const log = (m) => context.log(m);
+    const startedAt = Date.now();
     const sweep = await callCron({ ...env(), path: "/api/cron/paid-orders-report?mode=sweep", loop: true, log });
-    const report = await callCron({ ...env(), path: "/api/cron/paid-orders-report", log });
-    if (!sweep.ok || !report.ok) {
-      throw new Error(`paid-orders-report failed (sweep ok=${sweep.ok}, report ok=${report.ok})`);
+    const daily = await callCron({ ...env(), path: "/api/cron/paid-orders-report", log });
+    await report(context, "paid-orders-report", startedAt, [
+      { label: "스윕", ...sweep },
+      { label: "리포트", ...daily },
+    ]);
+    if (!sweep.ok || !daily.ok) {
+      throw new Error(`paid-orders-report failed (sweep ok=${sweep.ok}, report ok=${daily.ok})`);
     }
   },
 });

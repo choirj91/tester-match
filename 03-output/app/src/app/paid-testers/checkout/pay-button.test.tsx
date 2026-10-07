@@ -17,13 +17,15 @@ const props = {
   amount: 3000,
   customerEmail: "buyer@example.com",
   customerName: "구매자",
-  customerId: "tm_user_11",
 };
 
 const assign = vi.fn();
 const fetchMock = vi.fn();
 const requestPayment = vi.mocked(PortOne.requestPayment);
 const payButton = () => screen.getByRole("button");
+/** 이니시스 필수 구매자 정보 — 번호를 넣어야 버튼이 열린다 */
+const fillPhone = (value = "010-1234-5678") =>
+  fireEvent.change(screen.getByLabelText("휴대폰 번호"), { target: { value } });
 const response = (extra: Record<string, string> = {}) => ({
   transactionType: "PAYMENT" as const,
   txId: "tx_1",
@@ -47,10 +49,11 @@ afterEach(() => {
 });
 
 describe("PayButton — 결제창", () => {
-  test("주문 코드를 결제 ID 로 삼아 KCP 카드 결제창을 요청한다", async () => {
+  test("주문 코드를 결제 ID 로 삼아 KG이니시스 카드 결제창을 요청한다 — 구매자 휴대폰 번호는 숫자만 넘긴다", async () => {
     requestPayment.mockResolvedValue(response());
     render(<PayButton {...props} />);
 
+    fillPhone("010-1234-5678");
     fireEvent.click(payButton());
 
     await waitFor(() => expect(requestPayment).toHaveBeenCalledOnce());
@@ -62,15 +65,30 @@ describe("PayButton — 결제창", () => {
       totalAmount: 3000,
       currency: "CURRENCY_KRW",
       payMethod: "CARD",
-      customer: { fullName: "구매자", email: "buyer@example.com" },
+      customer: { fullName: "구매자", email: "buyer@example.com", phoneNumber: "01012345678" },
       redirectUrl: SUCCESS_URL,
-      bypass: { kcp_v2: { site_name: "Tester Match", shop_user_id: "tm_user_11" } },
     });
   });
+
+  test.each(["", "02-123-4567", "010-12-5678"])(
+    "휴대폰 번호가 없거나(%j) 형식이 틀리면 버튼이 잠겨 결제창을 열지 않는다",
+    async (value) => {
+      render(<PayButton {...props} />);
+
+      fillPhone(value);
+      fireEvent.click(payButton());
+
+      expect(payButton()).toBeDisabled();
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(requestPayment).not.toHaveBeenCalled();
+    },
+  );
 
   test("PC: 결제창이 오류 없이 닫히면 성공 화면으로 이동해 서버가 결제를 확인하게 한다", async () => {
     requestPayment.mockResolvedValue(response());
     render(<PayButton {...props} />);
+
+    fillPhone();
 
     fireEvent.click(payButton());
 
@@ -83,6 +101,8 @@ describe("PayButton — 결제창", () => {
     );
     render(<PayButton {...props} />);
 
+    fillPhone();
+
     fireEvent.click(payButton());
 
     expect(await screen.findByText("사용자가 결제를 취소하였습니다")).toBeInTheDocument();
@@ -93,6 +113,8 @@ describe("PayButton — 결제창", () => {
   test("결제 모듈을 불러오지 못하면(예외) 안내하고 다시 결제할 수 있게 한다", async () => {
     requestPayment.mockRejectedValue(new Error("[PortOne] Failed to load window.PortOne"));
     render(<PayButton {...props} />);
+
+    fillPhone();
 
     fireEvent.click(payButton());
 
@@ -105,6 +127,8 @@ describe("PayButton — 결제창", () => {
     requestPayment.mockResolvedValue(undefined);
     render(<PayButton {...props} />);
 
+    fillPhone();
+
     fireEvent.click(payButton());
 
     await waitFor(() => expect(requestPayment).toHaveBeenCalledOnce());
@@ -115,6 +139,8 @@ describe("PayButton — 결제창", () => {
   test("결제 진행 중에는 버튼이 잠겨 결제창을 두 번 열지 않는다", async () => {
     requestPayment.mockReturnValue(new Promise(() => {}));
     render(<PayButton {...props} />);
+
+    fillPhone();
 
     fireEvent.click(payButton());
     await waitFor(() => expect(payButton()).toBeDisabled());
@@ -127,6 +153,7 @@ describe("PayButton — 결제창", () => {
   test("모바일에서 뒤로 돌아와 화면이 되살아나면(bfcache) 버튼을 다시 연다", async () => {
     requestPayment.mockReturnValue(new Promise(() => {}));
     render(<PayButton {...props} />);
+    fillPhone();
     fireEvent.click(payButton());
     await waitFor(() => expect(payButton()).toBeDisabled());
 
@@ -143,15 +170,21 @@ describe("PayButton — 결제 전 확인(precheck)", () => {
     requestPayment.mockResolvedValue(response());
     render(<PayButton {...props} />);
 
+    fillPhone();
+
     fireEvent.click(payButton());
 
     await waitFor(() => expect(requestPayment).toHaveBeenCalledOnce());
-    expect(fetchMock).toHaveBeenCalledWith(`/api/paid-testers/orders/${ORDER_CODE}/precheck`, { method: "POST" });
+    expect(fetchMock).toHaveBeenCalledWith(`/api/paid-testers/orders/${ORDER_CODE}/precheck`, {
+      method: "POST",
+    });
   });
 
   test("이미 결제된 주문이면 결제창을 열지 않고 성공 화면으로 간다", async () => {
     stubPrecheck({ state: "paid" });
     render(<PayButton {...props} />);
+
+    fillPhone();
 
     fireEvent.click(payButton());
 
@@ -163,6 +196,8 @@ describe("PayButton — 결제 전 확인(precheck)", () => {
     stubPrecheck({ state: "closed", message: "이미 취소되었거나 환불된 주문입니다." });
     render(<PayButton {...props} />);
 
+    fillPhone();
+
     fireEvent.click(payButton());
 
     expect(await screen.findByText("이미 취소되었거나 환불된 주문입니다.")).toBeInTheDocument();
@@ -171,17 +206,30 @@ describe("PayButton — 결제 전 확인(precheck)", () => {
   });
 
   test.each<[string, () => void, RegExp]>([
-    ["서버가 확인에 실패(500)", () => stubPrecheck({ message: "결제 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요." }, 500), /확인하지 못했습니다/],
+    [
+      "서버가 확인에 실패(500)",
+      () =>
+        stubPrecheck(
+          { message: "결제 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요." },
+          500,
+        ),
+      /확인하지 못했습니다/,
+    ],
     ["통신 오류", () => fetchMock.mockRejectedValue(new Error("offline")), /확인하지 못했습니다/],
     ["알 수 없는 응답", () => stubPrecheck({ state: "weird" }), /확인하지 못했습니다/],
-  ])("%s 이면 결제창을 열지 않고 안내한 뒤 다시 시도할 수 있게 한다", async (_label, arrange, text) => {
-    arrange();
-    render(<PayButton {...props} />);
+  ])(
+    "%s 이면 결제창을 열지 않고 안내한 뒤 다시 시도할 수 있게 한다",
+    async (_label, arrange, text) => {
+      arrange();
+      render(<PayButton {...props} />);
 
-    fireEvent.click(payButton());
+      fillPhone();
 
-    expect(await screen.findByText(text)).toBeInTheDocument();
-    expect(payButton()).toBeEnabled();
-    expect(requestPayment).not.toHaveBeenCalled();
-  });
+      fireEvent.click(payButton());
+
+      expect(await screen.findByText(text)).toBeInTheDocument();
+      expect(payButton()).toBeEnabled();
+      expect(requestPayment).not.toHaveBeenCalled();
+    },
+  );
 });
