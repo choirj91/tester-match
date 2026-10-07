@@ -5,6 +5,15 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Session } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { safeInternalPath } from "@/lib/safe-redirect";
+import {
+  REFERRAL_COOKIE,
+  isReferralSettled,
+  parseReferralCode,
+  readReferralCookie,
+  recordReferralForLogin,
+  referralCookieOptions,
+  withAttributionTimeout,
+} from "@/lib/referrals";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -35,6 +44,38 @@ async function repairMemberRow(session: Session | null): Promise<void> {
     await admin.auth.admin.signOut(session.access_token, "others");
   } catch (err) {
     console.error("[auth/callback] member row repair failed", err instanceof Error ? err.message : "unknown");
+  }
+}
+
+/**
+ * 추천 링크(/r/[id])로 들어와 Google 로 처음 가입한 회원이면 추천 관계를 기록한다 (ADR-0019).
+ * 회원 행 복구가 끝난 뒤에 부른다. 새 회원인지(행 생성 24시간 이내)는 recordReferral 이 판단한다.
+ * 쿠키는 결과가 정해지면 지운다 — 기존 회원의 재로그인이면 다시 시도하지 않게. 일시 실패·2초 초과면 남겨
+ * 다음 로그인에서 다시 시도한다. 어떤 실패도 로그인을 막거나 늦추지 않는다.
+ */
+async function attributeReferral(
+  request: Request,
+  session: Session | null,
+  response: NextResponse,
+): Promise<void> {
+  const raw = readReferralCookie(request.headers.get("cookie"));
+  if (raw === null || !session) return;
+  const clearCookie = () => response.cookies.set(REFERRAL_COOKIE, "", referralCookieOptions(0));
+  const referrerUserId = parseReferralCode(raw);
+  if (referrerUserId === null) {
+    clearCookie();
+    return;
+  }
+  try {
+    const outcome = await withAttributionTimeout(
+      recordReferralForLogin(createSupabaseAdminClient(), {
+        authUserId: session.user.id,
+        referrerUserId,
+      }),
+    );
+    if (isReferralSettled(outcome)) clearCookie();
+  } catch (err) {
+    console.error("[auth/callback] referral attribution failed", err instanceof Error ? err.message : "unknown");
   }
 }
 
@@ -90,6 +131,7 @@ export async function GET(request: Request) {
   }
 
   await repairMemberRow(data.session);
+  await attributeReferral(request, data.session, response);
 
   return response;
 }

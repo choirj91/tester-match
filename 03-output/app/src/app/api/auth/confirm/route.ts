@@ -18,6 +18,15 @@ import {
   completeSignupErrorCode,
   type CompleteSignupInput,
 } from "@/lib/validators/signup";
+import {
+  REFERRAL_COOKIE,
+  isReferralSettled,
+  parseReferralCode,
+  recordReferralForLogin,
+  referralCookieOptions,
+  withAttributionTimeout,
+  type RecordReferralOutcome,
+} from "@/lib/referrals";
 
 const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const;
 const PASSWORD_SAVE_ATTEMPTS = 2;
@@ -87,7 +96,11 @@ async function discardConfirmedAccount(
   }
 }
 
-async function confirmSignup(tokenHash: string, input: CompleteSignupInput): Promise<ConfirmResult> {
+async function confirmSignup(
+  tokenHash: string,
+  input: CompleteSignupInput,
+  referrerUserId: number | null,
+): Promise<ConfirmResult & { referral?: RecordReferralOutcome }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) {
@@ -136,7 +149,13 @@ async function confirmSignup(tokenHash: string, input: CompleteSignupInput): Pro
     return { ok: false, reason: "member" };
   }
 
-  return { ok: true };
+  // 추천 링크로 들어온 가입이면 추천 관계를 기록한다 (ADR-0019). 실패해도 가입은 끝난 것이다 — 성공 여부를 바꾸지 않는다.
+  if (referrerUserId === null) return { ok: true };
+  // 2초를 넘기면 기다리지 않는다 (timeout — 추천 쿠키는 남는다)
+  const referral = await withAttributionTimeout(
+    recordReferralForLogin(admin, { authUserId: data.user.id, referrerUserId }),
+  );
+  return { ok: true, referral };
 }
 
 /** 확인 화면의 양식이 호출 — 닉네임·비밀번호·약관 동의를 받아 여기서 가입을 확정한다. */
@@ -163,8 +182,19 @@ export async function POST(req: Request) {
     return redirectTo(req, `/auth/confirm?error=${completeSignupErrorCode(parsed.error)}`);
   }
 
+  const referralRaw = cookieStore.get(REFERRAL_COOKIE)?.value;
+  const result = await confirmSignup(tokenHash, parsed.data, parseReferralCode(referralRaw));
+
   // 토큰을 실제로 쓴 뒤에만 쿠키를 지운다
-  const res = redirectTo(req, confirmResultPath(await confirmSignup(tokenHash, parsed.data)));
+  const res = redirectTo(req, confirmResultPath(result));
   res.cookies.set(CONFIRM_COOKIE, "", { ...COOKIE_BASE, maxAge: 0 });
+  // 추천 쿠키는 가입이 끝나고 추천 결과가 정해졌을 때만 지운다 — 가입 실패·일시 오류면 다음 시도에서 쓴다
+  if (
+    result.ok &&
+    referralRaw !== undefined &&
+    (result.referral === undefined || isReferralSettled(result.referral))
+  ) {
+    res.cookies.set(REFERRAL_COOKIE, "", referralCookieOptions(0));
+  }
   return res;
 }

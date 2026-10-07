@@ -5,13 +5,25 @@ import { getCurrentUser } from "@/lib/auth";
 import { ProfileForm } from "./profile-form";
 import { WithdrawButton } from "./withdraw-button";
 import { GroupStatusCard } from "./group-status-card";
+import { ReferralCard } from "./referral-card";
 import { formatKrw } from "@/lib/credits";
+import {
+  REFERRAL_CAP_PER_WINDOW,
+  REFERRAL_CAP_WINDOW_DAYS,
+  REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  REFERRAL_TRUST_DELTA,
+  getReferralStats,
+  referralLink,
+} from "@/lib/referrals";
+import { SITE_URL } from "@/lib/site";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "프로필" };
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/profile");
+  const referralStats = await getReferralStats(createSupabaseAdminClient(), user.id);
 
   return (
     <>
@@ -48,6 +60,15 @@ export default async function ProfilePage() {
         </section>
 
         <GroupStatusCard />
+
+        <ReferralCard
+          link={referralLink(SITE_URL, user.id)}
+          stats={referralStats}
+          trustDelta={REFERRAL_TRUST_DELTA}
+          linkDays={REFERRAL_COOKIE_MAX_AGE_SECONDS / (24 * 60 * 60)}
+          capPerWindow={REFERRAL_CAP_PER_WINDOW}
+          capWindowDays={REFERRAL_CAP_WINDOW_DAYS}
+        />
 
         <section className="mt-8">
           <h2 className="text-lg font-semibold text-neutral-900">닉네임 변경</h2>

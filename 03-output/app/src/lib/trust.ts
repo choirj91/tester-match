@@ -6,6 +6,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  *
  * 원칙: 가점은 "체크인 실행"에만, 감점은 "이탈"에만. 앱 등록·게시글 등
  * 어뷰징 가능한 행위에는 점수를 연결하지 않는다.
+ * 예외 하나 (ADR-0019): 추천으로 가입한 친구의 첫 유료 시트 보상이 확정되면 양쪽 +10.
+ * 가입이 아니라 14일 스크린샷 체크인을 마친 유료 시트에 걸고, 자기 결제 시트·추천인 90일 5건 초과는
+ * DB 함수가 무효로 끝내 부계정으로 부풀리기 어렵게 했다.
  */
 export const TRUST_START = 50;
 export const TRUST_MIN = 0;
@@ -17,9 +20,16 @@ export const CHECKIN_TRUST_DELTA = +1;
 export const OPTOUT_TRUST_DELTA = -3;
 /** 무단 이탈 (기간 만료 미완주 또는 5일 연속 미체크인) */
 export const PENALTY_TRUST_DELTA = -10;
+/**
+ * 친구 추천 — 피추천인 첫 유료 시트 확정 시 추천인·피추천인 각각. 무단 이탈 1회분을 되돌리는 크기.
+ * 실제 지급 값은 DB 함수 grant_referral_reward 의 상수다 — 이 값은 화면 문구용 (같은지 테스트가 확인).
+ */
+export const REFERRAL_TRUST_DELTA = +10;
 
 export type TrustReason =
   | "reward.checkin"
+  /** DB 함수 grant_referral_reward 가 기록한다 (applyTrustDelta 를 거치지 않음 — 한 트랜잭션) */
+  | "reward.referral"
   | "penalty.opt_out"
   | "penalty.no_checkin"
   | "admin.adjust";

@@ -22,6 +22,7 @@ const TYPE_ICON: Record<string, string> = {
   boost_expiring: "⏳",
   boost_expired: "🔕",
   group_upgrade: "🚀",
+  referral_reward: "🤝",
 };
 
 function formatRelative(dateStr: string): string {

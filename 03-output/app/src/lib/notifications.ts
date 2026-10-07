@@ -22,7 +22,8 @@ export type NotificationType =
   | "seat_reward"
   | "seat_issue"
   | "tester_request"
-  | "inquiry_answered";
+  | "inquiry_answered"
+  | "referral_reward";
 
 type Args = {
   userId: number;

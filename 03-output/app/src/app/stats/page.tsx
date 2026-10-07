@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchAll } from "@/lib/fetch-all";
 import { SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
+import { REFERRAL_TRUST_DELTA, fetchRewardedReferrals, rankReferrers } from "@/lib/referrals";
 
 export const metadata = {
   title: "활동 랭킹",
@@ -141,7 +142,7 @@ export default async function PublicStatsPage() {
   const maxVisitors = Math.max(...weeklyData.map((d) => d.visitors), 1);
 
   // ── 랭킹 집계 (공개 페이지 — 이메일 등 개인정보 미노출) ──────────────
-  const [usersRows, apps, matches] = await Promise.all([
+  const [usersRows, apps, matches, rewardedReferrals] = await Promise.all([
     fetchAll<{ id: number; nickname: string; trust_score: number }>((from, to) =>
       supabase
         .from("users")
@@ -161,6 +162,8 @@ export default async function PublicStatsPage() {
     fetchAll<{ tester_user_id: number; status: string }>((from, to) =>
       supabase.from("matches").select("tester_user_id, status").order("id").range(from, to),
     ),
+    // 추천은 첫 유료 시트 완주까지 간 것만 — 지급된 추천 수는 확정된 유료 시트 수를 넘지 않는다
+    fetchRewardedReferrals(supabase),
   ]);
 
   const appCountByUser = new Map<number, number>();
@@ -206,6 +209,13 @@ export default async function PublicStatsPage() {
         (completedByUser.get(b.id) ?? 0) - (completedByUser.get(a.id) ?? 0),
     )
     .slice(0, 20);
+
+  // 추천 랭킹 (ADR-0019) — 가입 수가 아니라 첫 유료 테스트 완주까지 간 추천 수. 탈퇴 회원은 usersRows 에 없어 빠진다.
+  const byReferrals: RankedUser[] = rankReferrers(
+    rewardedReferrals,
+    new Map(usersRows.map((u) => [u.id, { nickname: u.nickname, trust_score: u.trust_score }])),
+    20,
+  );
 
   return (
     <>
@@ -312,6 +322,18 @@ export default async function PublicStatsPage() {
             accent="text-spark-500"
             showStar={false}
             emptyText="아직 집계 중입니다. 매일 체크인으로 신뢰도를 쌓아보세요!"
+          />
+        </div>
+
+        {/* 추천 랭킹 — 초대한 친구가 첫 유료 테스트를 완주한 수만 센다 */}
+        <div className="mt-10 lg:max-w-md">
+          <RankingList
+            title="추천 랭킹"
+            sub={`초대한 친구가 첫 유료 테스트를 완주한 수 · 나와 친구 모두 신뢰도 +${REFERRAL_TRUST_DELTA} · TOP 20`}
+            rows={byReferrals}
+            unit="명"
+            accent="text-trust-600"
+            emptyText="아직 기록이 없습니다. 프로필에서 내 초대 링크를 확인하세요."
           />
         </div>
       </main>
