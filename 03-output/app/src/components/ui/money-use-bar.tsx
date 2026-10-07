@@ -1,34 +1,42 @@
 import { formatKrw } from "@/lib/credits";
-import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
-import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
+import { MONEY_USE } from "@/lib/money-use";
 
-/** 테스터 1명 결제 금액 중 보상 몫(최대)과 운영 몫 — ADR-0017 */
-export const MONEY_USE = {
-  price: PAID_TESTER_PRICE_KRW,
-  reward: SEAT_REWARD_MAX,
-  operating: PAID_TESTER_PRICE_KRW - SEAT_REWARD_MAX,
-} as const;
+/**
+ * 테스터 1명 결제 금액의 쓰임 막대 (Design C §5.4) — 숫자는 lib/money-use 한 곳에서.
+ * 보상·부가세·카드 수수료를 떼고 남는 서버·운영 몫을 강조색으로 따로 보여 준다.
+ */
+const PARTS = [
+  { key: "reward", label: "보상 비용 최대", value: MONEY_USE.reward, fill: "bg-ink-900" },
+  { key: "vat", label: "부가세", value: MONEY_USE.vat, fill: "bg-ink-600" },
+  { key: "cardFee", label: "카드 수수료 약", value: MONEY_USE.cardFee, fill: "bg-ink-200" },
+  { key: "operating", label: "서버·운영", value: MONEY_USE.operating, fill: "bg-accent-600" },
+] as const;
 
 export function MoneyUseBar() {
-  const rewardPct = (MONEY_USE.reward / MONEY_USE.price) * 100;
   const price = formatKrw(MONEY_USE.price);
-  const reward = formatKrw(MONEY_USE.reward);
-  const operating = formatKrw(MONEY_USE.operating);
+  const ariaLabel = `${price}원 중 ${PARTS.map((p) => `${p.label} ${formatKrw(p.value)}원`).join(", ")}`;
   return (
     <div className="flex flex-col gap-2">
       <span className="font-mono text-xs text-ink-600">{price}원의 쓰임</span>
-      <div
-        className="flex h-3 border border-ink-900"
-        role="img"
-        aria-label={`${price}원 중 테스터 보상 최대 ${reward}원, 운영 ${operating}원`}
-      >
-        <div className="bg-ink-900" style={{ width: `${rewardPct}%` }} />
-        <div className="flex-1 border-l border-ink-900 bg-white" />
+      <div className="flex h-3 border border-ink-900" role="img" aria-label={ariaLabel}>
+        {PARTS.map((p, i) => (
+          <div
+            key={p.key}
+            className={`${p.fill} ${i > 0 ? "border-l border-ink-900" : ""}`}
+            style={{ width: `${(p.value / MONEY_USE.price) * 100}%` }}
+          />
+        ))}
       </div>
-      <div className="flex flex-wrap justify-between gap-3 font-mono text-[13px] text-ink-900 tabular-nums">
-        <span>보상 비용 최대 {reward}</span>
-        <span>부가세·수수료·서버·운영 {operating}</span>
-      </div>
+      <ul className="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-1 p-0 font-mono text-[13px] text-ink-900 tabular-nums min-[481px]:grid-cols-4">
+        {PARTS.map((p) => (
+          <li key={p.key} className="flex items-center gap-1.5">
+            <span aria-hidden="true" className={`inline-block size-2.5 shrink-0 border border-ink-900 ${p.fill}`} />
+            <span className={p.key === "operating" ? "font-semibold text-accent-700" : undefined}>
+              {p.label} {formatKrw(p.value)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

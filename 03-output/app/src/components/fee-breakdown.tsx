@@ -1,16 +1,14 @@
 import { formatKrw } from "@/lib/credits";
-import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
-import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
+import { CARD_FEE_RATE, MONEY_USE } from "@/lib/money-use";
 import { MoneyUseBar } from "@/components/ui/money-use-bar";
 import { Receipt, ReceiptDivider } from "@/components/ui/receipt";
 
 /**
  * 테스터 1명 결제 금액이 어디에 쓰이는지 (ADR-0017) — 급구 신청·결제·랜딩이 같은 숫자를 보여 준다.
- * 보상 몫은 시트당 최대 보상(seat-reward-rules), 나머지는 부가세·카드 수수료·운영비.
+ * 숫자는 lib/money-use — 보상 비용(최대) · 부가세 · 카드 수수료(추정) · 남는 서버·운영 몫.
  * 모양은 영수증(Design C §5.3) + 쓰임 막대(§5.4).
  */
-const REWARD_SHARE_KRW = SEAT_REWARD_MAX;
-const OPERATING_SHARE_KRW = PAID_TESTER_PRICE_KRW - SEAT_REWARD_MAX;
+const CARD_FEE_PERCENT = (CARD_FEE_RATE * 100).toFixed(1);
 /** 한 화면에 한 번만 쓰인다 (급구 신청·결제) */
 const TITLE_ID = "fee-breakdown-title";
 
@@ -22,9 +20,8 @@ export function FeeBreakdown({
   /** 같은 화면의 영수증에 쓰임 막대가 이미 있으면 끈다 */
   showBar?: boolean;
 }) {
-  const price = formatKrw(PAID_TESTER_PRICE_KRW);
-  const reward = formatKrw(REWARD_SHARE_KRW);
-  const operating = formatKrw(OPERATING_SHARE_KRW);
+  const price = formatKrw(MONEY_USE.price);
+  const reward = formatKrw(MONEY_USE.reward);
 
   return (
     <section className={className} aria-labelledby={TITLE_ID}>
@@ -52,12 +49,28 @@ export function FeeBreakdown({
           </div>
           <div className="flex flex-col gap-1">
             <dt className="text-ink-900 flex justify-between gap-3 font-mono font-medium tabular-nums">
-              <span>운영</span>
-              <span>나머지 {operating}원</span>
+              <span>부가세</span>
+              <span>{formatKrw(MONEY_USE.vat)}원</span>
+            </dt>
+            <dd className="m-0">가격에 포함된 부가세입니다.</dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-ink-900 flex justify-between gap-3 font-mono font-medium tabular-nums">
+              <span>카드 결제 수수료</span>
+              <span>약 {formatKrw(MONEY_USE.cardFee)}원</span>
             </dt>
             <dd className="m-0">
-              부가세, 카드 결제 수수료, 서버와 스크린샷 보관, 보상 발송, 문의 응대에 씁니다. 남는
-              돈은 많지 않고, 그마저 서비스를 계속 운영하는 데 다시 씁니다.
+              결제대행사에 내는 수수료입니다(결제 금액의 약 {CARD_FEE_PERCENT}%와 그 부가세).
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="flex justify-between gap-3 font-mono font-semibold text-accent-700 tabular-nums">
+              <span>서버·운영</span>
+              <span>{formatKrw(MONEY_USE.operating)}원</span>
+            </dt>
+            <dd className="m-0">
+              서버와 스크린샷 보관, 보상 발송, 문의 응대에 씁니다. 남는 돈은 많지 않고, 그마저
+              서비스를 계속 운영하는 데 다시 씁니다.
             </dd>
           </div>
         </dl>

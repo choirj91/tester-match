@@ -6,6 +6,7 @@ import { OnboardingProgress } from "@/components/onboarding-progress";
 import { ButtonLink } from "@/components/ui/button";
 import { PaymentPendingBadge } from "@/components/ui/badge";
 import { MoneyUseBar } from "@/components/ui/money-use-bar";
+import { MONEY_USE } from "@/lib/money-use";
 import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
 import { StatTile, StatTiles } from "@/components/ui/stat-tile";
 import { Steps } from "@/components/ui/steps";
@@ -60,7 +61,7 @@ const FAQ = [
   },
   {
     q: "급구(유료 테스터) 결제 금액은 어디에 쓰이나요?",
-    a: `테스터 1명당 ${PRICE}(부가세 포함)이며, 못 채우거나 완주하지 못한 시트는 환불됩니다. 회사는 이 금액 가운데 최대 ${formatKrw(SEAT_REWARD_MAX)}원을 14일을 완주한 테스터의 보상(기프티콘·네이버페이 포인트) 비용으로 쓰고, 나머지는 부가세·카드 수수료·서버·보상 발송 같은 운영비에 씁니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
+    a: `테스터 1명당 ${PRICE}(부가세 포함)이며, 못 채우거나 완주하지 못한 시트는 환불됩니다. 회사는 이 금액 가운데 최대 ${formatKrw(SEAT_REWARD_MAX)}원을 14일을 완주한 테스터의 보상(기프티콘·네이버페이 포인트) 비용으로 쓰고, 부가세 ${formatKrw(MONEY_USE.vat)}원과 카드 수수료 약 ${formatKrw(MONEY_USE.cardFee)}원을 뺀 ${formatKrw(MONEY_USE.operating)}원을 서버·보상 발송·문의 응대 같은 운영에 씁니다. 회사는 크레딧을 판매하지 않고, 테스터에게 현금을 지급하지도 않습니다.`,
   },
   {
     q: "개발자가 아니어도 테스터로만 참여할 수 있나요?",
