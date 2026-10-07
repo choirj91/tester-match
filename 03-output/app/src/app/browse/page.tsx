@@ -26,11 +26,22 @@ type BrowseApp = {
   short_description: string;
   required_testers: number;
   is_boost: boolean;
+  boost_deadline_at: string | null;
   created_at: string;
   status: string;
   owner_user_id: number;
   users_public_profile: { nickname: string } | { nickname: string }[] | null;
+  /** 참여중(active) 테스터 수 — 목록 조회 뒤 따로 센다 */
+  activeTesters?: number;
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** 급구 표시가 끝날 때까지 남은 일수 (올림, 0 미만은 0) */
+function boostDaysLeft(deadline: string | null): number | null {
+  if (!deadline) return null;
+  return Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / DAY_MS));
+}
 
 function getOwner(app: BrowseApp) {
   if (!app.users_public_profile) return null;
@@ -86,12 +97,15 @@ function krDate(iso: string) {
   return new Date(iso).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
 }
 
-/** mono 꼬리 — 목록 조회에 있는 값만 쓴다 (모집 인원 · 등록자 · 등록일) */
+/** mono 꼬리 — 테스터 참여/필요 · 급구 남은 일수 · 등록자 · 등록일 */
 function AppMeta({ app }: { app: BrowseApp }) {
   const owner = getOwner(app);
+  const daysLeft = app.is_boost ? boostDaysLeft(app.boost_deadline_at) : null;
   return (
     <>
-      테스터 {app.required_testers}명 · {owner?.nickname ?? "—"} · {krDate(app.created_at)} 등록
+      테스터 {app.activeTesters ?? 0}/{app.required_testers}
+      {daysLeft !== null && <> · 급구 남은 {daysLeft}일</>} · {owner?.nickname ?? "—"} ·{" "}
+      {krDate(app.created_at)} 등록
     </>
   );
 }
@@ -280,7 +294,7 @@ export default async function BrowsePage({
   const supabase = createSupabaseAdminClient();
 
   const SELECT_COLS =
-    "id, name, short_description, required_testers, is_boost, created_at, status, owner_user_id, users_public_profile!inner(nickname)";
+    "id, name, short_description, required_testers, is_boost, boost_deadline_at, created_at, status, owner_user_id, users_public_profile!inner(nickname)";
 
   // 급구 리스트 — 별도 조회 후 서버 랜덤 셔플, 페이지네이션과 무관하게 상단 고정
   const { data: boostRaw } = await supabase
@@ -288,7 +302,7 @@ export default async function BrowsePage({
     .select(SELECT_COLS)
     .in("status", BROWSE_STATUSES)
     .eq("is_boost", true);
-  const boostApps = shuffle((boostRaw as BrowseApp[] | null) ?? []);
+  let boostApps = shuffle((boostRaw as BrowseApp[] | null) ?? []);
 
   // 비-급구 리스트 — 기존 정렬 + 페이지네이션
   let apps: BrowseApp[];
@@ -320,6 +334,23 @@ export default async function BrowsePage({
     nonBoostTotal = count ?? 0;
     apps = (data as BrowseApp[] | null) ?? [];
   }
+
+  // 앱별 참여중(active) 테스터 수 — 조회 실패 시 0 으로 보인다
+  const listedIds = [...boostApps, ...apps].map((a) => a.id);
+  const activeCounts = new Map<number, number>();
+  if (listedIds.length > 0) {
+    const { data: matchRows } = await supabase
+      .from("matches")
+      .select("app_id")
+      .in("app_id", listedIds)
+      .eq("status", "active");
+    for (const m of (matchRows as { app_id: number }[] | null) ?? []) {
+      activeCounts.set(m.app_id, (activeCounts.get(m.app_id) ?? 0) + 1);
+    }
+  }
+  const withCount = (a: BrowseApp): BrowseApp => ({ ...a, activeTesters: activeCounts.get(a.id) ?? 0 });
+  boostApps = boostApps.map(withCount);
+  apps = apps.map(withCount);
 
   // 조회 실패 시 배지만 숨긴다 (참여 자체는 서버가 다시 확인한다)
   const seats =

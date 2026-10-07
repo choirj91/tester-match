@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BUSINESS } from "@/lib/site";
 
 const POLICY_LINKS = [
+  { href: "/about", label: "서비스 소개" },
   { href: "/policies/terms", label: "이용약관" },
   { href: "/policies/privacy", label: "개인정보처리방침" },
   { href: "/policies/refund", label: "환불 정책" },

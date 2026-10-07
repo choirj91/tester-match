@@ -87,13 +87,12 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
           </label>
         ))}
       </fieldset>
-      <Field label="교환 금액">
+      <Field label="교환 크레딧">
         {({ id }) => (
           <Select id={id} value={units} onChange={(e) => setUnits(Number(e.target.value))} className="font-mono">
             {Array.from({ length: maxUnits }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
-                {(n * unitCredits).toLocaleString("ko-KR")} 크레딧 → {(n * unitCredits).toLocaleString("ko-KR")}원{" "}
-                {selected.label}
+                {(n * unitCredits).toLocaleString("ko-KR")} 크레딧 → {selected.label}
               </option>
             ))}
           </Select>

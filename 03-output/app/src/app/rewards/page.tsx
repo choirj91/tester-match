@@ -138,8 +138,8 @@ export default async function RewardsPage() {
                   <ReceiptDivider />
                   <ReceiptRows className="gap-1.5 text-[13px]">
                     <p className="m-0">
-                      {unitLabel} 크레딧 = {unitLabel}원권 · {unitLabel} 단위 · 1회 최대{" "}
-                      {formatKrw(REDEMPTION_MAX_CREDITS)}
+                      {unitLabel} 크레딧부터 · {unitLabel} 크레딧 단위 · 1회 최대{" "}
+                      {formatKrw(REDEMPTION_MAX_CREDITS)} 크레딧
                     </p>
                     <p className="m-0">{item.howDelivered}</p>
                     <p className="m-0">

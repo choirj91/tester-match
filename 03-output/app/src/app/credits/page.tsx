@@ -109,7 +109,7 @@ export default async function CreditsPage() {
               <ReceiptRows>
                 <ReceiptRow label="보상 교환 가능" value={`${formatKrw(redeemable)} 크레딧`} strong />
               </ReceiptRows>
-              <p className="m-0 font-mono text-xs text-ink-600">유료 시트 완주 적립분만 해당 (1 크레딧 = 1원)</p>
+              <p className="m-0 font-mono text-xs text-ink-600">유료 시트 완주 적립분만 해당</p>
             </Receipt>
 
             {/* 보상 교환 */}
