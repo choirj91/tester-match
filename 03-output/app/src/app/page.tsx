@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { AppScrollBanner } from "@/components/app-scroll-banner";
 import { SiteHeader } from "@/components/site-header";
 import { OnboardingProgress } from "@/components/onboarding-progress";
 import { ButtonLink } from "@/components/ui/button";
@@ -224,6 +225,26 @@ export default async function HomePage() {
             <ReceiptRow label="완주하지 못한 시트" value="환불" tone="accent" />
           </ReceiptRows>
         </Receipt>
+      </section>
+
+      {/* 지금 테스터를 기다리는 앱들 — 예전 홈의 좌우로 흐르는 카드 배너 (마우스를 올리면 멈춤, 동작 줄이기 설정이면 정지) */}
+      <section aria-labelledby="waiting-apps-title" className="border-y border-ink-200 bg-surface-1 py-12">
+        <div className="mx-auto mb-8 flex max-w-[1200px] flex-col gap-2 px-5 text-center">
+          <p className="m-0 font-mono text-[13px] tracking-[0.02em] text-ink-600">지금 테스터를 기다리는 앱들</p>
+          <h2
+            id="waiting-apps-title"
+            className="m-0 font-display text-h2 font-semibold tracking-[-0.01em] text-ink-900"
+          >
+            세상에 나오기 직전, 이 앱들을 가장 먼저 써볼 수 있습니다
+          </h2>
+        </div>
+        <AppScrollBanner />
+        <div className="mt-8 flex justify-center px-5">
+          <ButtonLink href={browseHref} variant="secondary">
+            전체 앱 보기
+            <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+          </ButtonLink>
+        </div>
       </section>
 
       {/* 두 사용자 */}
