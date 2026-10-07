@@ -48,8 +48,8 @@ export function OnboardingProgress({ steps }: { steps: OnboardingSteps }) {
   const percent = Math.round((doneCount / items.length) * 100);
 
   return (
-    <section className="mx-auto mt-8 max-w-4xl px-6">
-      <div className="border border-ink-200 bg-gradient-to-br from-surface-1 to-white p-6">
+    <section className="mx-auto max-w-[1200px] px-5 pt-8">
+      <div className="border border-ink-900 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-ink-900">시작하기</h2>

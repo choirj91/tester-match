@@ -18,4 +18,6 @@ export const BUSINESS = {
   email: CONTACT_EMAIL,
 } as const;
 /** 카카오 오픈채팅방 (커뮤니티 공지 대상) */
+/** Google Play 비공개 테스트 요건 — 테스터 수 (기간은 seat-reward-rules 의 SEAT_TOTAL_DAYS) */
+export const PLAY_CLOSED_TEST_TESTERS = 12;
 export const OPEN_CHAT_URL = "https://open.kakao.com/o/ghJ9350f";
