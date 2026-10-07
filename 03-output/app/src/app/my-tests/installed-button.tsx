@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
-/** 설치 자가확인 — 개발자 모니터링에 "설치 확인 ✓"로 표시됨 */
+/** 설치 자가확인 — 개발자 모니터링에 "설치 확인"으로 표시됨 */
 export function InstalledButton({ matchId }: { matchId: number }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -19,14 +20,14 @@ export function InstalledButton({ matchId }: { matchId: number }) {
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={confirm}
-      disabled={busy}
-      className="border border-success-700 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700 hover:bg-success-50 disabled:opacity-50"
+      loading={busy}
       title="설치를 완료했다면 눌러주세요. 개발자에게 설치 확인으로 표시됩니다."
     >
-      {busy ? "저장 중..." : "📲 앱 설치 완료했어요"}
-    </button>
+      앱 설치 완료했어요
+    </Button>
   );
 }

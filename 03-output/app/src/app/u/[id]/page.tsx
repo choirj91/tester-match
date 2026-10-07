@@ -1,15 +1,22 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { AppCard } from "@/components/ui/app-card";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
+import { EmptyState } from "@/components/ui/state";
+import { SEAT_TOTAL_DAYS } from "@/lib/seat-reward-rules";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AdminBadge } from "@/components/admin-badge";
 
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  matching: { label: "모집중", cls: "bg-surface-1 text-ink-900" },
-  reviewing: { label: "검수중", cls: "bg-warning-50 text-warning-700" },
-  launched: { label: "출시 완료", cls: "bg-success-50 text-success-700" },
-  paused: { label: "일시중지", cls: "bg-surface-1 text-ink-600" },
+const STATUS_LABEL: Record<string, { label: string; tone: BadgeTone }> = {
+  matching: { label: "모집중", tone: "ink" },
+  reviewing: { label: "검수중", tone: "warning" },
+  launched: { label: "출시 완료", tone: "success" },
+  paused: { label: "일시중지", tone: "outline" },
 };
 
 export default async function PublicUserPage({
@@ -58,70 +65,66 @@ export default async function PublicUserPage({
   return (
     <>
       <SiteHeader user={viewer} />
-      <main className="mx-auto max-w-4xl px-6 py-12">
-        <Link href="/stats" className="text-sm text-ink-600 hover:text-ink-900">
-          ← 활동 랭킹
+      <main className="mx-auto max-w-[880px] px-5 pt-8 pb-14">
+        <Link
+          href="/stats"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm text-ink-700 hover:text-accent-600"
+        >
+          <ArrowLeft className="size-4" strokeWidth={1.8} aria-hidden="true" />
+          활동 랭킹
         </Link>
 
         {/* 프로필 헤더 */}
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-ink-900">{profile.nickname}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">{profile.nickname}</h1>
           {profile.role === "admin" && <AdminBadge />}
-          <span className="text-sm font-semibold text-accent-600">★{profile.trust_score}</span>
+          <span className="font-mono text-sm text-ink-900 tabular-nums">신뢰도 {profile.trust_score}</span>
         </div>
-        <p className="mt-1 text-xs text-ink-600">
-          {new Date(profile.created_at).toLocaleDateString("ko-KR")} 가입
+        <p className="m-0 mt-1 text-[13px] text-ink-600">
+          <span className="font-mono tabular-nums">{new Date(profile.created_at).toLocaleDateString("ko-KR")}</span> 가입
         </p>
 
         {/* 활동 요약 */}
-        <section className="mt-6 grid grid-cols-3 gap-4">
-          <div className="border border-ink-200 bg-white p-4 text-center">
-            <p className="text-2xl font-bold tabular text-ink-900">{appList.length}</p>
-            <p className="mt-0.5 text-xs text-ink-600">등록 앱</p>
-          </div>
-          <div className="border border-ink-200 bg-white p-4 text-center">
-            <p className="text-2xl font-bold tabular text-ink-900">{matchCount ?? 0}</p>
-            <p className="mt-0.5 text-xs text-ink-600">테스트 참여</p>
-          </div>
-          <div className="border border-ink-200 bg-white p-4 text-center">
-            <p className="text-2xl font-bold tabular text-success-700">{completedCount ?? 0}</p>
-            <p className="mt-0.5 text-xs text-ink-600">14일 완주</p>
-          </div>
-        </section>
+        <StatTiles className="mt-8">
+          <StatTile rule label="등록 앱" value={<span className="font-mono">{appList.length}</span>} />
+          <StatTile rule label="테스트 참여" value={<span className="font-mono">{matchCount ?? 0}</span>} />
+          <StatTile
+            rule
+            label={`${SEAT_TOTAL_DAYS}일 완주`}
+            value={<span className="font-mono">{completedCount ?? 0}</span>}
+          />
+        </StatTiles>
 
         {/* 등록한 앱 */}
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink-900">등록한 앱 {appList.length}개</h2>
+        <section aria-labelledby="apps-heading" className="mt-12 flex flex-col gap-4 border-t border-ink-900 pt-8">
+          <h2 id="apps-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+            등록한 앱 <span className="font-mono tabular-nums">{appList.length}</span>개
+          </h2>
           {appList.length === 0 ? (
-            <p className="mt-4 border border-dashed border-ink-900 bg-surface-1 p-8 text-center text-sm text-ink-600">
-              아직 등록한 앱이 없습니다.
-            </p>
+            <EmptyState title="아직 등록한 앱이 없습니다." />
           ) : (
-            <ul className="mt-4 space-y-3">
+            <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4 p-0">
               {appList.map((a) => {
-                const st = STATUS_LABEL[a.status] ?? {
-                  label: a.status,
-                  cls: "bg-surface-1 text-ink-600",
-                };
+                const st = STATUS_LABEL[a.status] ?? { label: a.status, tone: "outline" as const };
                 return (
-                  <li key={a.id}>
-                    <Link
-                      href={`/browse/${a.id}`}
-                      className="block border border-ink-200 bg-white p-5 transition hover:border-ink-200"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-semibold text-ink-900">{a.name}</p>
-                        <span className={` px-2 py-0.5 text-[10px] font-bold ${st.cls}`}>
-                          {st.label}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink-700">
-                        {a.short_description}
-                      </p>
-                      <p className="mt-2 text-[11px] text-ink-600">
-                        {new Date(a.created_at).toLocaleDateString("ko-KR")} 등록
-                      </p>
-                    </Link>
+                  <li key={a.id} className="flex">
+                    <AppCard
+                      className="w-full"
+                      name={a.name}
+                      badges={<Badge tone={st.tone}>{st.label}</Badge>}
+                      description={<span className="line-clamp-2">{a.short_description}</span>}
+                      meta={`${new Date(a.created_at).toLocaleDateString("ko-KR")} 등록`}
+                      action={
+                        <ButtonLink
+                          href={`/browse/${a.id}`}
+                          variant="secondary"
+                          size="sm"
+                          aria-label={`${a.name} 자세히 보기`}
+                        >
+                          자세히 보기
+                        </ButtonLink>
+                      }
+                    />
                   </li>
                 );
               })}

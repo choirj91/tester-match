@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 export function OptOutButton({ matchId, paidSeat = false }: { matchId: number; paidSeat?: boolean }) {
   const router = useRouter();
@@ -12,7 +13,7 @@ export function OptOutButton({ matchId, paidSeat = false }: { matchId: number; p
       !confirm(
         `테스트를 중도 포기하면 신뢰도가 3점 차감됩니다.\n(무단 이탈 시에는 10점 차감 — 포기하실 거라면 옵트아웃이 유리합니다.)${
           paidSeat
-            ? "\n\n💰 유료 시트: 지금까지 쌓인 적립 예정 크레딧은 모두 사라지고, 올린 스크린샷은 삭제됩니다."
+            ? "\n\n유료 시트: 지금까지 쌓인 적립 예정 크레딧은 모두 사라지고, 올린 스크린샷은 삭제됩니다."
             : ""
         }\n\n계속하시겠습니까?`,
       )
@@ -37,13 +38,8 @@ export function OptOutButton({ matchId, paidSeat = false }: { matchId: number; p
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={busy}
-      className="border border-danger-700 bg-white px-3 py-1.5 text-xs font-semibold text-danger-700 hover:bg-danger-50 disabled:opacity-50"
-    >
-      {busy ? "처리 중..." : "옵트아웃"}
-    </button>
+    <Button variant="text" size="sm" onClick={onClick} loading={busy}>
+      옵트아웃
+    </Button>
   );
 }

@@ -1,7 +1,11 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/form";
+import { Notice } from "@/components/ui/notice";
 import { SEAT_REWARD_MAX, SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 
 type Props = {
@@ -32,37 +36,26 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
 
   if (isOwn) {
     return (
-      <button
-        type="button"
-        disabled
-        className="w-full bg-surface-1 px-5 py-3 text-sm font-semibold text-ink-600"
-      >
+      <Button disabled className="w-full">
         본인 앱에는 참여할 수 없습니다
-      </button>
+      </Button>
     );
   }
 
   if (alreadyJoined) {
     return (
-      <button
-        type="button"
-        disabled
-        className="w-full bg-success-50 px-5 py-3 text-sm font-semibold text-success-700"
-      >
+      <p className="m-0 flex min-h-12 w-full items-center justify-center gap-2 border border-ink-900 bg-white px-5 text-[15px] font-medium text-success-700">
+        <Check className="size-[18px]" strokeWidth={2} aria-hidden="true" />
         이미 참여중 — 내 테스트에서 확인
-      </button>
+      </p>
     );
   }
 
   if (isFull && !paidSeat) {
     return (
-      <button
-        type="button"
-        disabled
-        className="w-full bg-surface-1 px-5 py-3 text-sm font-semibold text-ink-600"
-      >
+      <Button disabled className="w-full">
         정원 마감
-      </button>
+      </Button>
     );
   }
 
@@ -87,31 +80,30 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       {paidSeat && (
-        <div className="mb-3 border border-warning-700 bg-warning-50 p-4">
-          <p className="text-sm font-bold text-warning-700">
-            💰 유료 시트 {openSeats}명 모집 중 — 최대 {SEAT_REWARD_MAX} 크레딧
-          </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed text-warning-700">
+        <Notice kind="caution" title={`유료 시트 ${openSeats}명 모집 중 — 최대 ${SEAT_REWARD_MAX} 크레딧`}>
+          <ul className="m-0 mt-1 flex list-disc flex-col gap-1 pl-5 text-[13px] leading-relaxed text-ink-900">
             {SEAT_RULES.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-          <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-semibold text-warning-700">
-            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-            위 규칙을 확인했고 동의합니다
-          </label>
-        </div>
+          <Checkbox
+            className="mt-2 font-semibold"
+            label="위 규칙을 확인했고 동의합니다"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+          />
+        </Notice>
       )}
-      <button
-        type="button"
+      <Button
         onClick={onClick}
-        disabled={busy || (paidSeat && !agreed)}
-        className="w-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
+        loading={busy}
+        disabled={paidSeat && !agreed}
+        className="w-full"
       >
-        {busy ? "처리 중..." : paidSeat ? "유료 시트로 참여하기" : "이 앱 테스트에 참여하기"}
-      </button>
+        {paidSeat ? "유료 시트로 참여하기" : "이 앱 테스트에 참여하기"}
+      </Button>
     </div>
   );
 }

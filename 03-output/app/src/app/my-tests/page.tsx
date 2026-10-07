@@ -1,6 +1,11 @@
-import Link from "next/link";
+import { ArrowRight, ExternalLink } from "lucide-react";
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
+import { EmptyState } from "@/components/ui/state";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { currentDayN } from "@/lib/checkin";
@@ -11,19 +16,32 @@ import { InstallBlockedButton } from "./install-blocked-button";
 import {
   SEAT_REWARD_SUMMARY,
   SEAT_STREAK_DAYS,
+  SEAT_TOTAL_DAYS,
   computeSeatReward,
 } from "@/lib/seat-reward-rules";
 import { CheckInButton } from "./check-in-button";
+import { CheckinCalendar } from "./checkin-calendar";
 import { InstalledButton } from "./installed-button";
 
 export const metadata = { title: "내 테스트" };
 
-const STATUS_LABEL: Record<string, { text: string; tone: string }> = {
-  active: { text: "진행중", tone: "bg-surface-1 text-ink-900" },
-  completed: { text: "완주", tone: "bg-success-50 text-success-700" },
-  opted_out: { text: "옵트아웃", tone: "bg-surface-1 text-ink-600" },
-  penalized: { text: "페널티", tone: "bg-danger-50 text-danger-700" },
+const STATUS_LABEL: Record<string, { text: string; tone: BadgeTone }> = {
+  active: { text: "진행중", tone: "ink" },
+  completed: { text: "완주", tone: "success" },
+  opted_out: { text: "옵트아웃", tone: "outline" },
+  penalized: { text: "페널티", tone: "danger" },
 };
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function ExternalButton({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <ButtonLink href={href} target="_blank" rel="noopener noreferrer" variant="secondary" size="sm">
+      {children}
+      <ExternalLink className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
+    </ButtonLink>
+  );
+}
 
 export default async function MyTestsPage() {
   const user = await getCurrentUser();
@@ -41,17 +59,17 @@ export default async function MyTestsPage() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-4xl px-6 py-12">
-        <header>
-          <h1 className="text-2xl font-bold text-ink-900">내 테스트</h1>
-          <p className="mt-1 text-sm text-ink-700">
-            참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 💰 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 구매자 확정 후 지급.
+      <main className="mx-auto max-w-[880px] px-5 pt-10 pb-14">
+        <header className="flex flex-col gap-2">
+          <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">내 테스트</h1>
+          <p className="m-0 text-[15px] text-ink-700">
+            참여중인 앱과 {SEAT_TOTAL_DAYS}일 체크인을 한 화면에서 추적합니다. 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 구매자 확정 후 지급.
           </p>
         </header>
 
         <div className="mt-8">
           {matches && matches.length > 0 ? (
-            <ul className="space-y-3">
+            <ul className="m-0 flex list-none flex-col gap-4 p-0">
               {matches.map((m) => {
                 const app = Array.isArray(m.apps) ? m.apps[0] : m.apps;
                 if (!app) return null;
@@ -65,170 +83,138 @@ export default async function MyTestsPage() {
                 const todayDayN = m.opted_in_at ? currentDayN(m.opted_in_at) : 0;
                 const alreadyCheckedToday = todayDayN > 0 && checkedDays.has(todayDayN);
                 const expired = todayDayN === 0;
+                // 달력용 — 오늘 이전에 지나간 날 수 (기간이 끝났으면 전부)
+                const elapsedDays = todayDayN > 0 ? todayDayN - 1 : m.opted_in_at ? SEAT_TOTAL_DAYS : 0;
                 const label = STATUS_LABEL[m.status] ?? STATUS_LABEL.active;
                 const isActive = m.status === "active";
+                const isPaidSeat = m.paid_order_id != null;
+                const hasCustomGroup = !!app.google_group_url && app.google_group_url !== TESTER_GROUP_URL;
 
                 return (
-                  <li
-                    key={m.id}
-                    className="border border-ink-200 bg-white p-5"
-                  >
+                  <li key={m.id} className="flex flex-col gap-4 border border-ink-900 bg-white p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-lg font-semibold text-ink-900">
+                        <h2 className="m-0 truncate font-display text-h3 font-semibold text-ink-900">
                           {app.name}
                         </h2>
-                        <p className="mt-1 line-clamp-2 text-sm text-ink-700">
+                        <p className="m-0 mt-1 line-clamp-2 text-sm text-ink-700">
                           {app.short_description}
                         </p>
                       </div>
-                      <span
-                        className={`shrink-0  px-2.5 py-1 text-xs font-semibold ${label.tone}`}
-                      >
+                      <Badge tone={label.tone} className="shrink-0">
                         {label.text}
-                      </span>
+                      </Badge>
                     </div>
 
+                    {/* 오늘 체크인 — 카드 첫 줄 행동 */}
+                    {isActive && (
+                      <CheckInButton
+                        paidSeat={isPaidSeat}
+                        deadlineIso={
+                          todayDayN > 0 && m.opted_in_at
+                            ? new Date(new Date(m.opted_in_at).getTime() + todayDayN * DAY_MS).toISOString()
+                            : null
+                        }
+                        matchId={m.id}
+                        alreadyCheckedToday={alreadyCheckedToday}
+                        expired={expired}
+                      />
+                    )}
+
                     {(isActive || m.status === "completed") && (
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between text-xs text-ink-600">
-                          <span className="tabular">
+                      <div className="flex flex-col gap-2.5 border-t border-ink-200 pt-4">
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-ink-600">
+                          <span className="font-mono tabular-nums">
                             체크인 <strong className="text-ink-900">{checkedCount}</strong>일
-                            {" / 14일"}
+                            {` / ${SEAT_TOTAL_DAYS}일`}
                           </span>
                           <span>
-                            {m.paid_order_id != null && (
+                            {isPaidSeat && (
                               <strong className="text-warning-700">
-                                💰 유료 시트 · 지금까지 {seatProgress.total} 크레딧 (7일 연속{" "}
-                                {Math.min(seatProgress.longestStreak, SEAT_STREAK_DAYS)}/{SEAT_STREAK_DAYS} · 12일↑
-                                완주 시 확정 후 지급) ·{" "}
+                                유료 시트 · 지금까지 <span className="font-mono tabular-nums">{seatProgress.total}</span> 크레딧 (7일 연속{" "}
+                                <span className="font-mono tabular-nums">
+                                  {Math.min(seatProgress.longestStreak, SEAT_STREAK_DAYS)}/{SEAT_STREAK_DAYS}
+                                </span>{" "}
+                                · 12일↑ 완주 시 확정 후 지급) ·{" "}
                               </strong>
                             )}
                             등록자 {owner?.nickname ?? "—"}
                           </span>
                         </div>
-                        <div className="mt-1 h-1.5 overflow-hidden bg-surface-1">
-                          <div
-                            className="h-full bg-ink-900 transition-all"
-                            style={{ width: `${(checkedCount / 14) * 100}%` }}
-                          />
-                        </div>
+                        <CheckinCalendar
+                          checkedDays={checkedDays}
+                          todayDayN={todayDayN}
+                          elapsedDays={elapsedDays}
+                        />
                       </div>
                     )}
 
                     {/* Google 그룹 — 초대 링크보다 먼저 표시 */}
                     {app.google_group_url === TESTER_GROUP_URL && isActive ? (
-                      <div className="mt-3 flex items-start gap-2 border border-warning-700 bg-warning-50 px-3 py-2">
-                        <span className="shrink-0 bg-warning-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          1단계
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs text-warning-700">
-                            공용 테스터 그룹({PLAY_GROUP_EMAIL}) 가입이 필요합니다 (최초 1회).
-                            이미 가입했다면 초대 링크를 바로 사용하세요.
-                          </p>
-                          <PlayGroupJoinPrompt compact />
-                        </div>
-                      </div>
+                      <Notice kind="caution" title={<span className="font-mono">1단계</span>}>
+                        <p className="m-0">
+                          공용 테스터 그룹(<span className="font-mono">{PLAY_GROUP_EMAIL}</span>) 가입이 필요합니다 (최초 1회).
+                          이미 가입했다면 초대 링크를 바로 사용하세요.
+                        </p>
+                        <PlayGroupJoinPrompt compact />
+                      </Notice>
                     ) : app.google_group_url && isActive ? (
-                      <div className="mt-3 flex items-start gap-2 border border-warning-700 bg-warning-50 px-3 py-2">
-                        <span className="shrink-0 bg-warning-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          1단계
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs text-warning-700">
-                            초대 링크 전에 Google 그룹 가입이 필요합니다.
-                          </p>
-                          <a
-                            href={app.google_group_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 inline-block text-xs font-semibold text-warning-700 underline"
-                          >
-                            그룹 가입하기 →
-                          </a>
-                        </div>
-                      </div>
+                      <Notice kind="caution" title={<span className="font-mono">1단계</span>}>
+                        <p className="m-0">초대 링크 전에 Google 그룹 가입이 필요합니다.</p>
+                        <a
+                          href={app.google_group_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex min-h-11 items-center gap-1.5 font-semibold text-ink-900 underline hover:text-accent-600"
+                        >
+                          그룹 가입하기
+                          <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                        </a>
+                      </Notice>
                     ) : null}
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {isActive && (
-                        <CheckInButton
-                          paidSeat={m.paid_order_id != null}
-                          deadlineIso={
-                            todayDayN > 0 && m.opted_in_at
-                              ? new Date(
-                                  new Date(m.opted_in_at).getTime() + todayDayN * 24 * 60 * 60 * 1000,
-                                ).toISOString()
-                              : null
-                          }
-                          matchId={m.id}
-                          alreadyCheckedToday={alreadyCheckedToday}
-                          expired={expired}
-                        />
-                      )}
-                      {isActive && m.paid_order_id != null && checkedCount === 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isActive && isPaidSeat && checkedCount === 0 && (
                         <InstallBlockedButton matchId={m.id} />
                       )}
                       {isActive &&
                         (m.installed_at ? (
-                          <span className="bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700">
-                            📲 설치 확인됨 ✓
-                          </span>
+                          <Badge tone="success" className="min-h-11">
+                            설치 확인됨
+                          </Badge>
                         ) : (
                           <InstalledButton matchId={m.id} />
                         ))}
                       {app.store_invite_url && (
-                        <a
-                          href={app.store_invite_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
-                        >
-                          {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL
-                            ? "안드로이드 (2단계) ↗"
-                            : "안드로이드 ↗"}
-                        </a>
+                        <ExternalButton href={app.store_invite_url}>
+                          {hasCustomGroup ? "안드로이드 (2단계)" : "안드로이드"}
+                        </ExternalButton>
                       )}
                       {app.web_invite_url && (
-                        <a
-                          href={app.web_invite_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
-                        >
-                          {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL
-                            ? "웹 (2단계) ↗"
-                            : "웹 ↗"}
-                        </a>
+                        <ExternalButton href={app.web_invite_url}>
+                          {hasCustomGroup ? "웹 (2단계)" : "웹"}
+                        </ExternalButton>
                       )}
-                      <Link
-                        href={`/browse/${app.id}`}
-                        className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
-                      >
+                      <ButtonLink href={`/browse/${app.id}`} variant="secondary" size="sm">
                         앱 정보
-                      </Link>
-                      {isActive && <OptOutButton matchId={m.id} paidSeat={m.paid_order_id != null} />}
+                      </ButtonLink>
+                      {isActive && <OptOutButton matchId={m.id} paidSeat={isPaidSeat} />}
                     </div>
                   </li>
                 );
               })}
             </ul>
           ) : (
-            <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
-              <p className="text-base font-medium text-ink-700">
-                아직 참여중인 테스트가 없습니다.
-              </p>
-              <p className="mt-2 text-sm text-ink-700">
-                매칭 가능 앱에서 관심 가는 앱을 골라 참여해보세요.
-              </p>
-              <Link
-                href="/browse"
-                className="mt-6 inline-flex bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
-              >
-                매칭 가능 앱 보기 →
-              </Link>
-            </div>
+            <EmptyState
+              title="아직 참여중인 테스트가 없습니다."
+              description="매칭 가능 앱에서 관심 가는 앱을 골라 참여해보세요."
+              action={
+                <ButtonLink href="/browse">
+                  매칭 가능 앱 보기
+                  <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                </ButtonLink>
+              }
+            />
           )}
         </div>
       </main>

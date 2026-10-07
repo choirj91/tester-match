@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 /** 유료 시트에서 앱 설치가 불가능할 때 — 신뢰도 차감 없이 시트에서 빠진다 (참여 72시간 이내, 체크인 전) */
 export function InstallBlockedButton({ matchId }: { matchId: number }) {
@@ -27,13 +28,8 @@ export function InstallBlockedButton({ matchId }: { matchId: number }) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={busy}
-      className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-warning-700 hover:text-warning-700 disabled:opacity-50"
-    >
-      {busy ? "처리 중..." : "설치가 안 돼요"}
-    </button>
+    <Button variant="secondary" size="sm" onClick={onClick} loading={busy}>
+      설치가 안 돼요
+    </Button>
   );
 }

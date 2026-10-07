@@ -1,9 +1,14 @@
 "use client";
 
+import { ArrowRight, Link2, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminBadge } from "@/components/admin-badge";
+import { Button } from "@/components/ui/button";
+import { cx } from "@/components/ui/cx";
+import { Textarea } from "@/components/ui/form";
+import { EmptyState } from "@/components/ui/state";
 
 type Comment = {
   id: number;
@@ -93,55 +98,59 @@ export function AppCommentsSection({
   }
 
   return (
-    <section className="mt-10">
-      <h2 className="text-lg font-semibold text-ink-900">
-        댓글 <span className="tabular text-ink-600">{comments.length}</span>
-      </h2>
-      <p className="mt-1 text-xs text-ink-600">
-        다른 개발자에게 인사하거나, 내 앱 링크를 걸어 품앗이 요청을 남겨보세요.
-      </p>
+    <section aria-labelledby="comments-heading" className="mt-12 flex flex-col gap-4 border-t border-ink-900 pt-8">
+      <div className="flex flex-col gap-1">
+        <h2 id="comments-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+          댓글 <span className="font-mono text-ink-600 tabular-nums">{comments.length}</span>
+        </h2>
+        <p className="m-0 text-sm text-ink-700">
+          다른 개발자에게 인사하거나, 내 앱 링크를 걸어 품앗이 요청을 남겨보세요.
+        </p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-4 space-y-3 border border-ink-200 bg-white p-4">
-        <textarea
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        <label htmlFor="comment-body" className="sr-only">
+          댓글 내용
+        </label>
+        <Textarea
+          id="comment-body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           maxLength={1000}
           required
           placeholder="저도 테스터 참여 중입니다. 제 앱도 한 번 봐주실래요?"
-          className="w-full resize-y border border-ink-900 bg-white px-3 py-2.5 text-sm placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600"
+          className="resize-y"
         />
 
         {/* 내 앱 링크 걸기 picker */}
         <div className="relative">
           {promotedAppId && promotedAppName ? (
-            <div className="flex items-center justify-between border border-ink-200 bg-surface-1 px-3 py-2">
-              <span className="text-sm text-ink-900">
-                🔗 첨부:{" "}
-                <strong className="font-semibold">{promotedAppName}</strong>
+            <div className="flex items-center justify-between gap-3 border border-ink-900 bg-surface-1 px-3">
+              <span className="inline-flex items-center gap-1.5 text-sm text-ink-900">
+                <Link2 className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+                첨부: <strong className="font-semibold">{promotedAppName}</strong>
               </span>
-              <button
-                type="button"
-                onClick={() => setPromotedAppId(null)}
-                className="text-xs text-ink-900 hover:text-ink-900"
-              >
+              <Button variant="text" size="sm" onClick={() => setPromotedAppId(null)}>
                 제거
-              </button>
+              </Button>
             </div>
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPickerOpen((v) => !v)}
               disabled={ownPromotableApps.length === 0}
-              className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1 disabled:opacity-50"
+              aria-expanded={pickerOpen}
               title={ownPromotableApps.length === 0 ? "첨부 가능한 본인 앱이 없습니다" : ""}
             >
-              + 내 앱 링크 걸기
-            </button>
+              <Plus className="size-4" strokeWidth={1.8} aria-hidden="true" />
+              내 앱 링크 걸기
+            </Button>
           )}
 
           {pickerOpen && !promotedAppId && (
-            <ul className="absolute z-10 mt-1 max-h-60 w-full overflow-auto border border-ink-200 bg-white sm:w-72">
+            <ul className="absolute z-10 m-0 mt-1 max-h-60 w-full list-none overflow-auto border border-ink-900 bg-white p-0 sm:w-72">
               {ownPromotableApps.map((a) => (
                 <li key={a.id}>
                   <button
@@ -150,7 +159,7 @@ export function AppCommentsSection({
                       setPromotedAppId(a.id);
                       setPickerOpen(false);
                     }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-ink-900 hover:bg-surface-1"
+                    className="flex min-h-11 w-full items-center justify-between px-3 text-left text-sm text-ink-900 hover:bg-surface-1"
                   >
                     <span className="truncate">{a.name}</span>
                   </button>
@@ -161,69 +170,55 @@ export function AppCommentsSection({
         </div>
 
         {error && (
-          <p role="alert" className="text-sm text-danger-700">
+          <p role="alert" className="m-0 text-[13px] text-danger-700">
             {error}
           </p>
         )}
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={submitting || body.trim().length === 0}
-            className="bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
-          >
-            {submitting ? "등록 중..." : "댓글 등록"}
-          </button>
+          <Button type="submit" loading={submitting} disabled={body.trim().length === 0}>
+            댓글 등록
+          </Button>
         </div>
       </form>
 
-      <ul className="mt-6 space-y-3">
-        {comments.length === 0 ? (
-          <li className="border border-dashed border-ink-200 px-4 py-8 text-center text-sm text-ink-600">
-            첫 댓글을 작성해보세요.
-          </li>
-        ) : (
-          comments.map((c) => (
+      {comments.length === 0 ? (
+        <EmptyState title="첫 댓글을 작성해보세요." />
+      ) : (
+        <ul className="m-0 list-none border-t border-ink-900 p-0">
+          {comments.map((c) => (
             <li
               key={c.id}
-              className={` border p-4 ${
-                c.author_role === "admin"
-                  ? "border-ink-200 bg-surface-1"
-                  : "border-ink-200 bg-white"
-              }`}
+              className={cx("border-b border-ink-200 px-3 py-4", c.author_role === "admin" ? "bg-surface-1" : "bg-white")}
             >
               <div className="flex items-center justify-between gap-4 text-xs text-ink-600">
-                <span className="inline-flex items-center gap-1.5">
-                  <strong className="text-ink-700">{c.author_nickname}</strong>
+                <span className="inline-flex flex-wrap items-center gap-1.5">
+                  <strong className="text-ink-900">{c.author_nickname}</strong>
                   {c.author_role === "admin" && <AdminBadge />}
                   {" · "}
-                  {new Date(c.created_at).toLocaleString("ko-KR")}
+                  <span className="font-mono tabular-nums">{new Date(c.created_at).toLocaleString("ko-KR")}</span>
                 </span>
                 {c.author_user_id === currentUserId && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(c.id)}
-                    className="text-xs text-ink-600 hover:text-danger-700"
-                  >
+                  <Button variant="text" size="sm" onClick={() => onDelete(c.id)} className="shrink-0">
                     삭제
-                  </button>
+                  </Button>
                 )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-900">
-                {c.body}
-              </p>
+              <p className="m-0 mt-2 text-sm leading-relaxed whitespace-pre-wrap text-ink-900">{c.body}</p>
               {c.promoted_app_id && c.promoted_app_name && (
                 <Link
                   href={`/browse/${c.promoted_app_id}`}
-                  className="mt-3 inline-flex items-center gap-2 border border-ink-200 bg-surface-1 px-3 py-2 text-xs font-semibold text-ink-900 hover:bg-surface-1"
+                  className="mt-3 inline-flex min-h-11 items-center gap-2 border border-ink-900 bg-white px-3 text-xs font-semibold text-ink-900 hover:bg-surface-1"
                 >
-                  🔗 첨부 앱: {c.promoted_app_name} →
+                  <Link2 className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+                  첨부 앱: {c.promoted_app_name}
+                  <ArrowRight className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
                 </Link>
               )}
             </li>
-          ))
-        )}
-      </ul>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

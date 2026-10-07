@@ -1,13 +1,20 @@
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { AppCard } from "@/components/ui/app-card";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { cx } from "@/components/ui/cx";
+import { EmptyState } from "@/components/ui/state";
+import { AppStatusBadge } from "@/app/apps/app-status-badge";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { APP_STATUS_LABEL, APP_STATUS_ORDER, BROWSE_STATUSES } from "@/lib/app-status";
-import type { AppStatus } from "@/lib/app-status";
+import { APP_STATUS_ORDER, BROWSE_STATUSES } from "@/lib/app-status";
 import { BrowseControls } from "./browse-controls";
 import type { SortKey } from "./browse-controls";
 import { PAID_SEAT_REWARD, countOpenSeatsByApp } from "@/lib/paid-seats";
+import { SEAT_TOTAL_DAYS } from "@/lib/seat-reward-rules";
 
 export const metadata = { title: "매칭 가능 앱" };
 
@@ -53,13 +60,14 @@ function shuffle<T>(arr: T[]): T[] {
 function SeatBadge({ n }: { n: number }) {
   if (n <= 0) return null;
   return (
-    <span
-      title={`유료 시트 ${n}명 · 14일 완주 시 ${PAID_SEAT_REWARD} 크레딧`}
-      className="bg-warning-700 px-2 py-0.5 text-[10px] font-bold text-white"
-    >
-      💰 {n}시트
+    <span title={`유료 시트 ${n}명 · ${SEAT_TOTAL_DAYS}일 완주 시 ${PAID_SEAT_REWARD} 크레딧`}>
+      <Badge tone="ink">유료 시트 {n}</Badge>
     </span>
   );
+}
+
+function BoostBadge() {
+  return <Badge tone="accent">급구</Badge>;
 }
 
 function getPageNumbers(current: number, total: number): (number | "...")[] {
@@ -78,15 +86,13 @@ function krDate(iso: string) {
   return new Date(iso).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const label = APP_STATUS_LABEL[status as AppStatus] ?? {
-    text: status,
-    tone: "bg-surface-1 text-ink-600",
-  };
+/** mono 꼬리 — 목록 조회에 있는 값만 쓴다 (모집 인원 · 등록자 · 등록일) */
+function AppMeta({ app }: { app: BrowseApp }) {
+  const owner = getOwner(app);
   return (
-    <span className={` px-2 py-0.5 text-[10px] font-bold ${label.tone}`}>
-      {label.text}
-    </span>
+    <>
+      테스터 {app.required_testers}명 · {owner?.nickname ?? "—"} · {krDate(app.created_at)} 등록
+    </>
   );
 }
 
@@ -94,42 +100,35 @@ function StatusBadge({ status }: { status: string }) {
 
 function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, number> }) {
   return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4 p-0">
       {apps.map((app) => {
-        const owner = getOwner(app);
+        const openSeats = seats.get(app.id) ?? 0;
         return (
-          <li key={app.id}>
-            <Link
-              href={`/browse/${app.id}`}
-              className="flex h-full flex-col border border-ink-200 bg-white p-5 transition hover:border-ink-900"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="truncate text-base font-semibold text-ink-900">{app.name}</h2>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <SeatBadge n={seats.get(app.id) ?? 0} />
-                  {app.is_boost && (
-                    <span className="bg-accent-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                      BOOST
-                    </span>
-                  )}
-                  <StatusBadge status={app.status} />
-                </div>
-              </div>
-
-              <p className="mt-2 line-clamp-2 flex-1 text-sm text-ink-700">
-                {app.short_description}
-              </p>
-
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-600">
-                <span className="tabular">
-                  테스터 <strong className="text-ink-900">{app.required_testers}</strong>명
-                </span>
-                <span>·</span>
-                <span>{owner?.nickname ?? "—"}</span>
-                <span>·</span>
-                <span className="tabular">{krDate(app.created_at)} 등록</span>
-              </div>
-            </Link>
+          <li key={app.id} className="flex">
+            <AppCard
+              className="w-full"
+              highlighted={openSeats > 0}
+              name={app.name}
+              badges={
+                <>
+                  {app.is_boost && <BoostBadge />}
+                  <SeatBadge n={openSeats} />
+                  <AppStatusBadge status={app.status} />
+                </>
+              }
+              description={<span className="line-clamp-2">{app.short_description}</span>}
+              meta={<AppMeta app={app} />}
+              action={
+                <ButtonLink
+                  href={`/browse/${app.id}`}
+                  variant="secondary"
+                  size="sm"
+                  aria-label={`${app.name} 자세히 보기`}
+                >
+                  자세히 보기
+                </ButtonLink>
+              }
+            />
           </li>
         );
       })}
@@ -141,41 +140,32 @@ function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, numbe
 
 function ListView({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, number> }) {
   return (
-    <ul className="divide-y divide-ink-200 border border-ink-200 bg-white">
+    <ul className="m-0 list-none border-t border-ink-900 p-0">
       {apps.map((app) => {
-        const owner = getOwner(app);
+        const openSeats = seats.get(app.id) ?? 0;
         return (
-          <li key={app.id}>
+          <li key={app.id} className="border-b border-ink-200">
             <Link
               href={`/browse/${app.id}`}
-              className="flex items-center gap-4 px-5 py-4 transition hover:bg-surface-1"
+              className="flex min-h-11 items-center gap-4 px-1 py-4 text-ink-900 no-underline hover:bg-surface-1"
             >
               <div className="w-16 shrink-0">
-                <StatusBadge status={app.status} />
+                <AppStatusBadge status={app.status} />
               </div>
 
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-semibold text-ink-900">{app.name}</span>
-                  <SeatBadge n={seats.get(app.id) ?? 0} />
-                  {app.is_boost && (
-                    <span className="shrink-0 bg-accent-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                      BOOST
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="truncate font-semibold text-ink-900">{app.name}</span>
+                  {app.is_boost && <BoostBadge />}
+                  <SeatBadge n={openSeats} />
                 </div>
-                <p className="mt-0.5 truncate text-xs text-ink-600">{app.short_description}</p>
+                <p className="m-0 mt-0.5 truncate text-[13px] text-ink-700">{app.short_description}</p>
+                <p className="m-0 mt-1 font-mono text-xs text-ink-600 tabular-nums">
+                  <AppMeta app={app} />
+                </p>
               </div>
 
-              <div className="hidden shrink-0 items-center gap-4 text-xs text-ink-600 sm:flex">
-                <span className="tabular">
-                  <strong className="text-ink-900">{app.required_testers}</strong>명
-                </span>
-                <span>{owner?.nickname ?? "—"}</span>
-                <span className="tabular">{krDate(app.created_at)}</span>
-              </div>
-
-              <span className="shrink-0 text-ink-600">›</span>
+              <ChevronRight className="size-4 shrink-0 text-ink-900" strokeWidth={1.8} aria-hidden="true" />
             </Link>
           </li>
         );
@@ -205,41 +195,43 @@ function Pagination({
   }
 
   const pageNums = getPageNumbers(page, totalPages);
+  const cell = "flex size-11 items-center justify-center font-mono text-sm tabular-nums";
 
   return (
-    <nav className="mt-10 flex items-center justify-center gap-1" aria-label="페이지 이동">
+    <nav className="mt-10 flex flex-wrap items-center justify-center gap-1" aria-label="페이지 이동">
       {/* 이전 */}
       {page > 1 ? (
         <Link
           href={href(page - 1)}
-          className="flex h-9 w-9 items-center justify-center border border-ink-200 bg-white text-sm text-ink-700 hover:bg-surface-1"
+          aria-label="이전 페이지"
+          className={cx(cell, "border border-ink-900 bg-white text-ink-900 hover:bg-surface-1")}
         >
-          ‹
+          <ChevronLeft className="size-4" strokeWidth={1.8} aria-hidden="true" />
         </Link>
       ) : (
-        <span className="flex h-9 w-9 items-center justify-center border border-ink-200 text-sm text-ink-600">
-          ‹
+        <span aria-hidden="true" className={cx(cell, "border border-ink-200 text-ink-600")}>
+          <ChevronLeft className="size-4" strokeWidth={1.8} />
         </span>
       )}
 
       {/* 페이지 번호 */}
       {pageNums.map((p, i) =>
         p === "..." ? (
-          <span
-            key={`dot-${i}`}
-            className="flex h-9 w-9 items-center justify-center text-sm text-ink-600"
-          >
+          <span key={`dot-${i}`} className={cx(cell, "text-ink-600")}>
             …
           </span>
         ) : (
           <Link
             key={p}
             href={href(p)}
-            className={`flex h-9 w-9 items-center justify-center  border text-sm font-medium transition ${
+            aria-current={p === page ? "page" : undefined}
+            className={cx(
+              cell,
+              "border",
               p === page
                 ? "border-ink-900 bg-ink-900 text-white"
-                : "border-ink-200 bg-white text-ink-700 hover:bg-surface-1"
-            }`}
+                : "border-ink-200 bg-white text-ink-900 hover:border-ink-900",
+            )}
           >
             {p}
           </Link>
@@ -250,13 +242,14 @@ function Pagination({
       {page < totalPages ? (
         <Link
           href={href(page + 1)}
-          className="flex h-9 w-9 items-center justify-center border border-ink-200 bg-white text-sm text-ink-700 hover:bg-surface-1"
+          aria-label="다음 페이지"
+          className={cx(cell, "border border-ink-900 bg-white text-ink-900 hover:bg-surface-1")}
         >
-          ›
+          <ChevronRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
         </Link>
       ) : (
-        <span className="flex h-9 w-9 items-center justify-center border border-ink-200 text-sm text-ink-600">
-          ›
+        <span aria-hidden="true" className={cx(cell, "border border-ink-200 text-ink-600")}>
+          <ChevronRight className="size-4" strokeWidth={1.8} />
         </span>
       )}
     </nav>
@@ -346,45 +339,45 @@ export default async function BrowsePage({
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold text-ink-900">매칭 가능 앱</h1>
-          <p className="mt-1 text-sm text-ink-700">
-            테스터를 모집 중인 앱입니다. 카드를 클릭해 참여 링크를 확인하세요.
+      <main className="mx-auto max-w-[1200px] px-5 pt-10 pb-14">
+        <header className="mb-8 flex flex-col gap-2">
+          <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">매칭 가능 앱</h1>
+          <p className="m-0 text-[15px] text-ink-700">
+            테스터를 모집 중인 앱입니다. 앱을 골라 참여 링크를 확인하세요.
           </p>
         </header>
 
         {total > 0 ? (
           <>
             {boostApps.length > 0 && (
-              <section className="mb-8">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="bg-accent-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                    🔥 BOOST
-                  </span>
-                  <h2 className="text-sm font-bold text-ink-900">
-                    급구 · <span className="tabular text-ink-600">{boostApps.length}</span>
+              <section
+                aria-labelledby="boost-heading"
+                className="mb-10 flex flex-col gap-4 border-[1.5px] border-accent-600 p-4 sm:p-5"
+              >
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <BoostBadge />
+                  <h2 id="boost-heading" className="m-0 font-display text-h3 font-semibold text-ink-900">
+                    급구 · <span className="font-mono tabular-nums">{boostApps.length}</span>
                   </h2>
-                  <span className="text-[11px] text-ink-600">매번 랜덤 순서</span>
+                  <span className="text-xs text-ink-600">매번 랜덤 순서</span>
                   <Link
                     href="/paid-testers"
-                    className="ml-auto text-[11px] font-semibold text-ink-600 hover:text-ink-700"
+                    className="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-ink-900 underline hover:text-accent-600"
                   >
-                    내 앱 급구 신청 →
+                    내 앱 급구 신청
+                    <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
                   </Link>
                 </div>
                 {view === "card" ? <CardGrid apps={boostApps} seats={seats} /> : <ListView apps={boostApps} seats={seats} />}
               </section>
             )}
+            <h2 className="sr-only">전체 앱</h2>
             <BrowseControls sort={sort} view={view} total={nonBoostTotal} page={page} totalPages={totalPages} />
             {view === "card" ? <CardGrid apps={apps} seats={seats} /> : <ListView apps={apps} seats={seats} />}
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
           </>
         ) : (
-          <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
-            <p className="text-base font-medium text-ink-700">현재 매칭중인 앱이 없습니다.</p>
-            <p className="mt-2 text-sm text-ink-700">잠시 후 다시 확인해주세요.</p>
-          </div>
+          <EmptyState title="현재 매칭중인 앱이 없습니다." description="잠시 후 다시 확인해주세요." />
         )}
       </main>
     </>
