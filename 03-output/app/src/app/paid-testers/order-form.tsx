@@ -1,10 +1,16 @@
 "use client";
 
+import { CircleAlert, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ConsentList, Field, Select, type ConsentItem } from "@/components/ui/form";
+import { Notice } from "@/components/ui/notice";
+import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
 import {
   PAID_TESTER_MAX_COUNT,
   PAID_TESTER_MIN_COUNT,
+  PAID_TESTER_PRICE_KRW,
   PAID_TESTER_RECOMMENDED_COUNT,
   paidTesterAmountKrw,
 } from "@/lib/paid-testers";
@@ -30,6 +36,12 @@ const NOTICES = [
   "테스터에게 리뷰·별점을 요청하지 않습니다. 완주한 시트만 과금됩니다 — 결제 7일 내 못 채운 시트, 충원 마감 후 이탈한 시트, 이의가 인용된 시트는 환불됩니다.",
 ];
 
+const CONSENT_ITEMS: ReadonlyArray<ConsentItem> = NOTICES.map((text, i) => ({
+  key: String(i),
+  label: text,
+  required: true,
+}));
+
 export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) {
   const router = useRouter();
   const [appId, setAppId] = useState<number>(initialAppId ?? apps[0]?.id ?? 0);
@@ -39,8 +51,8 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
   const [payWith, setPayWith] = useState<PayWith>("card");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [checked, setChecked] = useState<boolean[]>(() => NOTICES.map(() => false));
-  const allAgreed = checked.every(Boolean);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const allAgreed = CONSENT_ITEMS.every((item) => checked[item.key] === true);
 
   const amount = paidTesterAmountKrw(count);
   const canUseCredits = balance >= amount;
@@ -97,132 +109,150 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-4 space-y-5 border border-ink-200 bg-white p-6"
-    >
-      <div>
-        <label htmlFor="pt-app" className="block text-sm font-semibold text-ink-900">
-          대상 앱
-        </label>
-        <select
-          id="pt-app"
-          value={appId}
-          onChange={(e) => setAppId(Number(e.target.value))}
-          className="mt-2 w-full border border-ink-900 px-3 py-2.5 text-sm"
-        >
-          {apps.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 border border-ink-900 p-6">
+      <Field label="대상 앱">
+        {({ id }) => (
+          <Select id={id} value={appId} onChange={(e) => setAppId(Number(e.target.value))}>
+            {apps.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
 
-      <div>
-        <p className="text-sm font-semibold text-ink-900">테스터 인원 (시트)</p>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={PAID_TESTER_MIN_COUNT}
-            max={PAID_TESTER_MAX_COUNT}
-            value={count}
-            onChange={(e) => setCount(clampCount(Number(e.target.value)))}
-            className="w-24 border border-ink-900 px-3 py-2 text-sm font-semibold"
-            aria-label="테스터 인원"
-          />
-          <span className="text-sm text-ink-700">
+      <div className="flex flex-col gap-2">
+        <p className="m-0 text-sm font-medium text-ink-900">테스터 인원 (시트)</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-stretch border border-ink-900">
+            <button
+              type="button"
+              onClick={() => setCount((c) => clampCount(c - 1))}
+              disabled={count <= PAID_TESTER_MIN_COUNT}
+              aria-label="인원 1명 줄이기"
+              className="flex size-12 items-center justify-center bg-white text-ink-900 hover:bg-surface-1 disabled:text-ink-200"
+            >
+              <Minus className="size-4" strokeWidth={2} aria-hidden="true" />
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={PAID_TESTER_MIN_COUNT}
+              max={PAID_TESTER_MAX_COUNT}
+              value={count}
+              onChange={(e) => setCount(clampCount(Number(e.target.value)))}
+              className="h-12 w-16 border-x border-ink-900 bg-white text-center font-mono text-base font-medium text-ink-900 tabular-nums [appearance:textfield] focus:outline-[3px] focus:outline-offset-0 focus:outline-accent-600 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              aria-label="테스터 인원"
+            />
+            <button
+              type="button"
+              onClick={() => setCount((c) => clampCount(c + 1))}
+              disabled={count >= PAID_TESTER_MAX_COUNT}
+              aria-label="인원 1명 늘리기"
+              className="flex size-12 items-center justify-center bg-white text-ink-900 hover:bg-surface-1 disabled:text-ink-200"
+            >
+              <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
+            </button>
+          </div>
+          <span className="font-mono text-sm text-ink-700 tabular-nums">
             명 ({PAID_TESTER_MIN_COUNT}~{PAID_TESTER_MAX_COUNT})
           </span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {presets.map((n) => (
             <button
               key={n}
               type="button"
               onClick={() => setCount(n)}
-              className={` border px-3 py-1.5 text-xs font-semibold transition ${
+              aria-pressed={count === n}
+              className={`min-h-11 min-w-11 border px-3 font-mono text-[13px] font-medium tabular-nums transition-colors ${
                 count === n
                   ? "border-ink-900 bg-ink-900 text-white"
-                  : "border-ink-900 bg-white text-ink-700 hover:border-ink-900"
+                  : "border-ink-900 bg-white text-ink-900 hover:bg-surface-1"
               }`}
             >
               {n}명
             </button>
           ))}
         </div>
-        <p className="mt-1.5 text-xs text-ink-600">
+        <p className="m-0 text-[13px] text-ink-600">
           Google 요건은 12명입니다. 14일 사이 1~2명은 빠지기 쉬워 {PAID_TESTER_RECOMMENDED_COUNT}
           명을 권합니다. 여유 있게 잡아도 못 채우거나 완주하지 못한 시트는 환불됩니다.
         </p>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-ink-900">결제 수단</p>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
+      <fieldset className="m-0 flex flex-col gap-1 border-0 p-0">
+        <legend className="mb-1 p-0 text-sm font-medium text-ink-900">결제 수단</legend>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-ink-900">
           <input
             type="radio"
             name="pay_with"
+            className="size-5 shrink-0 accent-ink-900"
             checked={effectivePayWith === "card"}
             onChange={() => setPayWith("card")}
           />
           신용·체크카드 (KG이니시스)
         </label>
         <label
-          className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-ink-600"}`}
+          className={`flex min-h-11 items-center gap-3 text-[15px] ${canUseCredits ? "cursor-pointer text-ink-900" : "cursor-not-allowed text-ink-600"}`}
         >
           <input
             type="radio"
             name="pay_with"
+            className="size-5 shrink-0 accent-ink-900"
             disabled={!canUseCredits}
             checked={effectivePayWith === "credits"}
             onChange={() => setPayWith("credits")}
           />
-          보상으로 적립한 크레딧 사용 (잔액 {balance.toLocaleString("ko-KR")})
-          {!canUseCredits && " — 잔액 부족"}
+          <span>
+            보상으로 적립한 크레딧 사용 (잔액{" "}
+            <span className="font-mono tabular-nums">{balance.toLocaleString("ko-KR")}</span>)
+            {!canUseCredits && " — 잔액 부족"}
+          </span>
         </label>
-      </div>
-
-      <div className="flex items-center justify-between bg-surface-1 px-4 py-3">
-        <span className="text-sm text-ink-700">결제 금액</span>
-        <span className="text-lg font-bold text-ink-900">
-          {amount.toLocaleString("ko-KR")}
-          {effectivePayWith === "credits" ? " 크레딧" : "원"}
-        </span>
-      </div>
-
-      <fieldset className="space-y-2 border border-warning-700 bg-warning-50 p-4">
-        <legend className="px-1 text-sm font-bold text-warning-700">구매 전 유의사항 (모두 확인 필요)</legend>
-        {NOTICES.map((text, i) => (
-          <label key={i} className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-warning-700">
-            <input
-              type="checkbox"
-              className="mt-0.5 shrink-0"
-              checked={checked[i]}
-              onChange={(e) =>
-                setChecked((prev) => prev.map((v, idx) => (idx === i ? e.target.checked : v)))
-              }
-            />
-            <span>{text}</span>
-          </label>
-        ))}
       </fieldset>
 
-      {error && <p className="text-sm font-medium text-danger-700">{error}</p>}
+      <Receipt title="결제 금액" meta="판매자 낰낰컴퍼니 · 부가세 포함 가격">
+        <ReceiptDivider />
+        <ReceiptRows>
+          <ReceiptRow label="테스터 인원" value={`${count}명`} />
+          {effectivePayWith === "card" && (
+            <ReceiptRow label="테스터 1명" value={`${PAID_TESTER_PRICE_KRW.toLocaleString("ko-KR")}원`} />
+          )}
+        </ReceiptRows>
+        <ReceiptDivider />
+        <ReceiptRows>
+          <div aria-live="polite">
+            <ReceiptRow
+              strong
+              label="결제 금액"
+              value={`${amount.toLocaleString("ko-KR")}${effectivePayWith === "credits" ? " 크레딧" : "원"}`}
+            />
+          </div>
+        </ReceiptRows>
+      </Receipt>
 
-      {!orderingOpen && (
-        <p className="border border-warning-700 bg-warning-50 px-4 py-3 text-xs leading-relaxed text-warning-700">
-          카드 결제 오픈 준비 중입니다 (결제대행사 심사 진행 중). 오픈하면 게시판 공지로 알려드리고, 이
-          화면에서 바로 신청할 수 있습니다.
+      <div className="flex flex-col gap-2">
+        <p className="m-0 text-sm font-bold text-ink-900">구매 전 유의사항 (모두 확인 필요)</p>
+        <ConsentList items={CONSENT_ITEMS} checked={checked} onChange={setChecked} showAllToggle={false} />
+      </div>
+
+      {error && (
+        <p role="alert" className="m-0 flex items-center gap-1.5 text-sm font-medium text-danger-700">
+          <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+          {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={!orderingOpen || submitting || !appId || !allAgreed}
-        className="w-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
-      >
+      {!orderingOpen && (
+        <Notice>
+          카드 결제 오픈 준비 중입니다 (결제대행사 심사 진행 중). 오픈하면 게시판 공지로 알려드리고, 이
+          화면에서 바로 신청할 수 있습니다.
+        </Notice>
+      )}
+
+      <Button type="submit" className="w-full" disabled={!orderingOpen || submitting || !appId || !allAgreed}>
         {!orderingOpen
           ? "결제 오픈 준비 중"
           : submitting
@@ -230,7 +260,7 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
             : effectivePayWith === "credits"
               ? "크레딧으로 시트 열기"
               : "결제하기"}
-      </button>
+      </Button>
     </form>
   );
 }

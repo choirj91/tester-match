@@ -1,7 +1,10 @@
 "use client";
 
+import { CircleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/form";
 import { normalizeKoreanMobile } from "@/lib/phone";
 
 type Props = {
@@ -122,34 +125,35 @@ export function PayButton(props: Props) {
   }
 
   return (
-    <div className="mt-6">
-      <label htmlFor="pay-phone" className="block text-sm font-semibold text-ink-900">
-        휴대폰 번호
-      </label>
-      <input
-        id="pay-phone"
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder="010-1234-5678"
-        inputMode="tel"
-        autoComplete="tel-national"
-        maxLength={13}
-        disabled={paying || closed}
-        className="mt-2 w-full border border-ink-900 px-3 py-2.5 text-sm"
-      />
-      <p className="mt-1.5 text-xs leading-relaxed text-ink-600">
-        결제대행사(KG이니시스) 결제창에 구매자 정보로 전달하기 위해서만 쓰이며, Tester Match 서버에는
-        저장되지 않습니다.
-      </p>
-      {error && <p className="mt-3 text-sm font-medium text-danger-700">{error}</p>}
-      <button
-        type="button"
-        onClick={handlePay}
-        disabled={paying || closed || !phoneDigits}
-        className="bg-ink-900 hover:bg-black mt-4 w-full px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+    <div className="flex flex-col gap-4">
+      <Field
+        label="휴대폰 번호"
+        hint="결제대행사(KG이니시스) 결제창에 구매자 정보로 전달하기 위해서만 쓰이며, Tester Match 서버에는 저장되지 않습니다."
       >
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="010-1234-5678"
+            inputMode="tel"
+            autoComplete="tel-national"
+            maxLength={13}
+            disabled={paying || closed}
+            className="font-mono tabular-nums"
+          />
+        )}
+      </Field>
+      {error && (
+        <p role="alert" className="m-0 flex items-center gap-1.5 text-sm font-medium text-danger-700">
+          <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+      <Button className="w-full" onClick={handlePay} disabled={paying || closed || !phoneDigits}>
         {paying ? "결제 진행 중…" : `${props.amount.toLocaleString("ko-KR")}원 결제하기`}
-      </button>
+      </Button>
     </div>
   );
 }

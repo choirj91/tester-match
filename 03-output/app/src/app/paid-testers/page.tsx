@@ -1,12 +1,23 @@
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { FeeBreakdown } from "@/components/fee-breakdown";
 import { SiteHeader } from "@/components/site-header";
+import { Badge, PaymentPendingBadge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { MoneyUseBar } from "@/components/ui/money-use-bar";
+import { Notice } from "@/components/ui/notice";
+import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
+import { EmptyState } from "@/components/ui/state";
+import { StatTile, StatTiles } from "@/components/ui/stat-tile";
+import { Steps } from "@/components/ui/steps";
+import { Table, type Column } from "@/components/ui/table";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   PAID_ORDER_STATUS_LABEL,
   PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_MAX_COUNT,
+  PAID_TESTER_MIN_COUNT,
   PAID_TESTER_PRICE_KRW,
   PAID_TESTER_RECOMMENDED_COUNT,
   canOrderPaidTesters,
@@ -15,8 +26,8 @@ import {
   type PaidOrderStatus,
 } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
-import { PAID_SEAT_BOOST_DAYS } from "@/lib/paid-seats";
-import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
+import { PAID_SEAT_BOOST_DAYS, PAID_SEAT_FILL_DAYS } from "@/lib/paid-seats";
+import { SEAT_REWARD_MAX, SEAT_TOTAL_DAYS } from "@/lib/seat-reward-rules";
 import { OrderForm } from "./order-form";
 
 const PRICE_LABEL = `${formatKrw(PAID_TESTER_PRICE_KRW)}원`;
@@ -44,7 +55,7 @@ const STEPS = [
   },
   {
     title: "급구 표시 + 전 회원 알림",
-    desc: `결제 즉시 매칭 목록 맨 위 급구 칸에 표시되고(결제 후 ${PAID_SEAT_BOOST_DAYS}일, 빈 시트가 남아 있으면 연장) 전 회원에게 알림이 갑니다. 회사가 모집·관리하는 커뮤니티 테스터가 시트를 선착순으로 채웁니다 (신뢰도는 닉네임 옆 ★로 표시).`,
+    desc: `결제 즉시 매칭 목록 맨 위 급구 칸에 표시되고(결제 후 ${PAID_SEAT_BOOST_DAYS}일, 빈 시트가 남아 있으면 연장) 전 회원에게 알림이 갑니다. 회사가 모집·관리하는 커뮤니티 테스터가 시트를 선착순으로 채웁니다 (신뢰도는 닉네임 옆에 표시).`,
   },
   {
     title: "14일 매일 체크인 + 스크린샷",
@@ -79,6 +90,13 @@ const REFUND_SUMMARY = [
   ["충원 마감 후 이탈·이의 인용 시트", "해당 시트 100% 환불"],
   ["완주 후 확정된 시트", "환불 불가 (서비스 제공 완료)"],
 ] as const;
+
+type RefundRow = (typeof REFUND_SUMMARY)[number];
+
+const REFUND_COLUMNS: ReadonlyArray<Column<RefundRow>> = [
+  { key: "when", header: "상황", cell: ([when]) => <span className="text-ink-700">{when}</span> },
+  { key: "how", header: "환불", cell: ([, how]) => <strong className="font-semibold">{how}</strong> },
+];
 
 export default async function PaidTestersPage({
   searchParams,
@@ -122,131 +140,167 @@ export default async function PaidTestersPage({
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-accent-600 text-xs font-semibold">급구 · 유료 테스터</p>
-          {!PAID_TESTERS_PUBLIC_ORDERING && (
-            <span className="bg-warning-50 px-2.5 py-0.5 text-[11px] font-bold text-warning-700">
-              결제 오픈 대기
-            </span>
-          )}
+      <main className="mx-auto max-w-[1200px] px-5 pt-12 pb-16">
+        {/* 첫 화면: 소개 → 영수증 → 환불 기준 (모바일 순서). 데스크톱은 소개·진행 방식 | 영수증 2열 */}
+        <div className="grid items-start gap-x-14 gap-y-10 min-[921px]:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="flex flex-col gap-5 min-[921px]:col-start-1 min-[921px]:row-start-1">
+            <p className="m-0 font-mono text-xs tracking-[0.04em] text-accent-600">급구 · 유료 테스터</p>
+            <h1 className="m-0 font-display text-display font-semibold text-ink-900">
+              테스터는 부탁하는 게 아니라,
+              <br />
+              내 앱에 투자하는 겁니다
+            </h1>
+            <p className="m-0 max-w-[560px] text-[15px] leading-[1.75] text-ink-700">
+              단톡방에 부탁하고 답을 기다리던 14일 대신, 매일 앱을 열고 스크린샷으로 증빙을 남기는
+              테스터와 14일을 채우세요. 회사가 모집·관리하는 커뮤니티 테스터가 1명당 {PRICE_LABEL}
+              (부가세 포함)에 참여합니다. 급구를 신청하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이
+              갑니다.
+            </p>
+            {!PAID_TESTERS_PUBLIC_ORDERING && (
+              <Notice>
+                카드 결제는 오픈 준비 중입니다. 결제 버튼은 이 페이지 아래{" "}
+                <a href="#order" className="text-ink-900 underline hover:text-accent-600">
+                  급구 신청하기
+                </a>
+                에 열립니다. 오픈 시 게시판 공지로 안내드립니다.
+              </Notice>
+            )}
+          </div>
+
+          <Receipt
+            className="min-[921px]:col-start-2 min-[921px]:row-span-2 min-[921px]:row-start-1"
+            title="급구 · 유료 테스터"
+            badge={!PAID_TESTERS_PUBLIC_ORDERING && <PaymentPendingBadge />}
+            meta="판매자 낰낰컴퍼니 · 부가세 포함 가격"
+            footer={
+              <>
+                판매·환불 주체는 낰낰컴퍼니입니다.{" "}
+                <Link href="/policies/refund" className="text-ink-900 underline hover:text-accent-600">
+                  환불 정책
+                </Link>{" "}
+                ·{" "}
+                <Link href="/policies/terms" className="text-ink-900 underline hover:text-accent-600">
+                  이용약관
+                </Link>
+              </>
+            }
+          >
+            <ReceiptDivider />
+            <ReceiptRows>
+              <ReceiptRow label="테스터 1명" value={PRICE_LABEL} />
+              <ReceiptRow
+                label={`기본 ${PAID_TESTER_RECOMMENDED_COUNT}명 (${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택)`}
+                value={`${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`}
+              />
+              <ReceiptRow label="진행 기간" value={`${SEAT_TOTAL_DAYS}일`} />
+              <ReceiptRow label="충원 기간" value={`결제 후 ${PAID_SEAT_FILL_DAYS}일`} />
+              <ReceiptRow label="급구 표시" value={`결제 후 ${PAID_SEAT_BOOST_DAYS}일`} />
+            </ReceiptRows>
+            <ReceiptDivider />
+            <MoneyUseBar />
+            <ReceiptDivider />
+            <ReceiptRows className="gap-1.5 text-[13px]">
+              <ReceiptRow label="못 채운 시트" value="환불" tone="accent" />
+              <ReceiptRow label="완주하지 못한 시트" value="환불" tone="accent" />
+            </ReceiptRows>
+          </Receipt>
+
+          <section
+            aria-labelledby="refund-heading"
+            className="flex flex-col gap-3 min-[921px]:col-span-2 min-[921px]:row-start-3"
+          >
+            <h2 id="refund-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+              환불 기준
+            </h2>
+            <Table
+              caption="환불 기준"
+              columns={REFUND_COLUMNS}
+              rows={REFUND_SUMMARY}
+              rowKey={([when]) => when}
+            />
+            <p className="m-0 text-xs leading-relaxed text-ink-600">
+              환불은 결제대행사를 통해 원결제 수단으로 돌려드립니다 (카드 영업일 3~5일). 전체 기준은{" "}
+              <Link href="/policies/refund" className="text-ink-900 underline hover:text-accent-600">
+                환불 정책
+              </Link>
+              .
+            </p>
+          </section>
+
+          <section
+            aria-labelledby="steps-heading"
+            className="flex flex-col gap-5 border-t border-ink-900 pt-8 min-[921px]:col-start-1 min-[921px]:row-start-2"
+          >
+            <h2 id="steps-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+              진행 방식
+            </h2>
+            <Steps items={STEPS} />
+          </section>
         </div>
-        <h1 className="mt-2 text-3xl leading-tight font-bold text-ink-900">
-          테스터는 부탁하는 게 아니라,
-          <br />
-          <span className="text-ink-900">내 앱에 투자하는 겁니다</span>
-        </h1>
-        <p className="mt-4 text-sm leading-relaxed text-ink-700">
-          단톡방에 부탁하고 답을 기다리던 14일 대신, 매일 앱을 열고 스크린샷으로 증빙을 남기는
-          테스터와 14일을 채우세요. 회사가 모집·관리하는 커뮤니티 테스터가 1명당 {PRICE_LABEL}
-          (부가세 포함)에 참여합니다. 급구를 신청하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이
-          갑니다.
-        </p>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {HIGHLIGHTS.map((h) => (
-            <div key={h.value} className="border border-ink-200 bg-white p-4">
-              <p className="tabular text-lg font-bold text-ink-900">{h.value}</p>
-              <p className="mt-1 text-xs leading-relaxed text-ink-700">{h.label}</p>
-            </div>
-          ))}
-        </div>
-
-        <FeeBreakdown className="mt-8" />
-        <p className="mt-3 text-sm leading-relaxed text-ink-700">
-          수익을 늘리려고 만든 서비스가 아닙니다. 개발자는 Google Play 요건을 채우고, 테스터는 하루
-          1분의 체크인으로 보상을 받아 가도록 둘 사이를 잇는 데 결제 금액을 씁니다.
-        </p>
-
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink-900">진행 방식</h2>
-          <ol className="mt-4 space-y-3">
-            {STEPS.map((s, i) => (
-              <li
-                key={s.title}
-                className="flex gap-3 border border-ink-200 bg-white p-4"
-              >
-                <span className="bg-ink-900 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold text-white">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-ink-900">{s.title}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-ink-700">{s.desc}</p>
-                </div>
-              </li>
+        <section className="mt-14 border-t border-ink-900 pt-8">
+          <StatTiles>
+            {HIGHLIGHTS.map((h) => (
+              <StatTile key={h.value} rule label={h.label} value={<span className="font-mono text-xl">{h.value}</span>} />
             ))}
-          </ol>
+          </StatTiles>
         </section>
 
-        <section className="border-ink-200 bg-surface-1 mt-8 border p-5">
-          <h2 className="text-sm font-bold text-ink-900">약속</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-700">
-            {GUARANTEES.map((g) => (
-              <li key={g}>{g}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="mt-8">
-          <h2 className="text-lg font-bold text-ink-900">환불 기준</h2>
-          <table className="mt-3 w-full text-sm">
-            <tbody>
-              {REFUND_SUMMARY.map(([when, how]) => (
-                <tr key={when} className="border-t border-ink-200">
-                  <td className="py-2 pr-3 text-ink-700">{when}</td>
-                  <td className="py-2 font-semibold text-ink-900">{how}</td>
-                </tr>
+        <div className="mt-10 grid items-start gap-10 min-[921px]:grid-cols-2">
+          <div className="flex flex-col gap-3">
+            <FeeBreakdown showBar={false} />
+            <p className="m-0 text-sm leading-relaxed text-ink-700">
+              수익을 늘리려고 만든 서비스가 아닙니다. 개발자는 Google Play 요건을 채우고, 테스터는 하루
+              1분의 체크인으로 보상을 받아 가도록 둘 사이를 잇는 데 결제 금액을 씁니다.
+            </p>
+          </div>
+          <section aria-labelledby="promise-heading" className="flex flex-col gap-3">
+            <h2 id="promise-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+              약속
+            </h2>
+            <ul className="m-0 flex list-none flex-col p-0">
+              {GUARANTEES.map((g) => (
+                <li
+                  key={g}
+                  className="flex gap-3 border-t border-ink-200 py-3 text-sm leading-relaxed text-ink-700 first:border-ink-900"
+                >
+                  <Check className="mt-0.5 size-4 shrink-0 text-ink-900" strokeWidth={2} aria-hidden="true" />
+                  <span>{g}</span>
+                </li>
               ))}
-            </tbody>
-          </table>
-          <p className="mt-2 text-xs text-ink-600">
-            환불은 결제대행사를 통해 원결제 수단으로 돌려드립니다 (카드 영업일 3~5일). 전체 기준은{" "}
-            <Link href="/policies/refund" className="underline underline-offset-2">
-              환불 정책
-            </Link>
-            .
-          </p>
-        </section>
+            </ul>
+          </section>
+        </div>
 
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink-900">급구 신청하기</h2>
+        <section id="order" aria-labelledby="order-heading" className="mt-14 scroll-mt-20 border-t border-ink-900 pt-8">
+          <h2 id="order-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+            급구 신청하기
+          </h2>
           {!user ? (
-            <div className="mt-4 border border-ink-200 bg-white p-6 text-center">
-              <p className="text-sm text-ink-700">
-                로그인 후 앱을 고르고 인원을 선택해 신청합니다.
-              </p>
+            <div className="mt-5 flex flex-col items-start gap-3 border border-ink-900 p-6">
+              <p className="m-0 text-[15px] text-ink-700">로그인 후 앱을 고르고 인원을 선택해 신청합니다.</p>
               {!PAID_TESTERS_PUBLIC_ORDERING && (
-                <p className="mt-1 text-xs text-warning-700">
+                <p className="m-0 text-sm text-ink-700">
                   카드 결제는 오픈 준비 중입니다. 오픈 시 게시판 공지로 안내드립니다.
                 </p>
               )}
-              <Link
-                href={`/auth/login?next=${encodeURIComponent(loginNext)}`}
-                className="bg-ink-900 hover:bg-black mt-3 inline-block px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                로그인
-              </Link>
+              <ButtonLink href={`/auth/login?next=${encodeURIComponent(loginNext)}`}>로그인</ButtonLink>
             </div>
           ) : apps.length === 0 ? (
-            <div className="mt-4 border border-ink-200 bg-white p-6 text-center">
-              <p className="text-sm text-ink-700">
-                모집중(매칭 중) 상태의 앱이 없습니다. 앱을 등록하거나, 내 앱에서 상태를 모집중으로
-                바꾼 뒤 신청해주세요.
-              </p>
-              <Link
-                href="/apps/new"
-                className="bg-ink-900 hover:bg-black mt-3 inline-block px-5 py-2.5 text-sm font-semibold text-white"
-              >
-                앱 등록하기
-              </Link>
+            <div className="mt-5">
+              <EmptyState
+                title="모집중인 앱이 없습니다"
+                description="모집중(매칭 중) 상태의 앱이 없습니다. 앱을 등록하거나, 내 앱에서 상태를 모집중으로 바꾼 뒤 신청해주세요."
+                action={<ButtonLink href="/apps/new">앱 등록하기</ButtonLink>}
+              />
             </div>
           ) : (
-            <>
+            <div className="mt-5 flex flex-col gap-4">
               {requestedAppUnavailable && (
-                <p className="mt-4 border border-warning-700 bg-warning-50 px-4 py-3 text-sm text-warning-700">
+                <Notice kind="caution">
                   선택한 앱은 지금 급구를 신청할 수 없습니다(모집중 상태가 아님). 아래에서 신청할
                   앱을 다시 골라주세요.
-                </p>
+                </Notice>
               )}
               <OrderForm
                 key={initialAppId ?? "none"}
@@ -255,32 +309,34 @@ export default async function PaidTestersPage({
                 balance={user.balance ?? 0}
                 orderingOpen={orderingOpen}
               />
-            </>
+            </div>
           )}
         </section>
 
         {orders.length > 0 && (
-          <section className="mt-10">
-            <h2 className="text-lg font-bold text-ink-900">내 주문</h2>
-            <ul className="mt-4 space-y-2">
+          <section aria-labelledby="orders-heading" className="mt-14 border-t border-ink-900 pt-8">
+            <h2 id="orders-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
+              내 주문
+            </h2>
+            <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0">
               {orders.map((o) => (
                 <li key={o.id}>
                   <Link
                     href={`/console/orders/${o.id}`}
-                    className="hover:border-ink-900 flex items-center justify-between border border-ink-200 bg-white px-4 py-3 text-sm transition"
+                    className="flex min-h-11 items-center justify-between gap-3 border border-ink-900 px-4 py-3 text-sm text-ink-900 no-underline hover:bg-surface-1"
                   >
-                    <div>
-                      <p className="font-semibold text-ink-900">
-                        {o.apps?.name ?? "삭제된 앱"} — {o.tester_count}명
+                    <div className="min-w-0">
+                      <p className="m-0 font-semibold text-ink-900">
+                        {o.apps?.name ?? "삭제된 앱"} — <span className="font-mono">{o.tester_count}명</span>
                       </p>
-                      <p className="mt-0.5 text-xs text-ink-600">
+                      <p className="m-0 mt-0.5 font-mono text-xs text-ink-600 tabular-nums">
                         {new Date(o.created_at).toLocaleDateString("ko-KR")} ·{" "}
                         {formatKrw(o.amount_krw)}원 · {o.order_code} · 출석표·스크린샷 보기 →
                       </p>
                     </div>
-                    <span className="shrink-0 bg-surface-1 px-3 py-1 text-xs font-semibold text-ink-700">
+                    <Badge tone="outline" className="shrink-0">
                       {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
-                    </span>
+                    </Badge>
                   </Link>
                 </li>
               ))}
@@ -288,19 +344,19 @@ export default async function PaidTestersPage({
           </section>
         )}
 
-        <p className="mt-10 text-xs leading-relaxed text-ink-600">
+        <p className="mt-14 border-t border-ink-200 pt-5 text-xs leading-relaxed text-ink-600">
           유료 테스터는 회사가 모집·관리하는 커뮤니티 실사용자가 참여하며(테스터 보상 시트당 최대{" "}
           {formatKrw(SEAT_REWARD_MAX)} 크레딧), 리뷰·평점 작성이나 인위적 참여는 제공하지 않습니다.
           테스터에게 현금을 지급하지 않으며, 크레딧은 구매·양도·현금 환급이 불가능합니다 (
-          <Link href="/rewards" className="underline underline-offset-2">
+          <Link href="/rewards" className="text-ink-900 underline hover:text-accent-600">
             테스터 보상 안내
           </Link>
           ). 환불 기준은{" "}
-          <Link href="/policies/refund" className="underline underline-offset-2">
+          <Link href="/policies/refund" className="text-ink-900 underline hover:text-accent-600">
             환불 정책
           </Link>
           을, 이용 조건은{" "}
-          <Link href="/policies/terms" className="underline underline-offset-2">
+          <Link href="/policies/terms" className="text-ink-900 underline hover:text-accent-600">
             이용약관
           </Link>
           을 따릅니다.

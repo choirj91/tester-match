@@ -88,10 +88,13 @@ export function ConsentList({
   items,
   checked,
   onChange,
+  showAllToggle = true,
 }: {
   items: ReadonlyArray<ConsentItem>;
   checked: Readonly<Record<string, boolean>>;
   onChange: (next: Record<string, boolean>) => void;
+  /** 항목을 하나씩 확인받아야 하는 동의(구매 전 유의사항 등)는 끈다 */
+  showAllToggle?: boolean;
 }) {
   const allChecked = items.every((i) => checked[i.key]);
   const setAll = (value: boolean) =>
@@ -99,13 +102,15 @@ export function ConsentList({
   return (
     <fieldset className="m-0 flex flex-col border border-ink-900 p-0">
       <legend className="sr-only">약관 동의</legend>
-      <div className="border-b border-ink-900 px-4 py-1">
+      {showAllToggle && (
+        <div className="border-b border-ink-900 px-4 py-1">
         <Checkbox
           label={<strong>전체 동의</strong>}
           checked={allChecked}
           onChange={(e) => setAll(e.currentTarget.checked)}
         />
-      </div>
+        </div>
+      )}
       <ul className="m-0 flex list-none flex-col px-4 py-1">
         {items.map((item) => (
           <li key={item.key} className="flex items-center justify-between gap-3">
