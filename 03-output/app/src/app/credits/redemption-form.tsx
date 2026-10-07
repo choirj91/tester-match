@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, CircleAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Field, Input, Select } from "@/components/ui/form";
 import { REWARD_CATALOG, REWARD_KINDS, type RewardKind } from "@/lib/rewards";
 
 type Props = {
@@ -24,14 +27,21 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
 
   if (redeemable < minCredits) {
     return (
-      <p className="text-sm text-neutral-600">
-        교환 가능 크레딧 <strong>{redeemable.toLocaleString("ko-KR")}</strong> — 유료 시트 완주로{" "}
-        {minCredits.toLocaleString("ko-KR")} 이상 모으면 신청할 수 있습니다.
+      <p className="m-0 text-sm text-ink-700">
+        교환 가능 크레딧{" "}
+        <strong className="font-mono text-ink-900 tabular-nums">{redeemable.toLocaleString("ko-KR")}</strong> — 유료
+        시트 완주로 <span className="font-mono tabular-nums">{minCredits.toLocaleString("ko-KR")}</span> 이상 모으면
+        신청할 수 있습니다.
       </p>
     );
   }
   if (done) {
-    return <p className="text-sm font-medium text-mint-500">신청 완료 — 영업일 3일 내 연락처로 발송됩니다.</p>;
+    return (
+      <p role="status" className="m-0 flex items-center gap-1.5 text-sm font-medium text-success-700">
+        <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+        신청 완료 — 영업일 3일 내 연락처로 발송됩니다.
+      </p>
+    );
   }
 
   async function submit(e: React.FormEvent) {
@@ -61,62 +71,62 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
   const selected = REWARD_CATALOG[kind];
 
   return (
-    <form onSubmit={submit} className="space-y-3">
-      <fieldset className="space-y-1.5">
-        <legend className="text-sm font-semibold text-neutral-900">보상 종류</legend>
+    <form onSubmit={submit} className="flex flex-col gap-4">
+      <fieldset className="m-0 flex flex-col border-0 p-0">
+        <legend className="mb-1 p-0 text-sm font-medium text-ink-900">보상 종류</legend>
         {REWARD_KINDS.map((k) => (
-          <label key={k} className="flex cursor-pointer items-center gap-2 text-sm">
-            <input type="radio" name="reward_kind" checked={kind === k} onChange={() => setKind(k)} />
+          <label key={k} className="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-ink-900">
+            <input
+              type="radio"
+              name="reward_kind"
+              checked={kind === k}
+              onChange={() => setKind(k)}
+              className="size-5 shrink-0 cursor-pointer accent-ink-900"
+            />
             {REWARD_CATALOG[k].title}
           </label>
         ))}
       </fieldset>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label htmlFor="rd-units" className="font-semibold text-neutral-900">
-          교환 금액
-        </label>
-        <select
-          id="rd-units"
-          value={units}
-          onChange={(e) => setUnits(Number(e.target.value))}
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-        >
-          {Array.from({ length: maxUnits }, (_, i) => i + 1).map((n) => (
-            <option key={n} value={n}>
-              {(n * unitCredits).toLocaleString("ko-KR")} 크레딧 → {(n * unitCredits).toLocaleString("ko-KR")}원{" "}
-              {selected.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <input
+      <Field label="교환 크레딧">
+        {({ id }) => (
+          <Select id={id} value={units} onChange={(e) => setUnits(Number(e.target.value))} className="font-mono">
+            {Array.from({ length: maxUnits }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {(n * unitCredits).toLocaleString("ko-KR")} 크레딧 → {selected.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+      <Input
         value={contact}
         onChange={(e) => setContact(e.target.value)}
         placeholder={selected.contactPlaceholder}
+        aria-label={selected.contactPlaceholder}
         required
         inputMode="tel"
         pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}"
         maxLength={13}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
       />
       {kind === "gifticon" && (
-        <input
+        <Input
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="원하는 브랜드 (예: 스타벅스, 편의점) — 선택"
+          aria-label="원하는 브랜드 (예: 스타벅스, 편의점) — 선택"
           maxLength={200}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
         />
       )}
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={busy}
-        className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white hover:bg-trust-700 disabled:opacity-50"
-      >
+      {error && (
+        <p role="alert" className="m-0 flex items-center gap-1.5 text-[13px] text-danger-700">
+          <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+      <Button type="submit" disabled={busy} className="self-start">
         {busy ? "신청 중…" : `${selected.label} 교환 신청`}
-      </button>
-      <p className="text-xs text-neutral-500">
+      </Button>
+      <p className="m-0 text-xs leading-relaxed text-ink-600">
         신청 즉시 크레딧이 차감되고, 관리자가 확인 후 영업일 3일 내 문자로 발송합니다. 거절 시 전액 복구. 한
         번호는 한 계정에서만 쓸 수 있고, 처리 중에는 추가 신청이 안 됩니다. 현금 환급은 없습니다.
       </p>

@@ -23,9 +23,9 @@ export function NotifyGroupUpgradeButton() {
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-neutral-900">공용 그룹 전환 알림</h2>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+    <div className="border border-ink-200 bg-white p-6">
+      <h2 className="text-lg font-semibold text-ink-900">공용 그룹 전환 알림</h2>
+      <p className="mt-2 text-sm leading-relaxed text-ink-700">
         아직 공용 테스터 그룹을 쓰지 않는 앱의 소유자에게 전환 유도 인앱 알림을 보냅니다.
         앱당 1회만 발송되며, 여러 번 눌러도 중복되지 않습니다.
       </p>
@@ -33,18 +33,18 @@ export function NotifyGroupUpgradeButton() {
         type="button"
         onClick={send}
         disabled={busy}
-        className="mt-4 rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+        className="mt-4 bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
       >
         {busy ? "발송 중..." : "알림 일괄 발송"}
       </button>
       {result && (
         <p
           className={`mt-3 text-sm font-semibold ${
-            result.ok ? "text-mint-500" : "text-crimson-500"
+            result.ok ? "text-success-700" : "text-danger-700"
           }`}
         >
           {result.ok
-            ? `✓ 대상 ${result.candidates}건 · 발송 ${result.sent}건 · 스킵(기발송) ${result.skipped}건`
+            ? `대상 ${result.candidates}건 · 발송 ${result.sent}건 · 스킵(기발송) ${result.skipped}건`
             : (result.message ?? "발송 실패")}
         </p>
       )}

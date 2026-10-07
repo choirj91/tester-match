@@ -1,9 +1,13 @@
+import { Megaphone, Plus } from "lucide-react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ALL_POST_CATEGORIES, NOTICE_CATEGORY } from "@/lib/validators/post";
 import { AdminBadge } from "@/components/admin-badge";
+import { Badge } from "@/components/ui/badge";
+import { ButtonLink } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/state";
 
 export const metadata = { title: "게시판" };
 
@@ -92,29 +96,26 @@ export default async function BoardPage({ searchParams }: Props) {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-4xl px-6 py-12">
+      <main className="mx-auto max-w-4xl px-5 pt-12 pb-[88px]">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">게시판</h1>
-            <p className="mt-1 text-sm text-neutral-600">
+            <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">게시판</h1>
+            <p className="mt-2 text-[15px] text-ink-700">
               수익 인증, 개발기, 실패담 — 앱 만드는 사람들의 진짜 이야기를 나눕니다.
             </p>
           </div>
-          <Link
-            href="/board/new"
-            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-          >
-            + 글 쓰기
-          </Link>
+          <ButtonLink href="/board/new" size="sm">
+            <Plus className="size-4" strokeWidth={1.8} aria-hidden="true" />글 쓰기
+          </ButtonLink>
         </header>
 
-        <nav className="mt-6 flex flex-wrap items-center gap-2">
+        <nav aria-label="게시판 분류" className="mt-6 flex flex-wrap items-center gap-2">
           <FilterChip href="/board" label="전체" active={!activeCategory} />
           {ALL_POST_CATEGORIES.map((c) => (
             <FilterChip
               key={c}
               href={`/board?category=${encodeURIComponent(c)}`}
-              label={c === NOTICE_CATEGORY ? `📢 ${c}` : c}
+              label={c}
               active={activeCategory === c}
             />
           ))}
@@ -122,57 +123,57 @@ export default async function BoardPage({ searchParams }: Props) {
 
         {/* 공지 상단 고정 */}
         {(notices ?? []).length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-trust-500/30 bg-trust-50/50 shadow-sm">
-            <ul className="divide-y divide-trust-500/10">
-              {(notices ?? []).map((n) => (
-                <li key={n.id}>
-                  <Link
-                    href={`/board/${n.id}`}
-                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-trust-50"
-                  >
-                    <span className="shrink-0 text-sm">📢</span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
-                      {n.title}
-                    </span>
-                    <AdminBadge className="shrink-0" />
-                    <span className="shrink-0 text-xs text-neutral-400">
-                      {new Date(n.created_at).toLocaleDateString("ko-KR")}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="m-0 mt-6 list-none divide-y divide-ink-200 border border-ink-900 bg-surface-1 p-0">
+            {(notices ?? []).map((n) => (
+              <li key={n.id}>
+                <Link
+                  href={`/board/${n.id}`}
+                  className="flex items-center gap-3 px-5 py-3 no-underline hover:bg-white"
+                >
+                  <Megaphone className="size-4 shrink-0 text-ink-900" strokeWidth={1.8} aria-label="공지" />
+                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink-900">
+                    {n.title}
+                  </span>
+                  <AdminBadge className="shrink-0" />
+                  <span className="shrink-0 font-mono text-xs text-ink-600 tabular-nums">
+                    {new Date(n.created_at).toLocaleDateString("ko-KR")}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
 
         {/* 이번 주 인기글 */}
         {hotPosts.length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-spark-500/30 bg-spark-50/40 shadow-sm">
-            <p className="px-5 pt-3 text-xs font-bold text-spark-600">🔥 이번 주 인기글</p>
-            <ul className="divide-y divide-spark-500/10">
+          <section className="mt-8 border-t-[1.5px] border-ink-900 pt-3">
+            <h2 className="m-0 text-sm font-bold text-ink-900">이번 주 인기글</h2>
+            <ol className="m-0 mt-1 list-none divide-y divide-ink-200 p-0">
               {hotPosts.map((h, i) => (
                 <li key={h.id}>
                   <Link
                     href={`/board/${h.id}`}
-                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-spark-50"
+                    className="flex items-center gap-3 py-3 no-underline hover:text-accent-600"
                   >
-                    <span className="shrink-0 text-sm font-bold text-spark-500">{i + 1}</span>
-                    <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-neutral-600">
-                      {h.category}
+                    <span className="shrink-0 font-mono text-sm font-medium text-accent-600 tabular-nums">
+                      {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                    <Badge tone="outline" className="shrink-0">
+                      {h.category}
+                    </Badge>
+                    <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink-900">
                       {h.title}
                     </span>
                   </Link>
                 </li>
               ))}
-            </ul>
-          </div>
+            </ol>
+          </section>
         )}
 
-        <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <div className="mt-8">
           {posts && posts.length > 0 ? (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="m-0 list-none divide-y divide-ink-200 border-y border-ink-900 p-0">
               {posts.map((post) => {
                 const author = Array.isArray(post.users_public_profile)
                   ? post.users_public_profile[0]
@@ -181,25 +182,25 @@ export default async function BoardPage({ searchParams }: Props) {
                   <li key={post.id}>
                     <Link
                       href={`/board/${post.id}`}
-                      className="flex flex-col gap-1 px-5 py-4 transition hover:bg-neutral-50 sm:flex-row sm:items-center sm:gap-4"
+                      className="flex flex-col gap-1.5 px-1 py-4 no-underline hover:bg-surface-1 sm:flex-row sm:items-center sm:gap-4 sm:px-3"
                     >
-                      <span className="shrink-0 rounded-full bg-trust-50 px-2 py-0.5 text-xs font-semibold text-trust-700">
+                      <Badge tone="outline" className="shrink-0 self-start sm:self-auto">
                         {post.category}
-                      </span>
+                      </Badge>
                       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                        <span className="truncate text-sm font-medium text-neutral-900">
+                        <span className="truncate text-[15px] font-medium text-ink-900">
                           {post.title}
                         </span>
                         {adminCommentedPostIds.has(post.id) && (
-                          <span className="shrink-0 rounded-full bg-trust-50 px-1.5 py-0.5 text-[9px] font-bold text-trust-700 ring-1 ring-trust-500/30">
-                            🛡 관리자 답변
-                          </span>
+                          <Badge tone="ink" className="shrink-0">
+                            관리자 답변
+                          </Badge>
                         )}
                       </span>
-                      <span className="shrink-0 text-xs text-neutral-500">
+                      <span className="shrink-0 text-[13px] text-ink-600">
                         {author?.nickname ?? "—"}
                         {" · "}
-                        {new Date(post.created_at).toLocaleDateString("ko-KR")}
+                        <span className="tabular">{new Date(post.created_at).toLocaleDateString("ko-KR")}</span>
                         {" · "}
                         조회 <span className="tabular">{post.view_count}</span>
                       </span>
@@ -209,9 +210,11 @@ export default async function BoardPage({ searchParams }: Props) {
               })}
             </ul>
           ) : (
-            <div className="px-6 py-12 text-center">
-              <p className="text-sm text-neutral-600">아직 글이 없습니다. 첫 글을 작성해보세요.</p>
-            </div>
+            <EmptyState
+              title="아직 글이 없습니다."
+              description="첫 글을 작성해보세요."
+              action={<ButtonLink href="/board/new">글 쓰기</ButtonLink>}
+            />
           )}
         </div>
       </main>
@@ -223,10 +226,11 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+      aria-current={active ? "page" : undefined}
+      className={`inline-flex min-h-11 items-center px-4 text-sm font-medium no-underline transition-colors ${
         active
-          ? "bg-trust-600 text-white"
-          : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50"
+          ? "bg-ink-900 text-white"
+          : "border border-ink-900 bg-white text-ink-900 hover:bg-surface-1"
       }`}
     >
       {label}

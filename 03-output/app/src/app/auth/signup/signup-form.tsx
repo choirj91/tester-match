@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/form";
+import { Notice } from "@/components/ui/notice";
+import { FormError } from "../auth-card";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -35,39 +40,38 @@ export function SignupForm() {
 
   if (sentTo) {
     return (
-      <div className="border-trust-500/30 bg-trust-50 mt-8 rounded-xl border p-5 text-sm leading-relaxed text-neutral-700">
-        <p className="font-semibold text-neutral-900">가입 링크를 보냈습니다</p>
-        <p className="mt-1">
-          <strong>{sentTo}</strong> 로 보낸 메일의 [이메일 인증하기] 버튼을 누른 뒤, 열리는
+      <Notice kind="info" title="가입 링크를 보냈습니다" className="mt-7">
+        <p className="m-0">
+          <strong className="text-ink-900">{sentTo}</strong> 로 보낸 메일의 [이메일 인증하기] 버튼을 누른 뒤, 열리는
           화면에서 닉네임과 비밀번호를 정하면 가입이 완료됩니다. 메일이 안 보이면 스팸함을
           확인해주세요.
         </p>
         <Link
           href="/auth/login"
-          className="text-trust-600 mt-4 inline-block font-semibold hover:underline"
+          className="mt-3 inline-flex min-h-11 items-center gap-1.5 font-semibold text-ink-900 underline underline-offset-2 hover:text-accent-600"
         >
-          로그인 화면으로 →
+          로그인 화면으로
+          <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
         </Link>
-      </div>
+      </Notice>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-4">
-      <label className="block text-sm font-semibold text-neutral-900">
-        이메일
-        <input
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="focus:border-trust-600 focus:ring-trust-500/20 mt-1.5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:ring-2 focus:outline-none"
-        />
-        <span className="mt-1 block text-xs font-normal text-neutral-500">
-          닉네임과 비밀번호는 메일의 링크를 연 다음 화면에서 정합니다.
-        </span>
-      </label>
+    <form onSubmit={onSubmit} className="mt-7 flex flex-col gap-4">
+      <Field label="이메일" hint="닉네임과 비밀번호는 메일의 링크를 연 다음 화면에서 정합니다.">
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        )}
+      </Field>
 
       {/* 허니팟 — 화면에 보이지 않고 탭으로도 닿지 않는다 */}
       <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
@@ -84,15 +88,11 @@ export function SignupForm() {
         </label>
       </div>
 
-      {error && <p className="text-crimson-500 text-sm">{error}</p>}
+      {error && <FormError>{error}</FormError>}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-trust-600 hover:bg-trust-700 w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? "처리 중..." : "가입 링크 받기"}
-      </button>
+      </Button>
     </form>
   );
 }

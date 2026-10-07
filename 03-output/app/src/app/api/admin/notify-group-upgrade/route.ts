@@ -54,7 +54,7 @@ export async function POST() {
     const { error: insErr } = await supabase.from("notifications").insert({
       user_id: app.owner_user_id,
       type: "group_upgrade",
-      title: "🚀 새 기능: 공용 테스터 그룹",
+      title: "새 기능: 공용 테스터 그룹",
       body: `"${app.name}" 을 공용 그룹으로 전환하면 테스터가 그룹 가입 절차 없이 로그인만으로 바로 참여할 수 있습니다. 관리 페이지에서 버튼 한 번이면 끝!`,
       link,
     });

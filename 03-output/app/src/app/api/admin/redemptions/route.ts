@@ -93,7 +93,7 @@ export async function PATCH(req: Request) {
   await createNotification({
     userId: row.user_id,
     type: "redemption_done",
-    title: payload.action === "done" ? "🎁 기프티콘이 발송되었습니다" : "기프티콘 교환이 거절되었습니다",
+    title: payload.action === "done" ? "기프티콘이 발송되었습니다" : "기프티콘 교환이 거절되었습니다",
     body:
       payload.action === "done"
         ? `${row.amount.toLocaleString("ko-KR")} 크레딧 교환분을 신청하신 연락처로 보냈습니다.${payload.admin_note ? ` ${payload.admin_note}` : ""}`

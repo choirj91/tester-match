@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 export type OnboardingSteps = {
   signedUp: boolean;
@@ -48,23 +49,23 @@ export function OnboardingProgress({ steps }: { steps: OnboardingSteps }) {
   const percent = Math.round((doneCount / items.length) * 100);
 
   return (
-    <section className="mx-auto mt-8 max-w-4xl px-6">
-      <div className="rounded-2xl border border-trust-500/30 bg-gradient-to-br from-trust-50 to-white p-6 shadow-sm">
+    <section className="mx-auto max-w-[1200px] px-5 pt-8">
+      <div className="border border-ink-900 bg-white p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-neutral-900">시작하기</h2>
-            <p className="mt-0.5 text-sm text-neutral-600">
+            <h2 className="text-lg font-bold text-ink-900">시작하기</h2>
+            <p className="mt-0.5 text-sm text-ink-700">
               4단계로 첫 매칭까지. 지금 {doneCount}/{items.length} 완료
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-2 w-40 overflow-hidden rounded-full bg-neutral-200">
+            <div className="h-2 w-40 overflow-hidden bg-ink-200">
               <div
-                className="h-full rounded-full bg-trust-600 transition-all"
+                className="h-full bg-ink-900 transition-all"
                 style={{ width: `${percent}%` }}
               />
             </div>
-            <span className="tabular text-sm font-semibold text-trust-700">{percent}%</span>
+            <span className="tabular text-sm font-semibold text-ink-900">{percent}%</span>
           </div>
         </div>
 
@@ -75,33 +76,33 @@ export function OnboardingProgress({ steps }: { steps: OnboardingSteps }) {
               <li key={it.key}>
                 <Link
                   href={it.href}
-                  className={`flex items-start gap-3 rounded-xl border p-4 transition ${
+                  className={`flex items-start gap-3  border p-4 transition ${
                     done
-                      ? "border-mint-500/40 bg-mint-500/5"
-                      : "border-neutral-200 bg-white hover:border-trust-500 hover:shadow-md"
+                      ? "border-success-700 bg-success-50"
+                      : "border-ink-200 bg-white hover:border-ink-900 "
                   }`}
                 >
                   <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center  text-sm font-bold ${
                       done
-                        ? "bg-mint-500 text-white"
-                        : "bg-neutral-200 text-neutral-500"
+                        ? "bg-success-700 text-white"
+                        : "bg-ink-200 text-ink-600"
                     }`}
                   >
-                    {done ? "✓" : i + 1}
+                    {done ? <Check className="h-4 w-4" aria-label="완료" /> : i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p
                       className={`text-sm font-semibold ${
-                        done ? "text-neutral-500 line-through" : "text-neutral-900"
+                        done ? "text-ink-600 line-through" : "text-ink-900"
                       }`}
                     >
                       {it.label}
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-500">{it.hint}</p>
+                    <p className="mt-0.5 text-xs text-ink-600">{it.hint}</p>
                   </div>
                   {!done && (
-                    <span className="shrink-0 text-xs font-semibold text-trust-600">
+                    <span className="shrink-0 text-xs font-semibold text-ink-900">
                       {it.cta} →
                     </span>
                   )}

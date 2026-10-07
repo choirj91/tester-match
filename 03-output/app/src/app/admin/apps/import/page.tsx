@@ -12,18 +12,18 @@ export default async function AdminAppImportPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
-        <Link href="/admin" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/admin" className="text-sm text-ink-600 hover:text-ink-900">
           ← 관리자
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">앱 일괄 등록</h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+        <h1 className="mt-4 text-2xl font-bold text-ink-900">앱 일괄 등록</h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-700">
           이미 수집한 사용자 이메일 + 앱 정보를 JSON 으로 붙여넣으면 한 번에 등록됩니다. 미가입
           이메일은 placeholder 사용자로 만들어지고, 추후 같은 이메일로 Google 로그인 하면 자동으로 본인 앱으로 매칭됩니다.
         </p>
 
-        <section className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
-          <h2 className="text-sm font-semibold text-neutral-900">입력 형식 (JSON 배열)</h2>
-          <pre className="mt-3 overflow-x-auto rounded-lg bg-neutral-900 p-4 text-xs leading-relaxed text-neutral-100">{`[
+        <section className="mt-8 border border-ink-200 bg-surface-1 p-5">
+          <h2 className="text-sm font-semibold text-ink-900">입력 형식 (JSON 배열)</h2>
+          <pre className="mt-3 overflow-x-auto bg-ink-900 p-4 text-xs leading-relaxed text-ink-200">{`[
   {
     "email": "owner@example.com",
     "nickname": "닉네임 (선택)",
@@ -35,7 +35,7 @@ export default async function AdminAppImportPage() {
     "status": "matching"
   }
 ]`}</pre>
-          <ul className="mt-3 space-y-1 text-xs text-neutral-600">
+          <ul className="mt-3 space-y-1 text-xs text-ink-700">
             <li>· <strong>store_invite_url / web_invite_url</strong> 선택. 없으면 생략 가능 (나중에 앱 소유자가 등록)</li>
             <li>· <strong>required_testers</strong> 기본 12, 0~100 범위</li>
             <li>· <strong>status</strong> 기본 &quot;matching&quot;. 다른 값: reviewing / launched / paused</li>

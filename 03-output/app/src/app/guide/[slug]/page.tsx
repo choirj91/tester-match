@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { GUIDES, getGuide } from "../guides";
+import { ButtonLink } from "@/components/ui/button";
+import { PLAY_CLOSED_TEST_TESTERS } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -58,29 +60,32 @@ export default async function GuidePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/guide" className="text-sm text-neutral-500 hover:text-neutral-900">
+      <main className="mx-auto max-w-[720px] px-5 pt-12 pb-[88px]">
+        <Link href="/guide" className="inline-flex min-h-11 items-center text-sm text-ink-700 hover:text-accent-600">
           ← 출시 가이드
         </Link>
-        <h1 className="mt-4 text-2xl font-bold leading-snug text-neutral-900">{guide.title}</h1>
-        <p className="mt-2 text-xs text-neutral-400">
-          {new Date(guide.date).toLocaleDateString("ko-KR")} · Tester Match
+        <h1 className="mt-2 font-display text-h1 font-semibold text-ink-900">{guide.title}</h1>
+        <p className="mt-3 text-[13px] text-ink-600">
+          <span className="tabular">{new Date(guide.date).toLocaleDateString("ko-KR")}</span> · Tester Match
         </p>
 
         <article
-          className="prose-sm mt-8 max-w-none text-sm leading-7 text-neutral-700
-            [&_code]:rounded [&_code]:bg-neutral-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[13px]
-            [&_h2]:mt-8 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-neutral-900
-            [&_li]:mt-1.5 [&_ol]:mt-2 [&_ol]:list-decimal [&_ol]:pl-5
-            [&_p]:mt-3 [&_strong]:font-semibold [&_strong]:text-neutral-900
-            [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5"
+          className="mt-8 max-w-none border-t border-ink-900 pt-2 text-base leading-[1.8] text-ink-700
+            [&_code]:bg-surface-1 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-ink-900
+            [&_h2]:mt-10 [&_h2]:font-display [&_h2]:text-h3 [&_h2]:font-semibold [&_h2]:text-ink-900
+            [&_li]:mt-1.5 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:pl-5
+            [&_p]:mt-4 [&_strong]:font-semibold [&_strong]:text-ink-900
+            [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-5"
         >
           {guide.body}
         </article>
 
-        <nav className="mt-12 flex flex-col gap-3 border-t border-neutral-100 pt-6 sm:flex-row sm:justify-between">
+        <nav
+          aria-label="이전·다음 가이드"
+          className="mt-12 flex flex-col gap-3 border-t border-ink-900 pt-6 sm:flex-row sm:justify-between"
+        >
           {prev ? (
-            <Link href={`/guide/${prev.slug}`} className="text-sm text-trust-600 hover:underline">
+            <Link href={`/guide/${prev.slug}`} className="text-sm text-ink-900 underline hover:text-accent-600">
               ← {prev.title}
             </Link>
           ) : (
@@ -89,23 +94,18 @@ export default async function GuidePage({
           {next && (
             <Link
               href={`/guide/${next.slug}`}
-              className="text-sm text-trust-600 hover:underline sm:text-right"
+              className="text-sm text-ink-900 underline hover:text-accent-600 sm:text-right"
             >
               {next.title} →
             </Link>
           )}
         </nav>
 
-        <div className="mt-10 rounded-2xl border border-trust-500/30 bg-trust-50 p-6 text-center">
-          <p className="text-sm font-semibold text-neutral-900">
-            테스터 12명, 품앗이로 채워보세요
+        <div className="mt-10 flex flex-col items-center gap-4 border-[1.5px] border-ink-900 p-6 text-center">
+          <p className="m-0 font-display text-h3 font-semibold text-ink-900">
+            테스터 <span className="font-mono">{PLAY_CLOSED_TEST_TESTERS}</span>명, 품앗이로 채워보세요
           </p>
-          <Link
-            href="/apps/new"
-            className="mt-3 inline-block rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
-          >
-            앱 등록하기 →
-          </Link>
+          <ButtonLink href="/apps/new">앱 등록하기 →</ButtonLink>
         </div>
       </main>
     </>

@@ -82,7 +82,7 @@ export async function POST(req: Request, { params }: Ctx) {
     void createNotification({
       userId: post.author_user_id,
       type: "post_comment",
-      title: isAdmin ? "🛡 관리자가 댓글을 남겼습니다" : "게시글에 댓글이 달렸습니다",
+      title: isAdmin ? "관리자가 댓글을 남겼습니다" : "게시글에 댓글이 달렸습니다",
       body: `${isAdmin ? "[관리자] " : ""}${user.nickname}님: ${payload.body.slice(0, 80)}`,
       link: `/board/${postId}`,
     });

@@ -68,33 +68,33 @@ export default async function AdminDigestPage({
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/admin" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/admin" className="text-sm text-ink-600 hover:text-ink-900">
           ← 관리자
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">오픈채팅 다이제스트</h1>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+        <h1 className="mt-4 text-2xl font-bold text-ink-900">오픈채팅 다이제스트</h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-700">
           아래 메시지를 복사해서 오픈 카톡방에 붙여넣고 공지로 등록하세요.
-          글 선택: <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs">?ids=17,18,19</code>{" "}
-          · 헤더 교체: <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs">?h=문구</code>{" "}
+          글 선택: <code className="bg-surface-1 px-1.5 py-0.5 text-xs">?ids=17,18,19</code>{" "}
+          · 헤더 교체: <code className="bg-surface-1 px-1.5 py-0.5 text-xs">?h=문구</code>{" "}
           (미지정 시 최근 이야기 3편 + 기본 헤더)
         </p>
 
         {ordered.length === 0 ? (
-          <p className="mt-8 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+          <p className="mt-8 border border-dashed border-ink-900 bg-surface-1 p-8 text-center text-sm text-ink-600">
             대상 글이 없습니다. 이야기 카테고리에 글을 등록하거나 ?ids= 로 지정하세요.
           </p>
         ) : (
           <>
-            <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            <div className="mt-8 border border-ink-200 bg-white p-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-600">
                 미리보기 ({message.length}자)
               </p>
-              <pre className="mt-3 whitespace-pre-wrap break-all font-sans text-sm leading-7 text-neutral-800">
+              <pre className="mt-3 whitespace-pre-wrap break-all font-sans text-sm leading-7 text-ink-900">
                 {message}
               </pre>
             </div>
             <DigestActions message={message} openChatUrl={OPEN_CHAT_URL} />
-            <p className="mt-3 text-xs text-neutral-400">
+            <p className="mt-3 text-xs text-ink-600">
               순서: 복사 → 오픈 카톡방 열기 → 붙여넣기 → 전송 후 메시지 길게 눌러 공지 등록
             </p>
           </>

@@ -30,12 +30,12 @@ type Row = {
 };
 
 const STATUS_TONE: Record<PaidOrderStatus, string> = {
-  pending: "bg-neutral-100 text-neutral-600",
-  paid: "bg-amber-100 text-amber-800",
-  in_progress: "bg-trust-50 text-trust-600",
-  completed: "bg-emerald-100 text-emerald-800",
-  canceled: "bg-neutral-100 text-neutral-500",
-  refunded: "bg-red-100 text-red-700",
+  pending: "bg-surface-1 text-ink-700",
+  paid: "bg-warning-50 text-warning-700",
+  in_progress: "bg-surface-1 text-ink-900",
+  completed: "bg-success-50 text-success-700",
+  canceled: "bg-surface-1 text-ink-600",
+  refunded: "bg-danger-50 text-danger-700",
 };
 
 function fmtDate(iso: string | null): string {
@@ -86,46 +86,46 @@ export default async function AdminPaidOrdersPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">유료 테스터 주문</h1>
-        <p className="mt-1 text-sm text-neutral-600">
+        <h1 className="text-2xl font-bold text-ink-900">유료 테스터 주문</h1>
+        <p className="mt-1 text-sm text-ink-700">
           결제 완료 시 관리자 메일 즉시 발송 · 매일 아침 일일 리포트 메일 · 진행{" "}
           <strong>{activeCount}건</strong> · 누적 매출 <strong>{formatKrw(totalPaidKrw)}원</strong>
         </p>
 
-        <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+        <div className="mt-6 border border-warning-700 bg-warning-50 px-4 py-3 text-xs leading-relaxed text-warning-700">
           운영 절차 (ADR-0012): 결제 확정 시 급구 노출 + 전 회원 알림 자동. [공지 복사] → 오픈채팅
           붙여넣기. 완주한 시트만 과금 — 결제 7일 후 빈 시트는 자동 마감·환불(카드 결제는 환불 대기로 표시 → PG 관리자(포트원 콘솔)에서 부분취소 후 [환불 완료]). 매일 08:30 메일의 [ACTION] 항목을
           처리하면 됩니다.
         </div>
 
         {orders.length === 0 ? (
-          <p className="mt-10 text-sm text-neutral-500">아직 주문이 없습니다.</p>
+          <p className="mt-10 text-sm text-ink-600">아직 주문이 없습니다.</p>
         ) : (
           <ul className="mt-6 space-y-3">
             {orders.map((o) => (
-              <li key={o.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
+              <li key={o.id} className="border border-ink-200 bg-white p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[o.status] ?? "bg-neutral-100"}`}
+                        className={` px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONE[o.status] ?? "bg-surface-1"}`}
                       >
                         {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
                       </span>
-                      <p className="font-semibold text-neutral-900">
+                      <p className="font-semibold text-ink-900">
                         {o.apps?.name ?? "삭제된 앱"} — 시트{" "}
-                        <span className="text-amber-700">
+                        <span className="text-warning-700">
                           {filled.get(o.id) ?? 0}/{o.tester_count}
                         </span>{" "}
                         · {formatKrw(o.amount_krw)}원
                       </p>
                     </div>
-                    <p className="mt-1.5 text-xs text-neutral-500">
+                    <p className="mt-1.5 text-xs text-ink-600">
                       구매자 {o.users?.nickname ?? "-"} ({o.users?.email ?? "-"}) · 주문{" "}
                       {fmtDate(o.created_at)} · 결제 {fmtDate(o.paid_at)} · 개시{" "}
                       {fmtDate(o.started_at)}
                     </p>
-                    <p className="mt-0.5 text-xs text-neutral-400">
+                    <p className="mt-0.5 text-xs text-ink-600">
                       {o.order_code}
                       {o.fulfillment === "operator" ? " · 운영자 처리" : o.seats_closed ? " · 시트 마감" : ""}
                       {o.refund_due_krw > 0 ? ` · 환불 대기 ${formatKrw(o.refund_due_krw)}원` : ""}
@@ -136,7 +136,7 @@ export default async function AdminPaidOrdersPage() {
                   <div className="flex shrink-0 items-start gap-2">
                     <Link
                       href={`/console/orders/${o.id}`}
-                      className="hover:border-trust-500 hover:text-trust-600 rounded-lg border border-neutral-300 px-3.5 py-2 text-xs font-semibold text-neutral-700"
+                      className="hover:border-ink-900 hover:text-ink-900 border border-ink-900 px-3.5 py-2 text-xs font-semibold text-ink-700"
                     >
                       콘솔 ↗
                     </Link>
@@ -150,7 +150,7 @@ export default async function AdminPaidOrdersPage() {
                   </div>
                 </div>
                 {o.apps && ["paid", "in_progress"].includes(o.status) && !o.seats_closed && (
-                  <div className="mt-3 border-t border-neutral-100 pt-3">
+                  <div className="mt-3 border-t border-ink-200 pt-3">
                     <DigestActions
                       message={seatNoticeText({
                         appName: o.apps.name,

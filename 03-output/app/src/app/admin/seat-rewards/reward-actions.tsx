@@ -40,7 +40,7 @@ export function RewardActions({ id, canForfeit }: { id: number; canForfeit: bool
           type="button"
           disabled={busy}
           onClick={() => run("release")}
-          className="rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="bg-success-700 px-3.5 py-2 text-xs font-semibold text-white hover:bg-success-700 disabled:opacity-50"
         >
           지급
         </button>
@@ -49,13 +49,13 @@ export function RewardActions({ id, canForfeit }: { id: number; canForfeit: bool
             type="button"
             disabled={busy}
             onClick={() => run("forfeit")}
-            className="rounded-lg border border-neutral-300 px-3.5 py-2 text-xs font-semibold text-neutral-600 hover:border-red-400 hover:text-red-600 disabled:opacity-50"
+            className="border border-ink-900 px-3.5 py-2 text-xs font-semibold text-ink-700 hover:border-danger-700 hover:text-danger-700 disabled:opacity-50"
           >
             몰수
           </button>
         )}
       </div>
-      {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-danger-700">{error}</p>}
     </div>
   );
 }

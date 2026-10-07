@@ -108,7 +108,7 @@ export async function POST(req: Request, { params }: Ctx) {
     void createNotification({
       userId: app.owner_user_id,
       type: "comment_new",
-      title: isAdmin ? "🛡 관리자가 앱에 댓글을 남겼습니다" : "앱에 새 댓글이 달렸습니다",
+      title: isAdmin ? "관리자가 앱에 댓글을 남겼습니다" : "앱에 새 댓글이 달렸습니다",
       body: `${isAdmin ? "[관리자] " : ""}${user.nickname}님: ${payload.body.slice(0, 80)}`,
       link: `/browse/${appId}`,
     });

@@ -155,7 +155,7 @@ export function dailyReportSlackPayload(args: {
     });
   }
   return {
-    text: `${args.alerts.length > 0 ? "⚠️" : "✅"} ${headline}`,
+    text: headline,
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: `*${headline}*\n${stats}` } },
       ...alertSections,

@@ -20,6 +20,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const metadata = { title: "프로필" };
 
+const SECTION = "flex flex-col gap-4 border-t border-ink-900 pt-6";
+const H2 = "m-0 font-display text-h3 font-semibold text-ink-900";
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/auth/login?next=/profile");
@@ -28,36 +31,32 @@ export default async function ProfilePage() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-2xl px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">프로필</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          닉네임은 게시판·매칭 화면에서 다른 사용자에게 표시됩니다.
-        </p>
+      <main className="mx-auto flex max-w-[760px] flex-col gap-10 px-5 pt-12 pb-16">
+        <header className="flex flex-col gap-2">
+          <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">프로필</h1>
+          <p className="m-0 text-[15px] text-ink-700">닉네임은 게시판·매칭 화면에서 다른 사용자에게 표시됩니다.</p>
+        </header>
 
-        <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <dl className="grid gap-4 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-xs text-neutral-500">이메일</dt>
-              <dd className="mt-1 font-medium text-neutral-900">{user.email}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-500">신뢰 점수</dt>
-              <dd className="mt-1 font-medium text-neutral-900 tabular">{user.trustScore}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-500">크레딧 잔액</dt>
-              <dd className="mt-1 font-medium text-neutral-900 tabular">
-                {formatKrw(user.balance)} ⓒ
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-neutral-500">권한</dt>
-              <dd className="mt-1 font-medium text-neutral-900">
-                {user.role === "admin" ? "운영자" : "회원"}
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <dl className="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] border-t-[1.5px] border-ink-900">
+          <div className="flex flex-col gap-1 border-b border-ink-200 py-4 pr-4">
+            <dt className="text-xs text-ink-600">이메일</dt>
+            <dd className="m-0 font-medium break-all text-ink-900">{user.email}</dd>
+          </div>
+          <div className="flex flex-col gap-1 border-b border-ink-200 py-4 pr-4">
+            <dt className="text-xs text-ink-600">신뢰 점수</dt>
+            <dd className="m-0 font-mono font-medium text-ink-900 tabular-nums">{user.trustScore}</dd>
+          </div>
+          <div className="flex flex-col gap-1 border-b border-ink-200 py-4 pr-4">
+            <dt className="text-xs text-ink-600">크레딧 잔액</dt>
+            <dd className="m-0 font-medium text-ink-900">
+              <span className="font-mono tabular-nums">{formatKrw(user.balance)}</span> 크레딧
+            </dd>
+          </div>
+          <div className="flex flex-col gap-1 border-b border-ink-200 py-4 pr-4">
+            <dt className="text-xs text-ink-600">권한</dt>
+            <dd className="m-0 font-medium text-ink-900">{user.role === "admin" ? "운영자" : "회원"}</dd>
+          </div>
+        </dl>
 
         <GroupStatusCard />
 
@@ -70,25 +69,24 @@ export default async function ProfilePage() {
           capWindowDays={REFERRAL_CAP_WINDOW_DAYS}
         />
 
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold text-neutral-900">닉네임 변경</h2>
-          <div className="mt-4">
-            <ProfileForm
-              initialNickname={user.nickname}
-              initialKakaoNickname={user.kakaoNickname ?? ""}
-            />
-          </div>
+        <section aria-labelledby="nickname-title" className={SECTION}>
+          <h2 id="nickname-title" className={H2}>
+            닉네임 변경
+          </h2>
+          <ProfileForm initialNickname={user.nickname} initialKakaoNickname={user.kakaoNickname ?? ""} />
         </section>
 
-        <section className="mt-12 rounded-2xl border border-crimson-500/20 bg-crimson-500/5 p-6">
-          <h2 className="text-lg font-semibold text-neutral-900">회원 탈퇴</h2>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+        <section aria-labelledby="withdraw-title" className={`${SECTION} mt-6`}>
+          <h2 id="withdraw-title" className={H2}>
+            회원 탈퇴
+          </h2>
+          <p className="m-0 text-[15px] leading-relaxed text-ink-700">
             탈퇴 시 본인 정보는 즉시 익명화되고, 진행 중인 매칭은 자동 옵트아웃됩니다. 보유 크레딧은 소멸하며 환불되지 않습니다.{" "}
-            <Link href="/policies/privacy" className="underline hover:text-neutral-900">
+            <Link href="/policies/privacy" className="text-ink-900 underline underline-offset-2 hover:text-accent-600">
               자세히
             </Link>
           </p>
-          <div className="mt-4">
+          <div>
             <WithdrawButton />
           </div>
         </section>

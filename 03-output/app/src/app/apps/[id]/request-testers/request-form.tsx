@@ -1,6 +1,9 @@
 "use client";
 
+import { Check, CircleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox, Field, Textarea } from "@/components/ui/form";
 
 type Candidate = { id: number; nickname: string; trust_score: number };
 
@@ -14,9 +17,6 @@ type Props = {
 
 const MAX_RECIPIENTS = 50;
 const MESSAGE_MAX = 1000;
-
-const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
 
 /**
  * 테스터 요청 — 선택한 회원에게 사이트 알림으로 전달한다.
@@ -67,67 +67,83 @@ export function RequestForm({ appId, appName, senderNickname, shortDescription, 
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-          <p className="text-sm font-semibold text-neutral-700">
-            수신자 선택 ({selected.size} / {MAX_RECIPIENTS}명)
+    <div className="flex flex-col gap-6">
+      <div className="border border-ink-900 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900 bg-surface-1 px-4 py-3">
+          <p className="text-sm font-bold text-ink-900">
+            수신자 선택 (<span className="tabular">{selected.size} / {MAX_RECIPIENTS}</span>명)
           </p>
-          <p className="text-xs text-neutral-400">최근 가입 순 · 이미 매칭된 테스터 제외</p>
+          <p className="text-[13px] text-ink-600">최근 가입 순 · 이미 매칭된 테스터 제외</p>
         </div>
         {candidates.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-neutral-500">요청 가능한 후보자가 없습니다.</p>
+          <p className="px-4 py-10 text-center text-sm text-ink-700">요청 가능한 후보자가 없습니다.</p>
         ) : (
-          <ul className="max-h-96 divide-y divide-neutral-100 overflow-y-auto">
+          <ul className="m-0 max-h-96 list-none divide-y divide-ink-200 overflow-y-auto p-0">
             {candidates.map((c) => (
-              <li key={c.id}>
-                <label className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(c.id)}
-                    onChange={() => toggle(c.id)}
-                    className="h-4 w-4 shrink-0 rounded border-neutral-300 text-trust-600"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-900">
-                    {c.nickname}
-                  </span>
-                  <span className="shrink-0 text-xs text-neutral-400">★ {c.trust_score}</span>
-                </label>
+              <li key={c.id} className="px-4 hover:bg-surface-1">
+                <Checkbox
+                  checked={selected.has(c.id)}
+                  onChange={() => toggle(c.id)}
+                  className="w-full"
+                  label={
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="min-w-0 truncate font-medium">{c.nickname}</span>
+                      <span className="shrink-0 text-[13px] text-ink-600">
+                        신뢰도 <span className="tabular">{c.trust_score}</span>
+                      </span>
+                    </span>
+                  }
+                />
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div>
-        <label className="text-sm font-semibold text-neutral-900">요청 메시지</label>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={6}
-          maxLength={MESSAGE_MAX}
-          className={`${inputClass} mt-2 resize-y`}
-        />
-        <p className="mt-1 text-right text-xs text-neutral-400">
-          {message.length} / {MESSAGE_MAX}
-        </p>
-      </div>
+      <Field
+        label="요청 메시지"
+        hint={
+          <span className="block text-right tabular">
+            {message.length} / {MESSAGE_MAX}
+          </span>
+        }
+      >
+        {({ id, describedBy }) => (
+          <Textarea
+            id={id}
+            aria-describedby={describedBy}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={6}
+            maxLength={MESSAGE_MAX}
+            className="resize-y"
+          />
+        )}
+      </Field>
 
       {result && (
-        <p className={`text-sm font-medium ${result.ok ? "text-mint-500" : "text-red-600"}`}>
+        <p
+          role={result.ok ? "status" : "alert"}
+          className={`flex items-center gap-1.5 text-sm font-medium ${result.ok ? "text-success-700" : "text-danger-700"}`}
+        >
+          {result.ok ? (
+            <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <CircleAlert className="size-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+          )}
           {result.text}
         </p>
       )}
 
-      <button
-        type="button"
+      <Button
         onClick={send}
-        disabled={busy || selected.size === 0 || message.trim().length < 10}
-        className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+        loading={busy}
+        disabled={selected.size === 0 || message.trim().length < 10}
+        className="w-full"
       >
         {busy ? "보내는 중…" : `${selected.size}명에게 요청 보내기`}
-      </button>
-      <p className="text-xs leading-relaxed text-neutral-500">
+      </Button>
+      <p className="text-[13px] leading-relaxed text-ink-600">
         요청은 수신자의 사이트 알림으로 전달됩니다 (앱당 하루 1회, 최대 {MAX_RECIPIENTS}명). 회원의 이메일
         주소는 제공되지 않습니다. 리뷰·별점 요청은 금지입니다.
       </p>
