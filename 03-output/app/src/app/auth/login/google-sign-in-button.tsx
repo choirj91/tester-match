@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { FormError } from "../auth-card";
 
 export function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
@@ -33,16 +35,15 @@ export function GoogleSignInButton() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={loading}
-        className="flex w-full items-center justify-center gap-3 border border-ink-900 bg-white px-4 py-3 text-sm font-semibold text-ink-900 hover:bg-surface-1 disabled:opacity-50"
-      >
+      <Button variant="secondary" onClick={onClick} disabled={loading} className="w-full gap-3">
         <GoogleLogo />
         {loading ? "Google로 이동 중..." : "Google로 계속하기"}
-      </button>
-      {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
+      </Button>
+      {error && (
+        <div className="mt-3">
+          <FormError>{error}</FormError>
+        </div>
+      )}
     </>
   );
 }

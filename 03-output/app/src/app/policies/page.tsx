@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
@@ -32,25 +33,31 @@ export default async function PoliciesIndex() {
   return (
     <>
       <SiteHeader user={user} />
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-bold text-ink-900">정책 안내</h1>
-        <p className="mt-2 text-sm text-ink-700">
+      <main className="mx-auto max-w-[760px] px-5 pt-12 pb-16">
+        <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">정책 안내</h1>
+        <p className="m-0 mt-3 text-base leading-[1.8] text-ink-700">
           낰낰컴퍼니가 운영하는 Tester Match 의 이용 조건·개인정보 처리·환불·크레딧 운영 기준입니다. 변경 시
           시행 7일 전에 게시판 공지로 안내합니다.
         </p>
 
-        <ul className="mt-8 space-y-3">
+        <ul className="m-0 mt-8 list-none border-t-[1.5px] border-ink-900 p-0">
           {ITEMS.map((item) => (
-            <li key={item.href}>
+            <li key={item.href} className="border-b border-ink-900">
               <Link
                 href={item.href}
-                className="flex items-center justify-between border border-ink-200 bg-white p-5 transition hover:border-ink-900"
+                className="group flex items-center justify-between gap-4 py-5 text-ink-900 no-underline"
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-ink-900">{item.title}</h2>
-                  <p className="mt-1 text-sm text-ink-700">{item.desc}</p>
+                  <h2 className="m-0 font-display text-h3 font-semibold text-ink-900 group-hover:text-accent-600">
+                    {item.title}
+                  </h2>
+                  <p className="m-0 mt-1 text-[15px] text-ink-700">{item.desc}</p>
                 </div>
-                <span className="text-ink-900">→</span>
+                <ArrowRight
+                  className="size-5 shrink-0 text-ink-900 group-hover:text-accent-600"
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
               </Link>
             </li>
           ))}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SiteHeader } from "@/components/site-header";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { NotificationList } from "./notification-list";
@@ -25,9 +26,12 @@ export default async function NotificationsPage() {
     .eq("is_read", false);
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 text-xl font-bold text-ink-900">알림</h1>
-      <NotificationList notifications={data ?? []} />
-    </main>
+    <>
+      <SiteHeader user={user} />
+      <main className="mx-auto max-w-[760px] px-5 pt-12 pb-16">
+        <h1 className="m-0 mb-6 font-display text-h1 font-semibold text-ink-900">알림</h1>
+        <NotificationList notifications={data ?? []} />
+      </main>
+    </>
   );
 }
