@@ -58,7 +58,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
         </nav>
         <div className="border-t border-ink-900 px-5 py-4 text-xs text-ink-600">
           <p className="m-0 truncate text-sm font-medium text-ink-900">{user.nickname}</p>
-          <p className="m-0 mt-0.5">{isAdmin ? "운영자" : "구매자"}</p>
+          <p className="m-0 mt-0.5">{isAdmin ? "운영자" : "개발자"}</p>
           <Link
             href="/"
             className="mt-3 inline-flex min-h-11 items-center text-ink-900 underline hover:text-accent-600"
@@ -81,7 +81,7 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
           </p>
           <div className="flex items-center gap-3 text-xs">
             <Badge tone="outline">
-              {isAdmin ? "운영자" : "구매자"} · {user.nickname}
+              {isAdmin ? "운영자" : "개발자"} · {user.nickname}
             </Badge>
             <Link
               href="/"

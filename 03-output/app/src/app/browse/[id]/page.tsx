@@ -286,7 +286,7 @@ export default async function BrowseDetailPage({ params }: Props) {
                   : "초대 링크는 참여 신청 후 공개됩니다."
               }
             >
-              유료 시트가 열린 앱은 시트당 최대 {SEAT_REWARD_MAX} 크레딧(구매자 확정 후 지급), 그 외 품앗이 참여는
+              유료 시트가 열린 앱은 시트당 최대 {SEAT_REWARD_MAX} 크레딧(개발자 확정 후 지급), 그 외 품앗이 참여는
               신뢰도가 쌓입니다.
             </Notice>
           )}

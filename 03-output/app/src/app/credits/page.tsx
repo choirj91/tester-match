@@ -72,7 +72,7 @@ export default async function CreditsPage() {
           <header className="flex max-w-[760px] flex-col gap-3">
             <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">크레딧</h1>
             <p className="m-0 text-[15px] leading-[1.75] text-ink-700">
-              크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 구매자 확정 후 지급.{" "}
+              크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 개발자 확정 후 지급.{" "}
               <span className="font-mono tabular-nums">{REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")}</span>{" "}
               이상 모으면 기프티콘·네이버페이 포인트로 바꾸거나, 내 앱의 테스터 시트를 여는 데 쓸 수
               있습니다. 구매·양도·현금 환급은 안 됩니다.
@@ -84,7 +84,7 @@ export default async function CreditsPage() {
               <strong className="text-ink-900">
                 확정 대기 <span className="font-mono tabular-nums">{formatKrw(pendingTotal)}</span> 크레딧
               </strong>{" "}
-              — 구매자가 확인하면 바로, 응답이 없으면 완주 {SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다.
+              — 개발자가 확인하면 바로, 응답이 없으면 완주 {SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다.
               {disputedCount > 0 && ` (이의 검토 중 ${disputedCount}건 — 운영팀이 증빙 확인 후 판정)`}
             </Notice>
           )}

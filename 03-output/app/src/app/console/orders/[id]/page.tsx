@@ -131,7 +131,7 @@ export default async function ConsoleOrderPage({
         <Receipt
           title={<span className="font-mono text-base">{order.order_code}</span>}
           meta={
-            isAdmin && order.users ? `구매자 ${order.users.nickname} (${order.users.email})` : undefined
+            isAdmin && order.users ? `개발자 ${order.users.nickname} (${order.users.email})` : undefined
           }
         >
           <ReceiptDivider />

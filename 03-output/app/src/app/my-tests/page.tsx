@@ -63,7 +63,7 @@ export default async function MyTestsPage() {
         <header className="flex flex-col gap-2">
           <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">내 테스트</h1>
           <p className="m-0 text-[15px] text-ink-700">
-            참여중인 앱과 {SEAT_TOTAL_DAYS}일 체크인을 한 화면에서 추적합니다. 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 구매자 확정 후 지급.
+            참여중인 앱과 {SEAT_TOTAL_DAYS}일 체크인을 한 화면에서 추적합니다. 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 개발자 확정 후 지급.
           </p>
         </header>
 

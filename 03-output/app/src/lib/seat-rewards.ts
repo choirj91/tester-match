@@ -69,7 +69,7 @@ async function holdSeatReward(
     userId: args.testerUserId,
     type: "seat_reward",
     title: `완주! ${amountLabel} 크레딧 확정 대기`,
-    body: `"${appName}" 유료 시트 ${breakdown.days}일 출석 완료 (설치 ${breakdown.install} + 출석 ${breakdown.attendance} + 보너스 ${breakdown.streak + breakdown.completion + breakdown.perfect}). 구매자가 확인하면 바로, 응답이 없으면 ${SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다. 앱이 정식 출시되면 +${SEAT_REWARDS.launch}.`,
+    body: `"${appName}" 유료 시트 ${breakdown.days}일 출석 완료 (설치 ${breakdown.install} + 출석 ${breakdown.attendance} + 보너스 ${breakdown.streak + breakdown.completion + breakdown.perfect}). 개발자가 확인하면 바로, 응답이 없으면 ${SEAT_REWARD_HOLD_DAYS}일 뒤 자동 지급됩니다. 앱이 정식 출시되면 +${SEAT_REWARDS.launch}.`,
     link: "/credits",
   });
   if (order) {
@@ -263,7 +263,7 @@ export async function disputeSeatReward(
     userId: row.tester_user_id,
     type: "seat_reward",
     title: "보상에 이의가 제기되었습니다",
-    body: `구매자 이의: ${DISPUTE_CATEGORIES[category]} — "${reason.slice(0, 120)}". 운영팀이 스크린샷 증빙을 확인해 ${DISPUTE_DECISION_DAYS}일 안에 판정하며, 기한 내 판정이 없으면 자동 지급됩니다. 소명은 문의 메일로 보내주세요.`,
+    body: `개발자 이의: ${DISPUTE_CATEGORIES[category]} — "${reason.slice(0, 120)}". 운영팀이 스크린샷 증빙을 확인해 ${DISPUTE_DECISION_DAYS}일 안에 판정하며, 기한 내 판정이 없으면 자동 지급됩니다. 소명은 문의 메일로 보내주세요.`,
     link: "/credits",
   });
   const tmpl = seatRewardDisputedEmail({

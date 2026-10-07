@@ -96,7 +96,7 @@ export function seatNoticeText(args: { appName: string; appId: number; seats: nu
     `유료 테스트 시트 오픈 — ${args.appName}`,
     "",
     `남은 시트 ${args.seats}명 · ${SEAT_REWARD_SUMMARY}`,
-    "14일 중 12일 이상 출석하면 완주 — 구매자 확정 후 지급, 기프티콘 교환 가능.",
+    "14일 중 12일 이상 출석하면 완주 — 개발자 확정 후 지급, 기프티콘 교환 가능.",
     "매일 앱 실행 + 체크인 + 스크린샷 1장. 리뷰·별점 작성은 금지.",
     `${SITE_URL}/browse/${args.appId}`,
   ].join("\n");
