@@ -17,12 +17,12 @@ function formatDate(iso: string | null | undefined) {
 function TrustBadge({ score }: { score: number }) {
   const tone =
     score >= 80
-      ? "bg-mint-500/10 text-mint-500"
+      ? "bg-success-50 text-success-700"
       : score >= 50
-        ? "bg-trust-50 text-trust-700"
-        : "bg-neutral-100 text-neutral-500";
+        ? "bg-surface-1 text-ink-900"
+        : "bg-surface-1 text-ink-600";
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tone}`}>★ {score}</span>
+    <span className={` px-2 py-0.5 text-[10px] font-bold ${tone}`}>★ {score}</span>
   );
 }
 
@@ -129,18 +129,18 @@ export default async function MyReviewsPage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">맞테스트</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">맞테스트</h1>
+          <p className="mt-1 text-sm text-ink-700">
             내 앱을 테스트해준 사람 목록. 상대방 앱도 테스트해주면 맞테스트가 완성됩니다.
           </p>
           {totalTesters > 0 && (
-            <div className="mt-3 flex flex-wrap gap-3 text-xs text-neutral-500">
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-ink-600">
               <span>참여자 {totalTesters}명</span>
               {mutualPossible > 0 && (
-                <span className="font-semibold text-trust-600">맞테스트 가능 {mutualPossible}건</span>
+                <span className="font-semibold text-ink-900">맞테스트 가능 {mutualPossible}건</span>
               )}
               {mutualDone > 0 && (
-                <span className="text-mint-500">맞테스트 완료 {mutualDone}건</span>
+                <span className="text-success-700">맞테스트 완료 {mutualDone}건</span>
               )}
             </div>
           )}
@@ -153,29 +153,29 @@ export default async function MyReviewsPage() {
             <ul className="space-y-3">
               {rows.map((row) => {
                 const cardBase =
-                  "flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between";
+                  "flex flex-col gap-4  border border-ink-200 bg-white p-5  sm:flex-row sm:items-center sm:justify-between";
 
                 const innerContent = (
                   <>
                     {/* 테스터 정보 */}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-neutral-900">
+                        <span className="text-sm font-semibold text-ink-900">
                           {row.tester?.nickname ?? `사용자 #${row.tid}`}
                         </span>
                         {row.tester && <TrustBadge score={row.tester.trust_score} />}
                       </div>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        <span className="font-medium text-neutral-700">
+                      <p className="mt-1 text-xs text-ink-600">
+                        <span className="font-medium text-ink-700">
                           {row.myApp?.name ?? "내 앱"}
                         </span>{" "}
                         테스트 참여 ·{" "}
                         {formatDate(row.latestMatch.opted_in_at ?? row.latestMatch.matched_at)}
                       </p>
                       {row.mutualDone && row.mutualMatchedApp && (
-                        <p className="mt-0.5 text-xs text-neutral-400">
+                        <p className="mt-0.5 text-xs text-ink-600">
                           맞테스트 앱:{" "}
-                          <span className="font-medium text-neutral-500">
+                          <span className="font-medium text-ink-600">
                             {row.mutualMatchedApp.name}
                           </span>
                         </p>
@@ -183,11 +183,11 @@ export default async function MyReviewsPage() {
                       {!row.mutualDone && row.mutualTarget && (
                         <Link
                           href={`/browse/${row.mutualTarget.id}`}
-                          className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 text-xs text-neutral-600 transition hover:border-trust-500 hover:bg-trust-50 hover:text-trust-700"
+                          className="mt-2 inline-flex items-center gap-1.5 border border-ink-200 bg-surface-1 px-2.5 py-1.5 text-xs text-ink-700 transition hover:border-ink-900 hover:bg-surface-1 hover:text-ink-900"
                         >
-                          <span className="text-neutral-400">상대방 앱</span>
+                          <span className="text-ink-600">상대방 앱</span>
                           <span className="font-semibold">{row.mutualTarget.name}</span>
-                          <span className="text-neutral-400">›</span>
+                          <span className="text-ink-600">›</span>
                         </Link>
                       )}
                     </div>
@@ -195,18 +195,18 @@ export default async function MyReviewsPage() {
                     {/* 맞테스트 버튼/배지 */}
                     <div className="shrink-0">
                       {row.mutualDone ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500">
+                        <span className="inline-flex items-center gap-1 bg-success-50 px-3 py-1.5 text-xs font-semibold text-success-700">
                           맞테스트 완료 ✓
                         </span>
                       ) : row.mutualTarget ? (
                         <Link
                           href={`/browse/${row.mutualTarget.id}`}
-                          className="inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                          className="inline-flex bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
                         >
                           맞테스트 하기 →
                         </Link>
                       ) : (
-                        <span className="text-xs text-neutral-400">
+                        <span className="text-xs text-ink-600">
                           {row.theirApps.length === 0 ? "상대방 앱 없음" : "모집 완료"}
                         </span>
                       )}
@@ -220,7 +220,7 @@ export default async function MyReviewsPage() {
                     <li key={row.tid}>
                       <Link
                         href={`/browse/${row.mutualMatchedApp.id}`}
-                        className={`${cardBase} transition hover:border-trust-500 hover:shadow-md`}
+                        className={`${cardBase} transition hover:border-ink-900 `}
                       >
                         {innerContent}
                       </Link>
@@ -244,31 +244,31 @@ export default async function MyReviewsPage() {
 
 function EmptyState({ hasApps }: { hasApps: boolean }) {
   return (
-    <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
+    <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
       {hasApps ? (
         <>
-          <p className="text-base font-medium text-neutral-700">
+          <p className="text-base font-medium text-ink-700">
             아직 내 앱을 테스트한 사람이 없습니다.
           </p>
-          <p className="mt-2 text-sm text-neutral-500">
+          <p className="mt-2 text-sm text-ink-600">
             매칭 가능 앱 목록에서 다른 앱을 먼저 테스트하면 맞테스트가 자연스럽게 쌓입니다.
           </p>
           <Link
             href="/browse"
-            className="mt-6 inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="mt-6 inline-flex bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
           >
             매칭 가능 앱 보기 →
           </Link>
         </>
       ) : (
         <>
-          <p className="text-base font-medium text-neutral-700">등록한 앱이 없습니다.</p>
-          <p className="mt-2 text-sm text-neutral-500">
+          <p className="text-base font-medium text-ink-700">등록한 앱이 없습니다.</p>
+          <p className="mt-2 text-sm text-ink-600">
             앱을 먼저 등록해야 맞테스트를 받을 수 있습니다.
           </p>
           <Link
             href="/apps/new"
-            className="mt-6 inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="mt-6 inline-flex bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
           >
             앱 등록하기 →
           </Link>

@@ -14,11 +14,11 @@ export default async function NewInquiryPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-2xl px-6 py-12">
-        <Link href="/inquiries" className="text-sm text-neutral-500 hover:text-neutral-800">
+        <Link href="/inquiries" className="text-sm text-ink-600 hover:text-ink-900">
           ← 내 문의
         </Link>
-        <h1 className="mt-3 text-2xl font-bold text-neutral-900">문의하기</h1>
-        <p className="mt-1 text-sm leading-relaxed text-neutral-600">
+        <h1 className="mt-3 text-2xl font-bold text-ink-900">문의하기</h1>
+        <p className="mt-1 text-sm leading-relaxed text-ink-700">
           문의 내용은 본인과 운영팀만 볼 수 있습니다. 답변이 등록되면 사이트 알림과 가입 이메일로
           알려드립니다.
         </p>

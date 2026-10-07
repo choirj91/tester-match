@@ -56,8 +56,8 @@ export default async function AdminHomePage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">관리자</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">관리자</h1>
+          <p className="mt-1 text-sm text-ink-700">
             운영자 전용 도구. 일반 사용자는 접근할 수 없습니다.
           </p>
         </header>
@@ -67,10 +67,10 @@ export default async function AdminHomePage() {
             <li key={t.href}>
               <Link
                 href={t.href}
-                className="hover:border-trust-600 block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition"
+                className="hover:border-ink-900 block border border-ink-200 bg-white p-6 transition"
               >
-                <h2 className="text-lg font-semibold text-neutral-900">{t.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{t.desc}</p>
+                <h2 className="text-lg font-semibold text-ink-900">{t.title}</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-700">{t.desc}</p>
               </Link>
             </li>
           ))}

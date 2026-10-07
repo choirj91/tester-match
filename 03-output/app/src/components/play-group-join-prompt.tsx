@@ -11,7 +11,7 @@ export function PlayGroupJoinPrompt({ compact = false }: { compact?: boolean }) 
         href={PLAY_GROUP_JOIN_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className={`rounded-lg bg-amber-500 font-semibold text-white shadow-sm hover:bg-amber-600 ${
+        className={` bg-warning-700 font-semibold text-white  hover:bg-warning-700 ${
           compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-1.5 text-xs"
         }`}
       >

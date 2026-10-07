@@ -89,21 +89,21 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/apps" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/apps" className="text-sm text-ink-600 hover:text-ink-900">
           ← 내 앱
         </Link>
 
         <div className="mt-4 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-900">{app.name}</h1>
+            <h1 className="text-3xl font-bold text-ink-900">{app.name}</h1>
             <div className="mt-2 flex items-center gap-1.5">
               <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusLabel.tone}`}
+                className={`inline-flex  px-2.5 py-0.5 text-xs font-semibold ${statusLabel.tone}`}
               >
                 {statusLabel.text}
               </span>
               {app.is_boost && (
-                <span className="inline-flex rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                <span className="inline-flex bg-accent-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                   BOOST
                 </span>
               )}
@@ -112,13 +112,13 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href={`/apps/${app.id}/request-testers`}
-              className="rounded-lg border border-trust-300 bg-trust-50 px-3 py-2 text-sm font-semibold text-trust-700 hover:bg-trust-100"
+              className="border border-ink-200 bg-surface-1 px-3 py-2 text-sm font-semibold text-ink-900 hover:bg-surface-1"
             >
               테스터 요청
             </Link>
             <Link
               href={`/apps/${app.id}/edit`}
-              className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+              className="border border-ink-900 bg-white px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-surface-1"
             >
               수정
             </Link>
@@ -126,22 +126,22 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           </div>
         </div>
 
-        <p className="mt-6 text-base leading-relaxed text-neutral-700">
+        <p className="mt-6 text-base leading-relaxed text-ink-700">
           {app.short_description}
         </p>
 
         <section
-          className={`mt-6 rounded-2xl border p-5 ${
-            isWelcome ? "border-trust-500/40 bg-trust-50" : "border-neutral-200 bg-neutral-50"
+          className={`mt-6  border p-5 ${
+            isWelcome ? "border-ink-200 bg-surface-1" : "border-ink-200 bg-surface-1"
           }`}
         >
           {isWelcome && (
-            <p className="mb-2 text-sm font-bold text-trust-700">
+            <p className="mb-2 text-sm font-bold text-ink-900">
               🎉 앱 등록 완료! 지금 카톡 오픈채팅에 공유해 테스터를 모아보세요.
             </p>
           )}
-          <h2 className="text-sm font-semibold text-neutral-900">테스터 모집 공유</h2>
-          <p className="mt-1 text-xs text-neutral-500">
+          <h2 className="text-sm font-semibold text-ink-900">테스터 모집 공유</h2>
+          <p className="mt-1 text-xs text-ink-600">
             버튼 클릭 시 문구가 클립보드에 복사되고 카톡 오픈채팅방이 새 창으로 열립니다. 채팅방에서 붙여넣기(Ctrl/⌘+V) 하면 끝.
           </p>
           <div className="mt-3">
@@ -170,29 +170,29 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
         )}
 
         {app.google_group_url === TESTER_GROUP_URL && (
-          <section className="mt-8 rounded-2xl border border-mint-500/40 bg-mint-500/5 p-6">
+          <section className="mt-8 border border-success-700 bg-success-50 p-6">
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+              <span className="bg-success-700 px-2 py-0.5 text-[10px] font-bold text-white">
                 공용 그룹
               </span>
-              <h2 className="text-lg font-semibold text-neutral-900">
+              <h2 className="text-lg font-semibold text-ink-900">
                 Tester Match 공용 테스터 그룹
               </h2>
             </div>
-            <p className="mt-1.5 text-sm text-neutral-700">
+            <p className="mt-1.5 text-sm text-ink-700">
               아래 그룹 이메일을 Play Console 비공개 테스트 트랙의 테스터 목록(Google
               그룹스)에 등록하세요. Tester Match 테스터들은 이 공용 그룹에 가입되어
               있어서, 별도 이메일 등록 없이 초대 링크를 사용할 수 있습니다.
             </p>
             <div className="mt-3">
-              <p className="text-xs text-neutral-500">
-                <strong className="text-neutral-700">Play Console 등록용 그룹 이메일:</strong>{" "}
-                <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-mint-600">
+              <p className="text-xs text-ink-600">
+                <strong className="text-ink-700">Play Console 등록용 그룹 이메일:</strong>{" "}
+                <code className="bg-white px-1.5 py-0.5 font-mono text-xs text-success-700">
                   {PLAY_GROUP_EMAIL}
                 </code>
               </p>
               <CopyGroupEmailButton />
-              <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">
+              <p className="mt-2 text-[11px] leading-relaxed text-ink-600">
                 Play Console → 테스트 → 비공개 테스트 → 테스터 탭 → &ldquo;Google
                 그룹스&rdquo;에 위 이메일을 붙여넣으면 됩니다.
               </p>
@@ -200,14 +200,14 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           </section>
         )}
 
-        <section className="mt-8 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-neutral-900">참여 링크</h2>
+        <section className="mt-8 border border-ink-200 bg-white p-6">
+          <h2 className="text-lg font-semibold text-ink-900">참여 링크</h2>
           {app.google_group_url === TESTER_GROUP_URL ? (
-            <div className="mt-4 rounded-xl border border-mint-500/30 bg-mint-500/5 p-4">
-              <p className="text-xs font-semibold text-neutral-800">공용 테스터 그룹 사용 중</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">
+            <div className="mt-4 border border-success-700 bg-success-50 p-4">
+              <p className="text-xs font-semibold text-ink-900">공용 테스터 그룹 사용 중</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-ink-700">
                 Play Console 비공개 테스트 트랙의 테스터 목록(Google 그룹스)에{" "}
-                <code className="rounded bg-white px-1 py-0.5 text-[11px] font-semibold text-trust-700">
+                <code className="bg-white px-1 py-0.5 text-[11px] font-semibold text-ink-900">
                   {PLAY_GROUP_EMAIL}
                 </code>{" "}
                 이 등록되어 있어야 합니다. 테스터에게는 그룹 1클릭 가입 안내가 자동으로
@@ -215,9 +215,9 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
               </p>
             </div>
           ) : app.google_group_url ? (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="text-xs font-semibold text-amber-800">Google 그룹 (1단계 필수)</p>
-              <p className="mt-0.5 text-xs text-amber-700">
+            <div className="mt-4 border border-warning-700 bg-warning-50 p-4">
+              <p className="text-xs font-semibold text-warning-700">Google 그룹 (1단계 필수)</p>
+              <p className="mt-0.5 text-xs text-warning-700">
                 테스터가 초대 링크를 사용하기 전 이 그룹에 먼저 가입해야 합니다.
               </p>
               <Row label="Google 그룹" url={app.google_group_url} amber />
@@ -225,7 +225,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
           ) : null}
           <div className="mt-4 space-y-3 text-sm">
             {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL && (
-              <p className="text-xs font-semibold text-neutral-500">초대 링크 (2단계)</p>
+              <p className="text-xs font-semibold text-ink-600">초대 링크 (2단계)</p>
             )}
             <Row label="안드로이드" url={app.store_invite_url} />
             <Row label="웹 참여" url={app.web_invite_url} />
@@ -249,9 +249,9 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="mt-1 text-base font-semibold text-neutral-900 tabular">{value}</dd>
+    <div className="border border-ink-200 bg-white px-4 py-3">
+      <dt className="text-xs text-ink-600">{label}</dt>
+      <dd className="mt-1 text-base font-semibold text-ink-900 tabular">{value}</dd>
     </div>
   );
 }
@@ -318,19 +318,19 @@ function buildShareText(args: {
 function Row({ label, url, amber }: { label: string; url: string | null; amber?: boolean }) {
   if (!url) {
     return (
-      <p className="text-neutral-400">
+      <p className="text-ink-600">
         <strong className="font-semibold">{label}:</strong> 미등록
       </p>
     );
   }
   return (
     <p className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-      <strong className={`shrink-0 font-semibold ${amber ? "text-amber-800" : "text-neutral-700"}`}>{label}</strong>
+      <strong className={`shrink-0 font-semibold ${amber ? "text-warning-700" : "text-ink-700"}`}>{label}</strong>
       <a
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`break-all underline text-sm ${amber ? "text-amber-700 hover:text-amber-900" : "text-trust-600 hover:text-trust-700"}`}
+        className={`break-all underline text-sm ${amber ? "text-warning-700 hover:text-warning-700" : "text-ink-900 hover:text-ink-900"}`}
       >
         {url}
       </a>

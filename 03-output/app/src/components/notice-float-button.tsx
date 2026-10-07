@@ -27,13 +27,13 @@ export function NoticeFloatButton() {
 
   return (
     <div className="group relative">
-      <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100">
+      <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
         {unread > 0 ? `안 읽은 공지 ${unread}건` : "공지사항"}
       </span>
       <Link
         href="/board?category=%EA%B3%B5%EC%A7%80"
         aria-label="공지사항 보기"
-        className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-neutral-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-95"
+        className="relative flex h-12 w-12 items-center justify-center bg-white ring-1 ring-ink-200 transition-all duration-200 hover:-translate-y-1 active:scale-95"
       >
         {/* 확성기 아이콘 */}
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -43,7 +43,7 @@ export function NoticeFloatButton() {
         </svg>
 
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold leading-none text-white shadow">
+          <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center bg-danger-700 text-xs font-bold leading-none text-white">
             !
           </span>
         )}

@@ -30,32 +30,32 @@ export function OrderMatrix({ orderId, isAdmin, slots, logs, dayN, dayLabels }: 
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+      <div className="overflow-x-auto border border-ink-200 bg-white">
         <table className="min-w-full text-xs">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 text-neutral-500">
-              <th className="sticky left-0 z-10 bg-neutral-50 px-3 py-2 text-left font-semibold">
+            <tr className="border-b border-ink-200 bg-surface-1 text-ink-600">
+              <th className="sticky left-0 z-10 bg-surface-1 px-3 py-2 text-left font-semibold">
                 테스터
               </th>
               {DAYS.map((d) => (
                 <th
                   key={d}
-                  className={`px-1.5 py-2 text-center font-semibold ${dayN === d ? "text-trust-600" : ""}`}
+                  className={`px-1.5 py-2 text-center font-semibold ${dayN === d ? "text-ink-900" : ""}`}
                 >
                   <div>{d}일차</div>
-                  {dayLabels && <div className="font-normal text-neutral-400">{dayLabels[d - 1]}</div>}
+                  {dayLabels && <div className="font-normal text-ink-600">{dayLabels[d - 1]}</div>}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {slots.map((slot) => (
-              <tr key={slot.id} className="border-b border-neutral-100 last:border-0">
+              <tr key={slot.id} className="border-b border-ink-200 last:border-0">
                 <td className="sticky left-0 z-10 bg-white px-3 py-2">
                   {isAdmin ? (
                     <SlotLabel orderId={orderId} slot={slot} />
                   ) : (
-                    <span className="font-semibold text-neutral-800">{slot.label}</span>
+                    <span className="font-semibold text-ink-900">{slot.label}</span>
                   )}
                 </td>
                 {DAYS.map((d) => {
@@ -64,11 +64,11 @@ export function OrderMatrix({ orderId, isAdmin, slots, logs, dayN, dayLabels }: 
                   const isSel = selected?.slotId === slot.id && selected?.dayN === d;
                   const tone = log
                     ? log.status === "done"
-                      ? "bg-emerald-500 text-white"
-                      : "bg-red-400 text-white"
+                      ? "bg-success-700 text-white"
+                      : "bg-danger-700 text-white"
                     : future
-                      ? "bg-neutral-50 text-neutral-300"
-                      : "bg-neutral-100 text-neutral-400";
+                      ? "bg-surface-1 text-ink-600"
+                      : "bg-surface-1 text-ink-600";
                   return (
                     <td key={d} className="px-1 py-1.5 text-center">
                       <button
@@ -76,8 +76,8 @@ export function OrderMatrix({ orderId, isAdmin, slots, logs, dayN, dayLabels }: 
                         disabled={future && !isAdmin}
                         onClick={() => setSelected({ slotId: slot.id, dayN: d })}
                         title={log ? `${log.status === "done" ? "출석" : "결석"}${log.screenshot_path ? " · 스샷" : ""}` : "기록 없음"}
-                        className={`flex h-8 w-8 items-center justify-center rounded-md font-bold transition ${tone} ${
-                          isSel ? "ring-2 ring-trust-600 ring-offset-1" : ""
+                        className={`flex h-8 w-8 items-center justify-center  font-bold transition ${tone} ${
+                          isSel ? "ring-2 ring-accent-600 ring-offset-1" : ""
                         } ${future && !isAdmin ? "cursor-default" : "hover:opacity-80"}`}
                       >
                         {log ? (log.status === "done" ? "✓" : "✕") : future ? "" : "·"}
@@ -93,10 +93,10 @@ export function OrderMatrix({ orderId, isAdmin, slots, logs, dayN, dayLabels }: 
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-neutral-500">
-        <span className="mr-3 inline-block h-3 w-3 rounded-sm bg-emerald-500 align-middle" /> 출석 (실행·체크인)
-        <span className="mx-3 inline-block h-3 w-3 rounded-sm bg-red-400 align-middle" /> 결석
-        <span className="mx-3 inline-block h-3 w-3 rounded-sm bg-neutral-100 align-middle" /> 미기록 — 셀을 누르면
+      <p className="text-xs text-ink-600">
+        <span className="mr-3 inline-block h-3 w-3 bg-success-700 align-middle" /> 출석 (실행·체크인)
+        <span className="mx-3 inline-block h-3 w-3 bg-danger-700 align-middle" /> 결석
+        <span className="mx-3 inline-block h-3 w-3 bg-surface-1 align-middle" /> 미기록 — 셀을 누르면
         스크린샷과 코멘트가 열립니다.
       </p>
 
@@ -144,7 +144,7 @@ function SlotLabel({ orderId, slot }: { orderId: number; slot: ConsoleSlot }) {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="font-semibold text-neutral-800 underline decoration-dotted underline-offset-4 hover:text-trust-600"
+        className="font-semibold text-ink-900 underline decoration-dotted underline-offset-4 hover:text-ink-900"
         title="클릭해서 계정명 수정"
       >
         {slot.label}
@@ -157,10 +157,10 @@ function SlotLabel({ orderId, slot }: { orderId: number; slot: ConsoleSlot }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && save()}
-        className="w-24 rounded border border-neutral-300 px-1.5 py-0.5 text-xs"
+        className="w-24 border border-ink-900 px-1.5 py-0.5 text-xs"
         autoFocus
       />
-      <button type="button" onClick={save} disabled={busy} className="text-trust-600">
+      <button type="button" onClick={save} disabled={busy} className="text-ink-900">
         저장
       </button>
     </span>
@@ -217,22 +217,22 @@ function DayDetail({
   }
 
   return (
-    <section className="rounded-xl border border-neutral-200 bg-white p-5">
+    <section className="border border-ink-200 bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold">
           {slot.label} · {dayN}일차{dateLabel ? ` (${dateLabel})` : ""}
         </h2>
         {log ? (
           <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              log.status === "done" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-700"
+            className={` px-2.5 py-0.5 text-xs font-semibold ${
+              log.status === "done" ? "bg-success-50 text-success-700" : "bg-danger-50 text-danger-700"
             }`}
           >
             {log.status === "done" ? "출석" : "결석"} ·{" "}
             {new Date(log.updated_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
           </span>
         ) : (
-          <span className="text-xs text-neutral-400">기록 없음</span>
+          <span className="text-xs text-ink-600">기록 없음</span>
         )}
       </div>
 
@@ -244,45 +244,45 @@ function DayDetail({
               <img
                 src={log.screenshot_url}
                 alt={`${slot.label} ${dayN}일차 실행 스크린샷`}
-                className="max-h-[480px] rounded-lg border border-neutral-200 object-contain"
+                className="max-h-[480px] border border-ink-200 object-contain"
               />
             </a>
           ) : (
-            <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-400">
+            <div className="flex h-40 items-center justify-center border border-dashed border-ink-900 text-xs text-ink-600">
               스크린샷 없음
             </div>
           )}
           {log?.comment && (
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">{log.comment}</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink-700">{log.comment}</p>
           )}
         </div>
 
         {isAdmin && (
-          <form onSubmit={submit} className="space-y-3 rounded-lg bg-neutral-50 p-4 text-sm">
-            <p className="text-xs font-semibold text-neutral-500">운영자 기록</p>
+          <form onSubmit={submit} className="space-y-3 bg-surface-1 p-4 text-sm">
+            <p className="text-xs font-semibold text-ink-600">운영자 기록</p>
             <label className="block">
-              <span className="text-xs text-neutral-600">상태</span>
+              <span className="text-xs text-ink-700">상태</span>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as LogStatus)}
-                className="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm"
+                className="mt-1 w-full border border-ink-900 bg-white px-2 py-1.5 text-sm"
               >
                 <option value="done">출석 — 실행·체크인 완료</option>
                 <option value="missed">결석</option>
               </select>
             </label>
             <label className="block">
-              <span className="text-xs text-neutral-600">코멘트</span>
+              <span className="text-xs text-ink-700">코멘트</span>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={3}
                 placeholder="실행 내용, 발견한 이슈 등"
-                className="mt-1 w-full rounded border border-neutral-300 bg-white px-2 py-1.5 text-sm"
+                className="mt-1 w-full border border-ink-900 bg-white px-2 py-1.5 text-sm"
               />
             </label>
             <label className="block">
-              <span className="text-xs text-neutral-600">스크린샷 (PNG·JPEG·WebP, 5MB)</span>
+              <span className="text-xs text-ink-700">스크린샷 (PNG·JPEG·WebP, 5MB)</span>
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
@@ -290,11 +290,11 @@ function DayDetail({
                 className="mt-1 block w-full text-xs"
               />
             </label>
-            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
+            {error && <p className="text-xs font-medium text-danger-700">{error}</p>}
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-lg bg-trust-600 px-3 py-2 text-sm font-semibold text-white hover:bg-trust-700 disabled:opacity-50"
+              className="w-full bg-ink-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
             >
               {busy ? "저장 중…" : "저장"}
             </button>

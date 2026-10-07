@@ -17,22 +17,22 @@ export default async function InquiriesPage() {
       <>
         <SiteHeader user={null} />
         <main className="mx-auto max-w-2xl px-6 py-12">
-          <h1 className="text-2xl font-bold text-neutral-900">문의</h1>
-          <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">문의</h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-700">
             로그인하면 운영팀에 1:1 문의를 남기고 답변을 받을 수 있습니다. 문의 내용은 본인과
             운영팀만 볼 수 있습니다.
           </p>
           <Link
             href="/auth/login?next=/inquiries"
-            className="bg-trust-600 hover:bg-trust-700 mt-6 inline-flex rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
+            className="bg-ink-900 hover:bg-black mt-6 inline-flex px-5 py-2.5 text-sm font-semibold text-white"
           >
             로그인하고 문의하기
           </Link>
-          <div className="mt-10 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-700">
-            <p className="font-semibold text-neutral-900">로그인이 안 되나요?</p>
+          <div className="mt-10 border border-ink-200 bg-surface-1 p-5 text-sm text-ink-700">
+            <p className="font-semibold text-ink-900">로그인이 안 되나요?</p>
             <p className="mt-1.5 leading-relaxed">
               이메일{" "}
-              <a href={`mailto:${CONTACT_EMAIL}`} className="text-trust-600 underline underline-offset-2">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-ink-900 underline underline-offset-2">
                 {CONTACT_EMAIL}
               </a>{" "}
               또는{" "}
@@ -40,7 +40,7 @@ export default async function InquiriesPage() {
                 href={OPEN_CHAT_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-trust-600 underline underline-offset-2"
+                className="text-ink-900 underline underline-offset-2"
               >
                 카카오 오픈채팅
               </a>
@@ -60,27 +60,27 @@ export default async function InquiriesPage() {
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">문의</h1>
-            <p className="mt-1 text-sm text-neutral-600">
+            <h1 className="text-2xl font-bold text-ink-900">문의</h1>
+            <p className="mt-1 text-sm text-ink-700">
               운영팀에 남긴 1:1 문의와 답변입니다. 본인과 운영팀만 볼 수 있습니다.
             </p>
           </div>
           <Link
             href="/inquiries/new"
-            className="bg-trust-600 hover:bg-trust-700 shrink-0 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            className="bg-ink-900 hover:bg-black shrink-0 px-4 py-2 text-sm font-semibold text-white"
           >
             + 문의하기
           </Link>
         </div>
 
         {failed ? (
-          <p className="mt-8 text-sm font-medium text-red-600">
+          <p className="mt-8 text-sm font-medium text-danger-700">
             문의 목록을 불러오지 못했습니다. 잠시 후 새로고침해주세요.
           </p>
         ) : inquiries.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-            <p className="text-base font-medium text-neutral-700">아직 남긴 문의가 없습니다.</p>
-            <p className="mt-2 text-sm text-neutral-600">
+          <div className="mt-8 border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
+            <p className="text-base font-medium text-ink-700">아직 남긴 문의가 없습니다.</p>
+            <p className="mt-2 text-sm text-ink-700">
               이용 중 궁금한 점이나 문제가 있으면 문의를 남겨주세요. 답변이 등록되면 알림과 메일로
               알려드립니다.
             </p>
@@ -91,18 +91,18 @@ export default async function InquiriesPage() {
               <li key={q.id}>
                 <Link
                   href={`/inquiries/${q.id}`}
-                  className="hover:border-trust-500 block rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition"
+                  className="hover:border-ink-900 block border border-ink-200 bg-white p-5 transition"
                 >
                   <div className="flex items-center gap-2">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${INQUIRY_STATUS_TONE[q.status]}`}
+                      className={` px-2.5 py-0.5 text-xs font-semibold ${INQUIRY_STATUS_TONE[q.status]}`}
                     >
                       {INQUIRY_STATUSES[q.status]}
                     </span>
-                    <span className="text-xs text-neutral-500">{INQUIRY_CATEGORIES[q.category]}</span>
+                    <span className="text-xs text-ink-600">{INQUIRY_CATEGORIES[q.category]}</span>
                   </div>
-                  <p className="mt-2 truncate font-semibold text-neutral-900">{q.title}</p>
-                  <p className="tabular mt-1 text-xs text-neutral-400">접수 {formatKst(q.created_at)}</p>
+                  <p className="mt-2 truncate font-semibold text-ink-900">{q.title}</p>
+                  <p className="tabular mt-1 text-xs text-ink-600">접수 {formatKst(q.created_at)}</p>
                 </Link>
               </li>
             ))}

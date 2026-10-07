@@ -35,7 +35,7 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
       <button
         type="button"
         disabled
-        className="w-full rounded-lg bg-neutral-100 px-5 py-3 text-sm font-semibold text-neutral-500"
+        className="w-full bg-surface-1 px-5 py-3 text-sm font-semibold text-ink-600"
       >
         본인 앱에는 참여할 수 없습니다
       </button>
@@ -47,7 +47,7 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
       <button
         type="button"
         disabled
-        className="w-full rounded-lg bg-mint-500/10 px-5 py-3 text-sm font-semibold text-mint-500"
+        className="w-full bg-success-50 px-5 py-3 text-sm font-semibold text-success-700"
       >
         이미 참여중 — 내 테스트에서 확인
       </button>
@@ -59,7 +59,7 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
       <button
         type="button"
         disabled
-        className="w-full rounded-lg bg-neutral-100 px-5 py-3 text-sm font-semibold text-neutral-500"
+        className="w-full bg-surface-1 px-5 py-3 text-sm font-semibold text-ink-600"
       >
         정원 마감
       </button>
@@ -89,16 +89,16 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
   return (
     <div>
       {paidSeat && (
-        <div className="mb-3 rounded-xl border border-amber-300 bg-amber-50 p-4">
-          <p className="text-sm font-bold text-amber-900">
+        <div className="mb-3 border border-warning-700 bg-warning-50 p-4">
+          <p className="text-sm font-bold text-warning-700">
             💰 유료 시트 {openSeats}명 모집 중 — 최대 {SEAT_REWARD_MAX} 크레딧
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed text-amber-900">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed text-warning-700">
             {SEAT_RULES.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
-          <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-semibold text-amber-900">
+          <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs font-semibold text-warning-700">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
             위 규칙을 확인했고 동의합니다
           </label>
@@ -108,7 +108,7 @@ export function OptInButton({ appId, alreadyJoined, isOwn, isFull, openSeats = 0
         type="button"
         onClick={onClick}
         disabled={busy || (paidSeat && !agreed)}
-        className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+        className="w-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
       >
         {busy ? "처리 중..." : paidSeat ? "유료 시트로 참여하기" : "이 앱 테스트에 참여하기"}
       </button>

@@ -55,8 +55,8 @@ export default async function CreditsPage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">크레딧</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">크레딧</h1>
+          <p className="mt-1 text-sm text-ink-700">
             💰 크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 구매자 확정 후 지급.{" "}
             {REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")} 이상 모으면 기프티콘·네이버페이 포인트로 바꾸거나,
             내 앱의 테스터 시트를 여는 데 쓸 수 있습니다. 구매·양도·현금 환급은 안 됩니다.
@@ -64,7 +64,7 @@ export default async function CreditsPage() {
         </header>
 
         {pendingTotal > 0 && (
-          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="mt-6 border border-warning-700 bg-warning-50 px-4 py-3 text-sm text-warning-700">
             ⏳ <strong>확정 대기 {formatKrw(pendingTotal)} 크레딧</strong> — 구매자가 확인하면 바로,
             응답이 없으면 완주 3일 뒤 자동 지급됩니다.
             {disputedCount > 0 && ` (이의 검토 중 ${disputedCount}건 — 운영팀이 증빙 확인 후 판정)`}
@@ -72,31 +72,31 @@ export default async function CreditsPage() {
         )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-neutral-200 bg-gradient-to-br from-trust-50 to-white p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">보유 크레딧</p>
-            <p className="mt-2 text-4xl font-bold text-trust-600 tabular">
+          <div className="border border-ink-200 bg-gradient-to-br from-surface-1 to-white p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-600">보유 크레딧</p>
+            <p className="mt-2 text-4xl font-bold text-ink-900 tabular">
               {formatKrw(user.balance)} <span className="text-lg font-semibold">크레딧</span>
             </p>
-            <p className="mt-2 text-xs text-neutral-600">
+            <p className="mt-2 text-xs text-ink-700">
               내 앱 테스터 시트 열기에 사용 가능 ·{" "}
               <Link href="/paid-testers" className="underline underline-offset-2">
                 내 앱에 테스터 투입 →
               </Link>
             </p>
           </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">보상 교환 가능</p>
-            <p className="mt-2 text-4xl font-bold text-amber-700 tabular">
+          <div className="border border-warning-700 bg-warning-50 p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-warning-700">보상 교환 가능</p>
+            <p className="mt-2 text-4xl font-bold text-warning-700 tabular">
               {formatKrw(redeemable)} <span className="text-lg font-semibold">크레딧</span>
             </p>
-            <p className="mt-2 text-xs text-amber-800">유료 시트 완주 적립분만 해당 (1 크레딧 = 1원)</p>
+            <p className="mt-2 text-xs text-warning-700">유료 시트 완주 적립분만 해당 (1 크레딧 = 1원)</p>
           </div>
         </div>
 
-        <section className="mt-6 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <section className="mt-6 border border-ink-200 bg-white p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-base font-bold text-neutral-900">🎁 보상 교환 — 기프티콘 · 네이버페이 포인트</h2>
-            <Link href="/rewards" className="text-xs text-neutral-500 underline underline-offset-2">
+            <h2 className="text-base font-bold text-ink-900">🎁 보상 교환 — 기프티콘 · 네이버페이 포인트</h2>
+            <Link href="/rewards" className="text-xs text-ink-600 underline underline-offset-2">
               보상 안내 →
             </Link>
           </div>
@@ -108,14 +108,14 @@ export default async function CreditsPage() {
             />
           </div>
           {redemptions && redemptions.length > 0 && (
-            <ul className="mt-4 divide-y divide-neutral-100 text-sm">
+            <ul className="mt-4 divide-y divide-ink-200 text-sm">
               {redemptions.map((r) => (
                 <li key={r.id} className="flex items-center justify-between py-2">
                   <span>
                     {REWARD_CATALOG[r.kind as RewardKind]?.label ?? r.kind} {formatKrw(r.amount)} 크레딧 ·{" "}
                     {new Date(r.created_at).toLocaleDateString("ko-KR")}
                   </span>
-                  <span className="text-xs font-semibold text-neutral-600">
+                  <span className="text-xs font-semibold text-ink-700">
                     {REDEMPTION_LABEL[r.status] ?? r.status}
                   </span>
                 </li>
@@ -125,10 +125,10 @@ export default async function CreditsPage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-lg font-semibold text-neutral-900">내역</h2>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          <h2 className="text-lg font-semibold text-ink-900">내역</h2>
+          <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
             {rows && rows.length > 0 ? (
-              <ul className="divide-y divide-neutral-100">
+              <ul className="divide-y divide-ink-200">
                 {rows.map((r) => {
                   const isPositive = r.amount > 0;
                   return (
@@ -137,26 +137,26 @@ export default async function CreditsPage() {
                       className="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-center sm:gap-4"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-neutral-900">
+                        <p className="text-sm font-medium text-ink-900">
                           {CREDIT_TYPE_LABEL[r.type] ?? r.type}
                           {r.description && (
-                            <span className="ml-2 text-xs text-neutral-500">· {r.description}</span>
+                            <span className="ml-2 text-xs text-ink-600">· {r.description}</span>
                           )}
                         </p>
-                        <p className="mt-0.5 text-xs text-neutral-500">
+                        <p className="mt-0.5 text-xs text-ink-600">
                           {new Date(r.created_at).toLocaleString("ko-KR")}
                         </p>
                       </div>
                       <div className="flex items-baseline gap-3 sm:flex-col sm:items-end sm:gap-0.5">
                         <span
                           className={`text-base font-bold tabular ${
-                            isPositive ? "text-mint-500" : "text-crimson-500"
+                            isPositive ? "text-success-700" : "text-danger-700"
                           }`}
                         >
                           {isPositive ? "+" : ""}
                           {formatKrw(r.amount)}
                         </span>
-                        <span className="text-xs text-neutral-500 tabular">
+                        <span className="text-xs text-ink-600 tabular">
                           잔액 {formatKrw(r.balance_after)}
                         </span>
                       </div>
@@ -166,8 +166,8 @@ export default async function CreditsPage() {
               </ul>
             ) : (
               <div className="px-6 py-12 text-center">
-                <p className="text-sm text-neutral-600">아직 적립·사용 내역이 없습니다.</p>
-                <p className="mt-2 text-xs text-neutral-500">
+                <p className="text-sm text-ink-700">아직 적립·사용 내역이 없습니다.</p>
+                <p className="mt-2 text-xs text-ink-600">
                   <Link href="/browse" className="underline underline-offset-2">
                     💰 시트가 열린 앱
                   </Link>

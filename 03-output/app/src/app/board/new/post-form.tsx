@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { NOTICE_CATEGORY, POST_CATEGORIES } from "@/lib/validators/post";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
+  "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600";
 
 export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
   const router = useRouter();
@@ -42,7 +42,7 @@ export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">카테고리</span>
+        <span className="text-sm font-semibold text-ink-900">카테고리</span>
         <div className="mt-2">
           <select name="category" defaultValue={POST_CATEGORIES[0]} className={inputClass}>
             {POST_CATEGORIES.map((c) => (
@@ -56,7 +56,7 @@ export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
       </label>
 
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">제목</span>
+        <span className="text-sm font-semibold text-ink-900">제목</span>
         <div className="mt-2">
           <input
             name="title"
@@ -70,7 +70,7 @@ export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
       </label>
 
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">본문</span>
+        <span className="text-sm font-semibold text-ink-900">본문</span>
         <div className="mt-2">
           <textarea
             name="body"
@@ -84,7 +84,7 @@ export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
       </label>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="bg-danger-50 px-3 py-2 text-sm text-danger-700">
           {error}
         </p>
       )}
@@ -93,7 +93,7 @@ export function PostForm({ isAdmin = false }: { isAdmin?: boolean }) {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {submitting ? "등록 중..." : "등록"}
         </button>

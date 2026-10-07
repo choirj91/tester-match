@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { POST_CATEGORIES, type PostCategory } from "@/lib/validators/post";
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
+  "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600";
 
 type Initial = { category: string; title: string; body: string };
 
@@ -42,7 +42,7 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">카테고리</span>
+        <span className="text-sm font-semibold text-ink-900">카테고리</span>
         <div className="mt-2">
           {/* "질문" 분류는 없어졌다 — 예전 질문 글을 고칠 때 첫 항목(이야기)이 아니라 "자유"로 둔다 */}
           <select
@@ -59,7 +59,7 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
         </div>
       </label>
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">제목</span>
+        <span className="text-sm font-semibold text-ink-900">제목</span>
         <div className="mt-2">
           <input
             name="title"
@@ -72,7 +72,7 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
         </div>
       </label>
       <label className="block">
-        <span className="text-sm font-semibold text-neutral-900">본문</span>
+        <span className="text-sm font-semibold text-ink-900">본문</span>
         <div className="mt-2">
           <textarea
             name="body"
@@ -85,7 +85,7 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
         </div>
       </label>
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="bg-danger-50 px-3 py-2 text-sm text-danger-700">
           {error}
         </p>
       )}
@@ -93,7 +93,7 @@ export function EditPostForm({ id, initial }: { id: number; initial: Initial }) 
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {submitting ? "저장 중..." : "저장"}
         </button>

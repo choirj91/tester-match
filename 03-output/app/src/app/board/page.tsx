@@ -95,14 +95,14 @@ export default async function BoardPage({ searchParams }: Props) {
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">게시판</h1>
-            <p className="mt-1 text-sm text-neutral-600">
+            <h1 className="text-2xl font-bold text-ink-900">게시판</h1>
+            <p className="mt-1 text-sm text-ink-700">
               수익 인증, 개발기, 실패담 — 앱 만드는 사람들의 진짜 이야기를 나눕니다.
             </p>
           </div>
           <Link
             href="/board/new"
-            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
           >
             + 글 쓰기
           </Link>
@@ -122,20 +122,20 @@ export default async function BoardPage({ searchParams }: Props) {
 
         {/* 공지 상단 고정 */}
         {(notices ?? []).length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-trust-500/30 bg-trust-50/50 shadow-sm">
-            <ul className="divide-y divide-trust-500/10">
+          <div className="mt-6 overflow-hidden border border-ink-200 bg-surface-1">
+            <ul className="divide-y divide-ink-200">
               {(notices ?? []).map((n) => (
                 <li key={n.id}>
                   <Link
                     href={`/board/${n.id}`}
-                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-trust-50"
+                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-surface-1"
                   >
                     <span className="shrink-0 text-sm">📢</span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
                       {n.title}
                     </span>
                     <AdminBadge className="shrink-0" />
-                    <span className="shrink-0 text-xs text-neutral-400">
+                    <span className="shrink-0 text-xs text-ink-600">
                       {new Date(n.created_at).toLocaleDateString("ko-KR")}
                     </span>
                   </Link>
@@ -147,20 +147,20 @@ export default async function BoardPage({ searchParams }: Props) {
 
         {/* 이번 주 인기글 */}
         {hotPosts.length > 0 && (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-spark-500/30 bg-spark-50/40 shadow-sm">
-            <p className="px-5 pt-3 text-xs font-bold text-spark-600">🔥 이번 주 인기글</p>
-            <ul className="divide-y divide-spark-500/10">
+          <div className="mt-6 overflow-hidden border border-accent-600 bg-accent-50">
+            <p className="px-5 pt-3 text-xs font-bold text-accent-600">🔥 이번 주 인기글</p>
+            <ul className="divide-y divide-ink-200">
               {hotPosts.map((h, i) => (
                 <li key={h.id}>
                   <Link
                     href={`/board/${h.id}`}
-                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-spark-50"
+                    className="flex items-center gap-3 px-5 py-3 transition hover:bg-accent-50"
                   >
-                    <span className="shrink-0 text-sm font-bold text-spark-500">{i + 1}</span>
-                    <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                    <span className="shrink-0 text-sm font-bold text-accent-600">{i + 1}</span>
+                    <span className="shrink-0 bg-white px-2 py-0.5 text-xs font-semibold text-ink-700">
                       {h.category}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
                       {h.title}
                     </span>
                   </Link>
@@ -170,9 +170,9 @@ export default async function BoardPage({ searchParams }: Props) {
           </div>
         )}
 
-        <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <div className="mt-6 overflow-hidden border border-ink-200 bg-white">
           {posts && posts.length > 0 ? (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-ink-200">
               {posts.map((post) => {
                 const author = Array.isArray(post.users_public_profile)
                   ? post.users_public_profile[0]
@@ -181,22 +181,22 @@ export default async function BoardPage({ searchParams }: Props) {
                   <li key={post.id}>
                     <Link
                       href={`/board/${post.id}`}
-                      className="flex flex-col gap-1 px-5 py-4 transition hover:bg-neutral-50 sm:flex-row sm:items-center sm:gap-4"
+                      className="flex flex-col gap-1 px-5 py-4 transition hover:bg-surface-1 sm:flex-row sm:items-center sm:gap-4"
                     >
-                      <span className="shrink-0 rounded-full bg-trust-50 px-2 py-0.5 text-xs font-semibold text-trust-700">
+                      <span className="shrink-0 bg-surface-1 px-2 py-0.5 text-xs font-semibold text-ink-900">
                         {post.category}
                       </span>
                       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                        <span className="truncate text-sm font-medium text-neutral-900">
+                        <span className="truncate text-sm font-medium text-ink-900">
                           {post.title}
                         </span>
                         {adminCommentedPostIds.has(post.id) && (
-                          <span className="shrink-0 rounded-full bg-trust-50 px-1.5 py-0.5 text-[9px] font-bold text-trust-700 ring-1 ring-trust-500/30">
+                          <span className="shrink-0 bg-surface-1 px-1.5 py-0.5 text-[9px] font-bold text-ink-900 ring-1 ring-accent-600">
                             🛡 관리자 답변
                           </span>
                         )}
                       </span>
-                      <span className="shrink-0 text-xs text-neutral-500">
+                      <span className="shrink-0 text-xs text-ink-600">
                         {author?.nickname ?? "—"}
                         {" · "}
                         {new Date(post.created_at).toLocaleDateString("ko-KR")}
@@ -210,7 +210,7 @@ export default async function BoardPage({ searchParams }: Props) {
             </ul>
           ) : (
             <div className="px-6 py-12 text-center">
-              <p className="text-sm text-neutral-600">아직 글이 없습니다. 첫 글을 작성해보세요.</p>
+              <p className="text-sm text-ink-700">아직 글이 없습니다. 첫 글을 작성해보세요.</p>
             </div>
           )}
         </div>
@@ -223,10 +223,10 @@ function FilterChip({ href, label, active }: { href: string; label: string; acti
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+      className={` px-3 py-1.5 text-xs font-semibold transition ${
         active
-          ? "bg-trust-600 text-white"
-          : "bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50"
+          ? "bg-ink-900 text-white"
+          : "bg-white text-ink-700 ring-1 ring-ink-200 hover:bg-surface-1"
       }`}
     >
       {label}

@@ -24,14 +24,14 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
 
   if (redeemable < minCredits) {
     return (
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-ink-700">
         교환 가능 크레딧 <strong>{redeemable.toLocaleString("ko-KR")}</strong> — 유료 시트 완주로{" "}
         {minCredits.toLocaleString("ko-KR")} 이상 모으면 신청할 수 있습니다.
       </p>
     );
   }
   if (done) {
-    return <p className="text-sm font-medium text-mint-500">신청 완료 — 영업일 3일 내 연락처로 발송됩니다.</p>;
+    return <p className="text-sm font-medium text-success-700">신청 완료 — 영업일 3일 내 연락처로 발송됩니다.</p>;
   }
 
   async function submit(e: React.FormEvent) {
@@ -63,7 +63,7 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
   return (
     <form onSubmit={submit} className="space-y-3">
       <fieldset className="space-y-1.5">
-        <legend className="text-sm font-semibold text-neutral-900">보상 종류</legend>
+        <legend className="text-sm font-semibold text-ink-900">보상 종류</legend>
         {REWARD_KINDS.map((k) => (
           <label key={k} className="flex cursor-pointer items-center gap-2 text-sm">
             <input type="radio" name="reward_kind" checked={kind === k} onChange={() => setKind(k)} />
@@ -72,14 +72,14 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
         ))}
       </fieldset>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label htmlFor="rd-units" className="font-semibold text-neutral-900">
+        <label htmlFor="rd-units" className="font-semibold text-ink-900">
           교환 금액
         </label>
         <select
           id="rd-units"
           value={units}
           onChange={(e) => setUnits(Number(e.target.value))}
-          className="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          className="border border-ink-900 px-3 py-2 text-sm"
         >
           {Array.from({ length: maxUnits }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
@@ -97,7 +97,7 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
         inputMode="tel"
         pattern="01[016789]-?[0-9]{3,4}-?[0-9]{4}"
         maxLength={13}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+        className="w-full border border-ink-900 px-3 py-2 text-sm"
       />
       {kind === "gifticon" && (
         <input
@@ -105,18 +105,18 @@ export function RedemptionForm({ redeemable, minCredits, unitCredits }: Props) {
           onChange={(e) => setNote(e.target.value)}
           placeholder="원하는 브랜드 (예: 스타벅스, 편의점) — 선택"
           maxLength={200}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          className="w-full border border-ink-900 px-3 py-2 text-sm"
         />
       )}
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      {error && <p className="text-sm font-medium text-danger-700">{error}</p>}
       <button
         type="submit"
         disabled={busy}
-        className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white hover:bg-trust-700 disabled:opacity-50"
+        className="bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
       >
         {busy ? "신청 중…" : `${selected.label} 교환 신청`}
       </button>
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-ink-600">
         신청 즉시 크레딧이 차감되고, 관리자가 확인 후 영업일 3일 내 문자로 발송합니다. 거절 시 전액 복구. 한
         번호는 한 계정에서만 쓸 수 있고, 처리 중에는 추가 신청이 안 됩니다. 현금 환급은 없습니다.
       </p>

@@ -3,42 +3,42 @@ import { BUSINESS } from "@/lib/site";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-neutral-200 bg-neutral-50">
+    <footer className="mt-16 border-t border-ink-200 bg-surface-1">
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <Link href="/about" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/about" className="text-ink-700 hover:text-ink-900">
             서비스 소개
           </Link>
-          <Link href="/guide" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/guide" className="text-ink-700 hover:text-ink-900">
             출시 가이드
           </Link>
-          <Link href="/stats" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/stats" className="text-ink-700 hover:text-ink-900">
             활동 랭킹
           </Link>
-          <Link href="/paid-testers" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/paid-testers" className="text-ink-700 hover:text-ink-900">
             유료 테스터
           </Link>
-          <Link href="/rewards" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/rewards" className="text-ink-700 hover:text-ink-900">
             테스터 보상
           </Link>
-          <Link href="/policies/terms" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/policies/terms" className="text-ink-700 hover:text-ink-900">
             이용약관
           </Link>
-          <Link href="/policies/privacy" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/policies/privacy" className="text-ink-700 hover:text-ink-900">
             개인정보처리방침
           </Link>
-          <Link href="/policies/refund" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/policies/refund" className="text-ink-700 hover:text-ink-900">
             환불 정책
           </Link>
-          <Link href="/policies/credits" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/policies/credits" className="text-ink-700 hover:text-ink-900">
             크레딧 운영 정책
           </Link>
-          <Link href="/inquiries" className="text-neutral-600 hover:text-neutral-900">
+          <Link href="/inquiries" className="text-ink-700 hover:text-ink-900">
             문의
           </Link>
         </div>
-        <div className="mt-5 space-y-1 text-xs leading-relaxed text-neutral-400">
-          <p className="font-semibold text-neutral-500">{BUSINESS.name}</p>
+        <div className="mt-5 space-y-1 text-xs leading-relaxed text-ink-600">
+          <p className="font-semibold text-ink-600">{BUSINESS.name}</p>
           <p>
             대표자 {BUSINESS.representative} · 사업자등록번호 {BUSINESS.registrationNumber}
           </p>
@@ -47,14 +47,14 @@ export function SiteFooter() {
             전화{" "}
             <a
               href={`tel:${BUSINESS.phone.replaceAll("-", "")}`}
-              className="hover:text-neutral-600"
+              className="hover:text-ink-700"
             >
               {BUSINESS.phone}
             </a>
           </p>
           <p>
             문의{" "}
-            <a href={`mailto:${BUSINESS.email}`} className="hover:text-neutral-600">
+            <a href={`mailto:${BUSINESS.email}`} className="hover:text-ink-700">
               {BUSINESS.email}
             </a>
           </p>

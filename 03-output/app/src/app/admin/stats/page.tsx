@@ -12,15 +12,15 @@ function Medal({ rank }: { rank: number }) {
   if (rank === 1) return <span className="text-base">🥇</span>;
   if (rank === 2) return <span className="text-base">🥈</span>;
   if (rank === 3) return <span className="text-base">🥉</span>;
-  return <span className="tabular w-5 text-center text-sm text-neutral-400">{rank}</span>;
+  return <span className="tabular w-5 text-center text-sm text-ink-600">{rank}</span>;
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">{label}</p>
-      <p className="mt-1 text-3xl font-bold tabular text-neutral-900">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>}
+    <div className="border border-ink-200 bg-white p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-600">{label}</p>
+      <p className="mt-1 text-3xl font-bold tabular text-ink-900">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-ink-600">{sub}</p>}
     </div>
   );
 }
@@ -182,10 +182,10 @@ export default async function AdminStatsPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <Link href="/admin" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/admin" className="text-sm text-ink-600 hover:text-ink-900">
           ← 관리자
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">사용자 통계</h1>
+        <h1 className="mt-4 text-2xl font-bold text-ink-900">사용자 통계</h1>
 
         {/* 전체 현황 */}
         <section className="mt-8 grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -199,8 +199,8 @@ export default async function AdminStatsPage() {
 
         {/* 방문자 현황 */}
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-neutral-900">방문자 현황</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">localStorage 세션 기준 · 기기별 일 1회 집계 (KST)</p>
+          <h2 className="text-lg font-bold text-ink-900">방문자 현황</h2>
+          <p className="mt-0.5 text-xs text-ink-600">localStorage 세션 기준 · 기기별 일 1회 집계 (KST)</p>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <StatCard label="오늘 방문자" value={todayVisitors} sub="고유 기기 수" />
@@ -208,18 +208,18 @@ export default async function AdminStatsPage() {
           </div>
 
           {/* 7일 바 차트 */}
-          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <p className="mb-5 text-sm font-semibold text-neutral-700">일별 방문자 추이</p>
+          <div className="mt-4 overflow-hidden border border-ink-200 bg-white p-6">
+            <p className="mb-5 text-sm font-semibold text-ink-700">일별 방문자 추이</p>
             {/* 바 영역 */}
             <div className="flex items-end gap-1.5" style={{ height: "96px" }}>
               {weeklyData.map(({ date, visitors, isToday }) => {
                 const barH = Math.max(Math.round((visitors / maxVisitors) * 80), visitors > 0 ? 6 : 2);
                 return (
                   <div key={date} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[11px] font-semibold text-neutral-500">{visitors}</span>
+                    <span className="text-[11px] font-semibold text-ink-600">{visitors}</span>
                     <div
-                      className={`w-full rounded-t-sm transition-all ${
-                        isToday ? "bg-trust-500" : "bg-trust-200"
+                      className={`w-full  transition-all ${
+                        isToday ? "bg-ink-900" : "bg-surface-1"
                       }`}
                       style={{ height: `${barH}px` }}
                     />
@@ -233,14 +233,14 @@ export default async function AdminStatsPage() {
                 <div key={date} className="flex flex-1 flex-col items-center">
                   <span
                     className={`text-[10px] leading-tight ${
-                      isToday ? "font-bold text-trust-600" : "text-neutral-400"
+                      isToday ? "font-bold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {label}
                   </span>
                   <span
                     className={`text-[9px] leading-tight ${
-                      isToday ? "font-semibold text-trust-400" : "text-neutral-300"
+                      isToday ? "font-semibold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {sub}
@@ -254,21 +254,21 @@ export default async function AdminStatsPage() {
         <div className="mt-10 grid gap-8 lg:grid-cols-3">
           {/* 앱 등록 순위 */}
           <section>
-            <h2 className="text-lg font-bold text-neutral-900">앱 등록 많은 순</h2>
-            <p className="mt-0.5 text-xs text-neutral-500">삭제된 앱 제외</p>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <h2 className="text-lg font-bold text-ink-900">앱 등록 많은 순</h2>
+            <p className="mt-0.5 text-xs text-ink-600">삭제된 앱 제외</p>
+            <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
               {byApps.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-neutral-400">데이터 없음</p>
+                <p className="px-5 py-8 text-center text-sm text-ink-600">데이터 없음</p>
               ) : (
-                <ul className="divide-y divide-neutral-100">
+                <ul className="divide-y divide-ink-200">
                   {byApps.map((u, i) => (
                     <li key={u.id} className="flex items-center gap-3 px-4 py-3">
                       <Medal rank={i + 1} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-900">{u.nickname}</p>
-                        <p className="truncate text-xs text-neutral-400">{u.email}</p>
+                        <p className="truncate text-sm font-medium text-ink-900">{u.nickname}</p>
+                        <p className="truncate text-xs text-ink-600">{u.email}</p>
                       </div>
-                      <span className="shrink-0 tabular text-sm font-bold text-trust-600">
+                      <span className="shrink-0 tabular text-sm font-bold text-ink-900">
                         {u.appCount}개
                       </span>
                     </li>
@@ -280,21 +280,21 @@ export default async function AdminStatsPage() {
 
           {/* 테스트 참여 순위 */}
           <section>
-            <h2 className="text-lg font-bold text-neutral-900">테스트 참여 많은 순</h2>
-            <p className="mt-0.5 text-xs text-neutral-500">전체 매칭 횟수 기준</p>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <h2 className="text-lg font-bold text-ink-900">테스트 참여 많은 순</h2>
+            <p className="mt-0.5 text-xs text-ink-600">전체 매칭 횟수 기준</p>
+            <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
               {byMatches.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-neutral-400">데이터 없음</p>
+                <p className="px-5 py-8 text-center text-sm text-ink-600">데이터 없음</p>
               ) : (
-                <ul className="divide-y divide-neutral-100">
+                <ul className="divide-y divide-ink-200">
                   {byMatches.map((u, i) => (
                     <li key={u.id} className="flex items-center gap-3 px-4 py-3">
                       <Medal rank={i + 1} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-900">{u.nickname}</p>
-                        <p className="truncate text-xs text-neutral-400">{u.email}</p>
+                        <p className="truncate text-sm font-medium text-ink-900">{u.nickname}</p>
+                        <p className="truncate text-xs text-ink-600">{u.email}</p>
                       </div>
-                      <span className="shrink-0 tabular text-sm font-bold text-trust-600">
+                      <span className="shrink-0 tabular text-sm font-bold text-ink-900">
                         {u.matchCount}회
                       </span>
                     </li>
@@ -306,21 +306,21 @@ export default async function AdminStatsPage() {
 
           {/* 완주 순위 */}
           <section>
-            <h2 className="text-lg font-bold text-neutral-900">14일 완주 많은 순</h2>
-            <p className="mt-0.5 text-xs text-neutral-500">status = completed 기준</p>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <h2 className="text-lg font-bold text-ink-900">14일 완주 많은 순</h2>
+            <p className="mt-0.5 text-xs text-ink-600">status = completed 기준</p>
+            <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
               {byCompleted.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-neutral-400">데이터 없음</p>
+                <p className="px-5 py-8 text-center text-sm text-ink-600">데이터 없음</p>
               ) : (
-                <ul className="divide-y divide-neutral-100">
+                <ul className="divide-y divide-ink-200">
                   {byCompleted.map((u, i) => (
                     <li key={u.id} className="flex items-center gap-3 px-4 py-3">
                       <Medal rank={i + 1} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-neutral-900">{u.nickname}</p>
-                        <p className="truncate text-xs text-neutral-400">{u.email}</p>
+                        <p className="truncate text-sm font-medium text-ink-900">{u.nickname}</p>
+                        <p className="truncate text-xs text-ink-600">{u.email}</p>
                       </div>
-                      <span className="shrink-0 tabular text-sm font-bold text-mint-500">
+                      <span className="shrink-0 tabular text-sm font-bold text-success-700">
                         {u.completedCount}회
                       </span>
                     </li>
@@ -334,31 +334,31 @@ export default async function AdminStatsPage() {
         {/* 테스터 그룹 멤버 */}
         <section className="mt-12">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-bold text-neutral-900">테스터 그룹 멤버</h2>
-            <span className="rounded-full bg-mint-500/10 px-2 py-0.5 text-[10px] font-bold text-mint-500">
+            <h2 className="text-lg font-bold text-ink-900">테스터 그룹 멤버</h2>
+            <span className="bg-success-50 px-2 py-0.5 text-[10px] font-bold text-success-700">
               실시간
             </span>
           </div>
-          <p className="mt-0.5 text-xs text-neutral-500">
+          <p className="mt-0.5 text-xs text-ink-600">
             {TESTER_GROUP_EMAIL} · Directory API 조회
             {groupMembers ? ` · 그룹 ${groupRows.length}명` : ""} · DB 가입 기록 {dbJoinedCount}명
           </p>
 
           {groupMembers === null ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+            <div className="mt-4 border border-dashed border-ink-900 bg-surface-1 p-8 text-center text-sm text-ink-600">
               그룹 멤버를 조회할 수 없습니다. 환경변수(GOOGLE_SERVICE_ACCOUNT_JSON 등) 또는
               도메인 위임 설정을 확인해주세요.
             </div>
           ) : groupRows.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-8 text-center text-sm text-neutral-500">
+            <div className="mt-4 border border-dashed border-ink-900 bg-surface-1 p-8 text-center text-sm text-ink-600">
               아직 그룹 멤버가 없습니다.
             </div>
           ) : (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+            <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
                   <thead>
-                    <tr className="border-b border-neutral-100 bg-neutral-50 text-left text-xs text-neutral-500">
+                    <tr className="border-b border-ink-200 bg-surface-1 text-left text-xs text-ink-600">
                       <th className="px-4 py-3 font-semibold">이메일</th>
                       <th className="px-4 py-3 font-semibold">닉네임</th>
                       <th className="px-4 py-3 font-semibold">역할</th>
@@ -367,18 +367,18 @@ export default async function AdminStatsPage() {
                       <th className="px-4 py-3 font-semibold">그룹 등록일</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-100">
+                  <tbody className="divide-y divide-ink-200">
                     {groupRows.map((m) => (
-                      <tr key={m.email} className="hover:bg-neutral-50">
-                        <td className="px-4 py-3 text-neutral-900">{m.email}</td>
-                        <td className="px-4 py-3 text-neutral-700">{m.nickname ?? "—"}</td>
-                        <td className="px-4 py-3 text-neutral-500">{m.role}</td>
+                      <tr key={m.email} className="hover:bg-surface-1">
+                        <td className="px-4 py-3 text-ink-900">{m.email}</td>
+                        <td className="px-4 py-3 text-ink-700">{m.nickname ?? "—"}</td>
+                        <td className="px-4 py-3 text-ink-600">{m.role}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            className={` px-2 py-0.5 text-[10px] font-bold ${
                               m.status === "ACTIVE"
-                                ? "bg-mint-500/10 text-mint-500"
-                                : "bg-neutral-100 text-neutral-500"
+                                ? "bg-success-50 text-success-700"
+                                : "bg-surface-1 text-ink-600"
                             }`}
                           >
                             {m.status}
@@ -386,12 +386,12 @@ export default async function AdminStatsPage() {
                         </td>
                         <td className="px-4 py-3">
                           {m.isServiceUser ? (
-                            <span className="font-semibold text-trust-600">회원</span>
+                            <span className="font-semibold text-ink-900">회원</span>
                           ) : (
-                            <span className="text-neutral-400">외부</span>
+                            <span className="text-ink-600">외부</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 tabular text-neutral-400">
+                        <td className="px-4 py-3 tabular text-ink-600">
                           {m.joinedAt
                             ? new Date(m.joinedAt).toLocaleDateString("ko-KR")
                             : "—"}
@@ -407,13 +407,13 @@ export default async function AdminStatsPage() {
 
         {/* 전체 사용자 목록 */}
         <section className="mt-12">
-          <h2 className="text-lg font-bold text-neutral-900">전체 사용자 목록</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">최근 가입 순 · {users?.length ?? 0}명</p>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+          <h2 className="text-lg font-bold text-ink-900">전체 사용자 목록</h2>
+          <p className="mt-0.5 text-xs text-ink-600">최근 가입 순 · {users?.length ?? 0}명</p>
+          <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px] text-sm">
                 <thead>
-                  <tr className="border-b border-neutral-100 bg-neutral-50 text-left text-xs text-neutral-500">
+                  <tr className="border-b border-ink-200 bg-surface-1 text-left text-xs text-ink-600">
                     <th className="px-4 py-3 font-semibold">닉네임</th>
                     <th className="px-4 py-3 font-semibold">이메일</th>
                     <th className="px-4 py-3 font-semibold tabular">앱</th>
@@ -423,24 +423,24 @@ export default async function AdminStatsPage() {
                     <th className="px-4 py-3 font-semibold">가입일</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-100">
+                <tbody className="divide-y divide-ink-200">
                   {userList.map((u) => (
-                    <tr key={u.id} className="hover:bg-neutral-50">
-                      <td className="px-4 py-3 font-medium text-neutral-900">{u.nickname}</td>
-                      <td className="px-4 py-3 text-neutral-500">{u.email}</td>
-                      <td className="px-4 py-3 tabular text-center font-semibold text-trust-600">
+                    <tr key={u.id} className="hover:bg-surface-1">
+                      <td className="px-4 py-3 font-medium text-ink-900">{u.nickname}</td>
+                      <td className="px-4 py-3 text-ink-600">{u.email}</td>
+                      <td className="px-4 py-3 tabular text-center font-semibold text-ink-900">
                         {u.appCount || "—"}
                       </td>
-                      <td className="px-4 py-3 tabular text-center text-neutral-700">
+                      <td className="px-4 py-3 tabular text-center text-ink-700">
                         {u.matchCount || "—"}
                       </td>
-                      <td className="px-4 py-3 tabular text-center font-semibold text-mint-500">
+                      <td className="px-4 py-3 tabular text-center font-semibold text-success-700">
                         {u.completedCount || "—"}
                       </td>
-                      <td className="px-4 py-3 tabular text-center text-neutral-700">
+                      <td className="px-4 py-3 tabular text-center text-ink-700">
                         {u.trust_score}
                       </td>
-                      <td className="px-4 py-3 text-neutral-400">
+                      <td className="px-4 py-3 text-ink-600">
                         {new Date(u.created_at).toLocaleDateString("ko-KR")}
                       </td>
                     </tr>

@@ -14,10 +14,10 @@ export default async function NewPostPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/board" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/board" className="text-sm text-ink-600 hover:text-ink-900">
           ← 게시판
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-neutral-900">글 쓰기</h1>
+        <h1 className="mt-4 text-2xl font-bold text-ink-900">글 쓰기</h1>
         <div className="mt-8">
           <PostForm isAdmin={user.role === "admin"} />
         </div>

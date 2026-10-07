@@ -80,14 +80,14 @@ export function CommentList({ postId, currentUserId, currentUserRole, initialCom
           maxLength={2000}
           required
           placeholder="댓글을 입력하세요"
-          className="w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20"
+          className="w-full resize-y border border-ink-900 bg-white px-3 py-2.5 text-sm placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600"
         />
-        {error && <p className="text-sm text-crimson-500">{error}</p>}
+        {error && <p className="text-sm text-danger-700">{error}</p>}
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={submitting || body.trim().length === 0}
-            className="rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+            className="bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
           >
             {submitting ? "등록 중..." : "댓글 등록"}
           </button>
@@ -96,22 +96,22 @@ export function CommentList({ postId, currentUserId, currentUserRole, initialCom
 
       <ul className="mt-6 space-y-4">
         {comments.length === 0 ? (
-          <li className="rounded-lg border border-dashed border-neutral-200 px-4 py-6 text-center text-sm text-neutral-500">
+          <li className="border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-600">
             첫 댓글을 작성해보세요.
           </li>
         ) : (
           comments.map((c) => (
             <li
               key={c.id}
-              className={`rounded-xl border p-4 ${
+              className={` border p-4 ${
                 c.author_role === "admin"
-                  ? "border-trust-500/40 bg-trust-50"
-                  : "border-neutral-200 bg-white"
+                  ? "border-ink-200 bg-surface-1"
+                  : "border-ink-200 bg-white"
               }`}
             >
-              <div className="flex items-center justify-between gap-4 text-xs text-neutral-500">
+              <div className="flex items-center justify-between gap-4 text-xs text-ink-600">
                 <span className="inline-flex items-center gap-1.5">
-                  <strong className="text-neutral-700">{c.author_nickname}</strong>
+                  <strong className="text-ink-700">{c.author_nickname}</strong>
                   {c.author_role === "admin" && <AdminBadge />}
                   {" · "}
                   {new Date(c.created_at).toLocaleString("ko-KR")}
@@ -120,13 +120,13 @@ export function CommentList({ postId, currentUserId, currentUserRole, initialCom
                   <button
                     type="button"
                     onClick={() => onDelete(c.id)}
-                    className="text-xs text-neutral-400 hover:text-crimson-500"
+                    className="text-xs text-ink-600 hover:text-danger-700"
                   >
                     삭제
                   </button>
                 )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-900">
                 <Linkify text={c.body} />
               </p>
             </li>

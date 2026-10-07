@@ -21,7 +21,7 @@ export function CopyGroupEmailButton() {
     <button
       type="button"
       onClick={copy}
-      className="mt-2 rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+      className="mt-2 border border-ink-900 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
     >
       {copied ? "✓ 복사됨" : "그룹 이메일 복사"}
     </button>

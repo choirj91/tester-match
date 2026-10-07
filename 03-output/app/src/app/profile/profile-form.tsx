@@ -38,11 +38,11 @@ export function ProfileForm({ initialNickname, initialKakaoNickname }: Props) {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
+    "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
-      <label className="block text-xs font-semibold text-neutral-600">
+      <label className="block text-xs font-semibold text-ink-700">
         닉네임
         <input
           type="text"
@@ -53,8 +53,8 @@ export function ProfileForm({ initialNickname, initialKakaoNickname }: Props) {
           className={`mt-1 ${inputClass}`}
         />
       </label>
-      <label className="block text-xs font-semibold text-neutral-600">
-        카카오톡 닉네임 <span className="font-normal text-neutral-400">(오픈채팅방 이름 · 비공개)</span>
+      <label className="block text-xs font-semibold text-ink-700">
+        카카오톡 닉네임 <span className="font-normal text-ink-600">(오픈채팅방 이름 · 비공개)</span>
         <input
           type="text"
           value={kakaoNickname}
@@ -68,14 +68,14 @@ export function ProfileForm({ initialNickname, initialKakaoNickname }: Props) {
         <button
           type="submit"
           disabled={submitting || !dirty}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {submitting ? "저장 중..." : "저장"}
         </button>
         {message && (
           <p
             role="status"
-            className={`text-sm ${message.type === "ok" ? "text-mint-500" : "text-crimson-500"}`}
+            className={`text-sm ${message.type === "ok" ? "text-success-700" : "text-danger-700"}`}
           >
             {message.text}
           </p>

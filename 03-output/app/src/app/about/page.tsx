@@ -16,14 +16,14 @@ export default async function AboutPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-bold text-neutral-900">Tester Match 소개</h1>
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+        <h1 className="text-3xl font-bold text-ink-900">Tester Match 소개</h1>
+        <p className="mt-3 text-sm leading-relaxed text-ink-700">
           서로의 앱을 테스트해주는 품앗이로, 혼자서는 넘기 힘든 Google Play 출시 관문을
           함께 통과하는 커뮤니티입니다.
         </p>
 
-        <section className="mt-10 space-y-4 text-sm leading-7 text-neutral-700">
-          <h2 className="text-xl font-bold text-neutral-900">왜 만들었나</h2>
+        <section className="mt-10 space-y-4 text-sm leading-7 text-ink-700">
+          <h2 className="text-xl font-bold text-ink-900">왜 만들었나</h2>
           <p>
             2023년 11월부터 Google Play 는 신규 개인 개발자 계정에 앱을 정식 출시하기 전{" "}
             <strong>비공개 테스트(Closed Testing)에서 테스터 12명이 14일간 연속으로 참여</strong>
@@ -37,14 +37,14 @@ export default async function AboutPage() {
             14일을 완주합니다.
           </p>
 
-          <h2 className="pt-4 text-xl font-bold text-neutral-900">어떻게 동작하나</h2>
+          <h2 className="pt-4 text-xl font-bold text-ink-900">어떻게 동작하나</h2>
           <ol className="list-decimal space-y-2 pl-5">
             <li>
               <strong>앱 등록</strong> — Play Store URL 만 붙여넣으면 정보가 자동으로 채워집니다.
               공용 테스터 그룹 이메일을 Play Console 에 등록하면 준비 끝.
             </li>
             <li>
-              <strong>테스트 참여</strong> — <Link href="/browse" className="text-trust-600 underline-offset-2 hover:underline">매칭 가능</Link> 목록에서
+              <strong>테스트 참여</strong> — <Link href="/browse" className="text-ink-900 underline-offset-2 hover:underline">매칭 가능</Link> 목록에서
               다른 개발자의 앱에 참여합니다. 공용 그룹에 1회만 가입하면 모든 앱의 초대 링크를
               쓸 수 있습니다.
             </li>
@@ -58,12 +58,12 @@ export default async function AboutPage() {
             </li>
           </ol>
 
-          <h2 className="pt-4 text-xl font-bold text-neutral-900">신뢰를 만드는 장치</h2>
+          <h2 className="pt-4 text-xl font-bold text-ink-900">신뢰를 만드는 장치</h2>
           <ul className="list-disc space-y-2 pl-5">
             <li>
               <strong>신뢰도 점수</strong> — 매일 체크인 +1 (최대 1,000점). 무단 이탈은 −10.
               점수는 닉네임 옆 ★로 상시 공개되어 성실한 테스터가 드러납니다.
-              (<Link href="/stats" className="text-trust-600 underline-offset-2 hover:underline">활동 랭킹</Link> 참고)
+              (<Link href="/stats" className="text-ink-900 underline-offset-2 hover:underline">활동 랭킹</Link> 참고)
             </li>
             <li>
               <strong>개발자 모니터링</strong> — 테스터별 설치 확인·플랫폼 출석·체크인 기록을
@@ -75,27 +75,27 @@ export default async function AboutPage() {
             </li>
           </ul>
 
-          <h2 className="pt-4 text-xl font-bold text-neutral-900">운영 정보</h2>
+          <h2 className="pt-4 text-xl font-bold text-ink-900">운영 정보</h2>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>운영사: {COMPANY_NAME}</li>
             <li>
-              문의: <a href={`mailto:${CONTACT_EMAIL}`} className="text-trust-600 underline-offset-2 hover:underline">{CONTACT_EMAIL}</a>
+              문의: <a href={`mailto:${CONTACT_EMAIL}`} className="text-ink-900 underline-offset-2 hover:underline">{CONTACT_EMAIL}</a>
             </li>
             <li>
-              <Link href="/policies/terms" className="text-trust-600 underline-offset-2 hover:underline">이용약관</Link>
+              <Link href="/policies/terms" className="text-ink-900 underline-offset-2 hover:underline">이용약관</Link>
               {" · "}
-              <Link href="/policies/privacy" className="text-trust-600 underline-offset-2 hover:underline">개인정보처리방침</Link>
+              <Link href="/policies/privacy" className="text-ink-900 underline-offset-2 hover:underline">개인정보처리방침</Link>
             </li>
           </ul>
         </section>
 
-        <div className="mt-12 rounded-2xl border border-trust-500/30 bg-trust-50 p-6 text-center">
-          <p className="text-sm font-semibold text-neutral-900">
+        <div className="mt-12 border border-ink-200 bg-surface-1 p-6 text-center">
+          <p className="text-sm font-semibold text-ink-900">
             출시를 앞두고 테스터가 필요하신가요?
           </p>
           <Link
             href="/apps/new"
-            className="mt-3 inline-block rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+            className="mt-3 inline-block bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black"
           >
             앱 등록하고 매칭 시작하기 →
           </Link>

@@ -55,7 +55,7 @@ function SeatBadge({ n }: { n: number }) {
   return (
     <span
       title={`유료 시트 ${n}명 · 14일 완주 시 ${PAID_SEAT_REWARD} 크레딧`}
-      className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white"
+      className="bg-warning-700 px-2 py-0.5 text-[10px] font-bold text-white"
     >
       💰 {n}시트
     </span>
@@ -81,10 +81,10 @@ function krDate(iso: string) {
 function StatusBadge({ status }: { status: string }) {
   const label = APP_STATUS_LABEL[status as AppStatus] ?? {
     text: status,
-    tone: "bg-neutral-100 text-neutral-500",
+    tone: "bg-surface-1 text-ink-600",
   };
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${label.tone}`}>
+    <span className={` px-2 py-0.5 text-[10px] font-bold ${label.tone}`}>
       {label.text}
     </span>
   );
@@ -101,14 +101,14 @@ function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, numbe
           <li key={app.id}>
             <Link
               href={`/browse/${app.id}`}
-              className="flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-trust-600 hover:shadow"
+              className="flex h-full flex-col border border-ink-200 bg-white p-5 transition hover:border-ink-900"
             >
               <div className="flex items-start justify-between gap-3">
-                <h2 className="truncate text-base font-semibold text-neutral-900">{app.name}</h2>
+                <h2 className="truncate text-base font-semibold text-ink-900">{app.name}</h2>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <SeatBadge n={seats.get(app.id) ?? 0} />
                   {app.is_boost && (
-                    <span className="rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                    <span className="bg-accent-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                       BOOST
                     </span>
                   )}
@@ -116,13 +116,13 @@ function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, numbe
                 </div>
               </div>
 
-              <p className="mt-2 line-clamp-2 flex-1 text-sm text-neutral-600">
+              <p className="mt-2 line-clamp-2 flex-1 text-sm text-ink-700">
                 {app.short_description}
               </p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-neutral-500">
+              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-600">
                 <span className="tabular">
-                  테스터 <strong className="text-trust-600">{app.required_testers}</strong>명
+                  테스터 <strong className="text-ink-900">{app.required_testers}</strong>명
                 </span>
                 <span>·</span>
                 <span>{owner?.nickname ?? "—"}</span>
@@ -141,14 +141,14 @@ function CardGrid({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, numbe
 
 function ListView({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, number> }) {
   return (
-    <ul className="divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-white shadow-sm">
+    <ul className="divide-y divide-ink-200 border border-ink-200 bg-white">
       {apps.map((app) => {
         const owner = getOwner(app);
         return (
           <li key={app.id}>
             <Link
               href={`/browse/${app.id}`}
-              className="flex items-center gap-4 px-5 py-4 transition hover:bg-neutral-50"
+              className="flex items-center gap-4 px-5 py-4 transition hover:bg-surface-1"
             >
               <div className="w-16 shrink-0">
                 <StatusBadge status={app.status} />
@@ -156,26 +156,26 @@ function ListView({ apps, seats }: { apps: BrowseApp[]; seats: Map<number, numbe
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-semibold text-neutral-900">{app.name}</span>
+                  <span className="truncate text-sm font-semibold text-ink-900">{app.name}</span>
                   <SeatBadge n={seats.get(app.id) ?? 0} />
                   {app.is_boost && (
-                    <span className="shrink-0 rounded-full bg-spark-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                    <span className="shrink-0 bg-accent-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
                       BOOST
                     </span>
                   )}
                 </div>
-                <p className="mt-0.5 truncate text-xs text-neutral-500">{app.short_description}</p>
+                <p className="mt-0.5 truncate text-xs text-ink-600">{app.short_description}</p>
               </div>
 
-              <div className="hidden shrink-0 items-center gap-4 text-xs text-neutral-500 sm:flex">
+              <div className="hidden shrink-0 items-center gap-4 text-xs text-ink-600 sm:flex">
                 <span className="tabular">
-                  <strong className="text-trust-600">{app.required_testers}</strong>명
+                  <strong className="text-ink-900">{app.required_testers}</strong>명
                 </span>
                 <span>{owner?.nickname ?? "—"}</span>
                 <span className="tabular">{krDate(app.created_at)}</span>
               </div>
 
-              <span className="shrink-0 text-neutral-300">›</span>
+              <span className="shrink-0 text-ink-600">›</span>
             </Link>
           </li>
         );
@@ -212,12 +212,12 @@ function Pagination({
       {page > 1 ? (
         <Link
           href={href(page - 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm text-neutral-600 hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border border-ink-200 bg-white text-sm text-ink-700 hover:bg-surface-1"
         >
           ‹
         </Link>
       ) : (
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-100 text-sm text-neutral-300">
+        <span className="flex h-9 w-9 items-center justify-center border border-ink-200 text-sm text-ink-600">
           ‹
         </span>
       )}
@@ -227,7 +227,7 @@ function Pagination({
         p === "..." ? (
           <span
             key={`dot-${i}`}
-            className="flex h-9 w-9 items-center justify-center text-sm text-neutral-400"
+            className="flex h-9 w-9 items-center justify-center text-sm text-ink-600"
           >
             …
           </span>
@@ -235,10 +235,10 @@ function Pagination({
           <Link
             key={p}
             href={href(p)}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium transition ${
+            className={`flex h-9 w-9 items-center justify-center  border text-sm font-medium transition ${
               p === page
-                ? "border-trust-600 bg-trust-600 text-white"
-                : "border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"
+                ? "border-ink-900 bg-ink-900 text-white"
+                : "border-ink-200 bg-white text-ink-700 hover:bg-surface-1"
             }`}
           >
             {p}
@@ -250,12 +250,12 @@ function Pagination({
       {page < totalPages ? (
         <Link
           href={href(page + 1)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-white text-sm text-neutral-600 hover:bg-neutral-50"
+          className="flex h-9 w-9 items-center justify-center border border-ink-200 bg-white text-sm text-ink-700 hover:bg-surface-1"
         >
           ›
         </Link>
       ) : (
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-100 text-sm text-neutral-300">
+        <span className="flex h-9 w-9 items-center justify-center border border-ink-200 text-sm text-ink-600">
           ›
         </span>
       )}
@@ -348,8 +348,8 @@ export default async function BrowsePage({
       <SiteHeader user={user} />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
         <header className="mb-8">
-          <h1 className="text-2xl font-bold text-neutral-900">매칭 가능 앱</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">매칭 가능 앱</h1>
+          <p className="mt-1 text-sm text-ink-700">
             테스터를 모집 중인 앱입니다. 카드를 클릭해 참여 링크를 확인하세요.
           </p>
         </header>
@@ -359,16 +359,16 @@ export default async function BrowsePage({
             {boostApps.length > 0 && (
               <section className="mb-8">
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="rounded-full bg-spark-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                  <span className="bg-accent-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                     🔥 BOOST
                   </span>
-                  <h2 className="text-sm font-bold text-neutral-900">
-                    급구 · <span className="tabular text-neutral-500">{boostApps.length}</span>
+                  <h2 className="text-sm font-bold text-ink-900">
+                    급구 · <span className="tabular text-ink-600">{boostApps.length}</span>
                   </h2>
-                  <span className="text-[11px] text-neutral-400">매번 랜덤 순서</span>
+                  <span className="text-[11px] text-ink-600">매번 랜덤 순서</span>
                   <Link
                     href="/paid-testers"
-                    className="ml-auto text-[11px] font-semibold text-neutral-500 hover:text-neutral-700"
+                    className="ml-auto text-[11px] font-semibold text-ink-600 hover:text-ink-700"
                   >
                     내 앱 급구 신청 →
                   </Link>
@@ -381,9 +381,9 @@ export default async function BrowsePage({
             <Pagination page={page} totalPages={totalPages} sort={sort} view={view} />
           </>
         ) : (
-          <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-            <p className="text-base font-medium text-neutral-700">현재 매칭중인 앱이 없습니다.</p>
-            <p className="mt-2 text-sm text-neutral-600">잠시 후 다시 확인해주세요.</p>
+          <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
+            <p className="text-base font-medium text-ink-700">현재 매칭중인 앱이 없습니다.</p>
+            <p className="mt-2 text-sm text-ink-700">잠시 후 다시 확인해주세요.</p>
           </div>
         )}
       </main>

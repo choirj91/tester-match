@@ -19,7 +19,7 @@ export function Linkify({ text }: { text: string }) {
             key={i}
             href={part}
             {...(internal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-            className="break-all text-trust-600 underline underline-offset-2 hover:text-trust-700"
+            className="break-all text-ink-900 underline underline-offset-2 hover:text-ink-900"
           >
             {part}
           </a>

@@ -61,22 +61,22 @@ export default async function CheckoutPage({
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-lg px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">결제</h1>
-        <div className="mt-4 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm">
-          <p className="font-semibold text-neutral-900">
+        <h1 className="text-2xl font-bold text-ink-900">결제</h1>
+        <div className="mt-4 border border-ink-200 bg-white px-4 py-3 text-sm">
+          <p className="font-semibold text-ink-900">
             {appName} — 유료 테스터 {order.tester_count}명 (14일)
           </p>
-          <p className="mt-1 text-neutral-600">
+          <p className="mt-1 text-ink-700">
             {order.tester_count}명 × {formatKrw(PAID_TESTER_PRICE_KRW)}원 = 결제 금액{" "}
             <strong>{formatKrw(order.amount_krw)}원</strong> (부가세 포함)
           </p>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-ink-600">
             판매자 낰낰컴퍼니 · 신용·체크카드 (KG이니시스) · 주문번호 {order.order_code}
           </p>
         </div>
 
         <FeeBreakdown className="mt-4" />
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-ink-600">
           환불 기준 전체는{" "}
           <Link href="/policies/refund" className="underline underline-offset-2">
             환불 정책
@@ -95,7 +95,7 @@ export default async function CheckoutPage({
             customerName={user.nickname}
           />
         ) : (
-          <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm leading-relaxed text-amber-900">
+          <div className="mt-6 border border-warning-700 bg-warning-50 p-5 text-sm leading-relaxed text-warning-700">
             결제 수단 연동이 아직 완료되지 않았습니다. 잠시 후 다시 시도하시거나{" "}
             <Link href="/paid-testers" className="underline underline-offset-2">
               유료 테스터 페이지

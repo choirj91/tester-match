@@ -23,7 +23,7 @@ export function InstalledButton({ matchId }: { matchId: number }) {
       type="button"
       onClick={confirm}
       disabled={busy}
-      className="rounded-lg border border-mint-500/40 bg-mint-500/5 px-2.5 py-1.5 text-xs font-semibold text-mint-500 hover:bg-mint-500/10 disabled:opacity-50"
+      className="border border-success-700 bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700 hover:bg-success-50 disabled:opacity-50"
       title="설치를 완료했다면 눌러주세요. 개발자에게 설치 확인으로 표시됩니다."
     >
       {busy ? "저장 중..." : "📲 앱 설치 완료했어요"}

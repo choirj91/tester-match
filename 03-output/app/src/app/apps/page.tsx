@@ -40,14 +40,14 @@ export default async function AppsPage() {
       <main className="mx-auto max-w-4xl px-6 py-12">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neutral-900">내 앱</h1>
-            <p className="mt-1 text-sm text-neutral-600">
+            <h1 className="text-2xl font-bold text-ink-900">내 앱</h1>
+            <p className="mt-1 text-sm text-ink-700">
               등록한 앱과 진행 상태를 한 화면에서 관리합니다.
             </p>
           </div>
           <Link
             href="/apps/new"
-            className="bg-trust-600 hover:bg-trust-700 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
+            className="bg-ink-900 hover:bg-black px-4 py-2 text-sm font-semibold text-white"
           >
             + 앱 등록
           </Link>
@@ -56,17 +56,17 @@ export default async function AppsPage() {
         {user && (
           <Link
             href="/paid-testers"
-            className="border-trust-500/30 bg-trust-50 hover:border-trust-500 mt-6 block rounded-2xl border px-5 py-4 transition"
+            className="border-ink-200 bg-surface-1 hover:border-ink-900 mt-6 block border px-5 py-4 transition"
           >
-            <p className="text-sm font-semibold text-neutral-900">
+            <p className="text-sm font-semibold text-ink-900">
               테스터가 부족하신가요? — 유료 테스터 투입
               {!PAID_TESTERS_PUBLIC_ORDERING && (
-                <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                <span className="ml-2 bg-warning-50 px-2 py-0.5 text-[10px] font-bold text-warning-700">
                   결제 오픈 대기
                 </span>
               )}
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+            <p className="mt-1 text-xs leading-relaxed text-ink-700">
               회사가 모집·관리하는 커뮤니티 테스터가 1명당 {formatKrw(PAID_TESTER_PRICE_KRW)}
               원(부가세 포함)에 14일간 매일 스크린샷 체크인. 완주한 시트만 과금됩니다. →
             </p>
@@ -83,27 +83,27 @@ export default async function AppsPage() {
                 return (
                   <li
                     key={app.id}
-                    className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+                    className="border border-ink-200 bg-white p-5"
                   >
                     <Link href={`/apps/${app.id}`} className="block">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <h2 className="truncate text-lg font-semibold text-neutral-900">
+                          <h2 className="truncate text-lg font-semibold text-ink-900">
                             {app.name}
                           </h2>
-                          <p className="mt-1 line-clamp-2 text-sm text-neutral-600">
+                          <p className="mt-1 line-clamp-2 text-sm text-ink-700">
                             {app.short_description}
                           </p>
                         </div>
                         <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${label.tone}`}
+                          className={`shrink-0  px-2.5 py-1 text-xs font-semibold ${label.tone}`}
                         >
                           {label.text}
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-600">
                         <span className="tabular">
-                          <strong className="text-trust-600">{activeCount}</strong>명 참여중
+                          <strong className="text-ink-900">{activeCount}</strong>명 참여중
                         </span>
                         <span>·</span>
                         <span className="tabular">
@@ -121,14 +121,14 @@ export default async function AppsPage() {
               })}
             </ul>
           ) : (
-            <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-              <p className="text-base font-medium text-neutral-700">아직 등록된 앱이 없습니다.</p>
-              <p className="mt-2 text-sm text-neutral-600">
+            <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
+              <p className="text-base font-medium text-ink-700">아직 등록된 앱이 없습니다.</p>
+              <p className="mt-2 text-sm text-ink-700">
                 첫 앱을 등록하면 매칭 큐에 진입합니다.
               </p>
               <Link
                 href="/apps/new"
-                className="bg-trust-600 hover:bg-trust-700 mt-6 inline-flex rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm"
+                className="bg-ink-900 hover:bg-black mt-6 inline-flex px-4 py-2 text-sm font-semibold text-white"
               >
                 + 앱 등록
               </Link>

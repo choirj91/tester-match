@@ -16,24 +16,24 @@ export function FeeBreakdown({ className = "" }: { className?: string }) {
   const operating = formatKrw(OPERATING_SHARE_KRW);
 
   return (
-    <section className={`rounded-2xl border border-amber-200 bg-amber-50 p-5 ${className}`}>
-      <h2 className="text-sm font-bold text-amber-900">테스터 1명 {price}원은 이렇게 쓰입니다</h2>
+    <section className={` border border-warning-700 bg-warning-50 p-5 ${className}`}>
+      <h2 className="text-sm font-bold text-warning-700">테스터 1명 {price}원은 이렇게 쓰입니다</h2>
       <div
-        className="mt-3 flex h-9 overflow-hidden rounded-lg text-xs font-semibold"
+        className="mt-3 flex h-9 overflow-hidden text-xs font-semibold"
         role="img"
         aria-label={`${price}원 중 테스터 보상 최대 ${reward}원, 운영 ${operating}원`}
       >
         <div
-          className="bg-trust-600 flex items-center justify-center px-2 text-white"
+          className="bg-ink-900 flex items-center justify-center px-2 text-white"
           style={{ width: `${REWARD_PERCENT}%` }}
         >
           테스터 보상 최대 {reward}원
         </div>
-        <div className="flex flex-1 items-center justify-center bg-amber-200 px-2 text-amber-900">
+        <div className="flex flex-1 items-center justify-center bg-warning-50 px-2 text-warning-700">
           운영 {operating}원
         </div>
       </div>
-      <dl className="mt-4 space-y-3 text-sm leading-relaxed text-amber-900">
+      <dl className="mt-4 space-y-3 text-sm leading-relaxed text-warning-700">
         <div>
           <dt className="font-semibold">테스터 보상 · 최대 {reward}원</dt>
           <dd>
@@ -49,7 +49,7 @@ export function FeeBreakdown({ className = "" }: { className?: string }) {
           </dd>
         </div>
       </dl>
-      <p className="mt-3 text-xs text-amber-800">
+      <p className="mt-3 text-xs text-warning-700">
         결제 후 못 채운 시트와 완주하지 못한 시트는 환불됩니다.
       </p>
     </section>

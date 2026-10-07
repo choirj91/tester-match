@@ -123,7 +123,7 @@ export function PayButton(props: Props) {
 
   return (
     <div className="mt-6">
-      <label htmlFor="pay-phone" className="block text-sm font-semibold text-neutral-900">
+      <label htmlFor="pay-phone" className="block text-sm font-semibold text-ink-900">
         휴대폰 번호
       </label>
       <input
@@ -135,18 +135,18 @@ export function PayButton(props: Props) {
         autoComplete="tel-national"
         maxLength={13}
         disabled={paying || closed}
-        className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm"
+        className="mt-2 w-full border border-ink-900 px-3 py-2.5 text-sm"
       />
-      <p className="mt-1.5 text-xs leading-relaxed text-neutral-500">
+      <p className="mt-1.5 text-xs leading-relaxed text-ink-600">
         결제대행사(KG이니시스) 결제창에 구매자 정보로 전달하기 위해서만 쓰이며, Tester Match 서버에는
         저장되지 않습니다.
       </p>
-      {error && <p className="mt-3 text-sm font-medium text-red-600">{error}</p>}
+      {error && <p className="mt-3 text-sm font-medium text-danger-700">{error}</p>}
       <button
         type="button"
         onClick={handlePay}
         disabled={paying || closed || !phoneDigits}
-        className="bg-trust-600 hover:bg-trust-700 mt-4 w-full rounded-lg px-5 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+        className="bg-ink-900 hover:bg-black mt-4 w-full px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
       >
         {paying ? "결제 진행 중…" : `${props.amount.toLocaleString("ko-KR")}원 결제하기`}
       </button>

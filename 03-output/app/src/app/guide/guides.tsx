@@ -10,18 +10,18 @@ export type Guide = {
 };
 
 const A = ({ href, children }: { href: string; children: ReactNode }) => (
-  <Link href={href} className="text-trust-600 underline-offset-2 hover:underline">
+  <Link href={href} className="text-ink-900 underline-offset-2 hover:underline">
     {children}
   </Link>
 );
 
 const Img = ({ src, alt }: { src: string; alt: string }) => (
   // eslint-disable-next-line @next/next/no-img-element
-  <img src={src} alt={alt} className="my-6 w-full rounded-xl border border-neutral-200 bg-white" loading="lazy" />
+  <img src={src} alt={alt} className="my-6 w-full border border-ink-200 bg-white" loading="lazy" />
 );
 
 const Tip = ({ children }: { children: ReactNode }) => (
-  <div className="my-5 rounded-xl border border-trust-500/30 bg-trust-50 px-4 py-3 text-[13px] leading-6">
+  <div className="my-5 border border-ink-200 bg-surface-1 px-4 py-3 text-[13px] leading-6">
     {children}
   </div>
 );

@@ -99,17 +99,17 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-4 space-y-5 rounded-2xl border border-neutral-200 bg-white p-6"
+      className="mt-4 space-y-5 border border-ink-200 bg-white p-6"
     >
       <div>
-        <label htmlFor="pt-app" className="block text-sm font-semibold text-neutral-900">
+        <label htmlFor="pt-app" className="block text-sm font-semibold text-ink-900">
           대상 앱
         </label>
         <select
           id="pt-app"
           value={appId}
           onChange={(e) => setAppId(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm"
+          className="mt-2 w-full border border-ink-900 px-3 py-2.5 text-sm"
         >
           {apps.map((a) => (
             <option key={a.id} value={a.id}>
@@ -120,7 +120,7 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-neutral-900">테스터 인원 (시트)</p>
+        <p className="text-sm font-semibold text-ink-900">테스터 인원 (시트)</p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <input
             type="number"
@@ -129,10 +129,10 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
             max={PAID_TESTER_MAX_COUNT}
             value={count}
             onChange={(e) => setCount(clampCount(Number(e.target.value)))}
-            className="w-24 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-semibold"
+            className="w-24 border border-ink-900 px-3 py-2 text-sm font-semibold"
             aria-label="테스터 인원"
           />
-          <span className="text-sm text-neutral-600">
+          <span className="text-sm text-ink-700">
             명 ({PAID_TESTER_MIN_COUNT}~{PAID_TESTER_MAX_COUNT})
           </span>
         </div>
@@ -142,24 +142,24 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
               key={n}
               type="button"
               onClick={() => setCount(n)}
-              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+              className={` border px-3 py-1.5 text-xs font-semibold transition ${
                 count === n
-                  ? "border-trust-600 bg-trust-600 text-white"
-                  : "border-neutral-300 bg-white text-neutral-700 hover:border-trust-500"
+                  ? "border-ink-900 bg-ink-900 text-white"
+                  : "border-ink-900 bg-white text-ink-700 hover:border-ink-900"
               }`}
             >
               {n}명
             </button>
           ))}
         </div>
-        <p className="mt-1.5 text-xs text-neutral-500">
+        <p className="mt-1.5 text-xs text-ink-600">
           Google 요건은 12명입니다. 14일 사이 1~2명은 빠지기 쉬워 {PAID_TESTER_RECOMMENDED_COUNT}
           명을 권합니다. 여유 있게 잡아도 못 채우거나 완주하지 못한 시트는 환불됩니다.
         </p>
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold text-neutral-900">결제 수단</p>
+        <p className="text-sm font-semibold text-ink-900">결제 수단</p>
         <label className="flex cursor-pointer items-center gap-2 text-sm">
           <input
             type="radio"
@@ -170,7 +170,7 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
           신용·체크카드 (KG이니시스)
         </label>
         <label
-          className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-neutral-400"}`}
+          className={`flex items-center gap-2 text-sm ${canUseCredits ? "cursor-pointer" : "cursor-not-allowed text-ink-600"}`}
         >
           <input
             type="radio"
@@ -184,18 +184,18 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
         </label>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-neutral-50 px-4 py-3">
-        <span className="text-sm text-neutral-600">결제 금액</span>
-        <span className="text-lg font-bold text-neutral-900">
+      <div className="flex items-center justify-between bg-surface-1 px-4 py-3">
+        <span className="text-sm text-ink-700">결제 금액</span>
+        <span className="text-lg font-bold text-ink-900">
           {amount.toLocaleString("ko-KR")}
           {effectivePayWith === "credits" ? " 크레딧" : "원"}
         </span>
       </div>
 
-      <fieldset className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4">
-        <legend className="px-1 text-sm font-bold text-amber-900">구매 전 유의사항 (모두 확인 필요)</legend>
+      <fieldset className="space-y-2 border border-warning-700 bg-warning-50 p-4">
+        <legend className="px-1 text-sm font-bold text-warning-700">구매 전 유의사항 (모두 확인 필요)</legend>
         {NOTICES.map((text, i) => (
-          <label key={i} className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-amber-900">
+          <label key={i} className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-warning-700">
             <input
               type="checkbox"
               className="mt-0.5 shrink-0"
@@ -209,10 +209,10 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
         ))}
       </fieldset>
 
-      {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+      {error && <p className="text-sm font-medium text-danger-700">{error}</p>}
 
       {!orderingOpen && (
-        <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+        <p className="border border-warning-700 bg-warning-50 px-4 py-3 text-xs leading-relaxed text-warning-700">
           카드 결제 오픈 준비 중입니다 (결제대행사 심사 진행 중). 오픈하면 게시판 공지로 알려드리고, 이
           화면에서 바로 신청할 수 있습니다.
         </p>
@@ -221,7 +221,7 @@ export function OrderForm({ apps, initialAppId, balance, orderingOpen }: Props) 
       <button
         type="submit"
         disabled={!orderingOpen || submitting || !appId || !allAgreed}
-        className="w-full rounded-lg bg-trust-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+        className="w-full bg-ink-900 px-5 py-3 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
       >
         {!orderingOpen
           ? "결제 오픈 준비 중"

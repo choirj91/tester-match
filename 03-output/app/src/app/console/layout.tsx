@@ -27,10 +27,10 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
   ];
 
   return (
-    <div className="flex min-h-screen bg-neutral-100 text-neutral-900">
-      <aside className="hidden w-60 shrink-0 flex-col bg-neutral-950 text-neutral-300 md:flex">
-        <Link href="/console" className="flex h-14 items-center gap-2 border-b border-neutral-800 px-5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-trust-600 text-xs font-black text-white">
+    <div className="flex min-h-screen bg-surface-1 text-ink-900">
+      <aside className="hidden w-60 shrink-0 flex-col bg-ink-900 text-ink-300 md:flex">
+        <Link href="/console" className="flex h-14 items-center gap-2 border-b border-ink-700 px-5">
+          <span className="flex h-7 w-7 items-center justify-center bg-accent-600 text-xs font-black text-white">
             TM
           </span>
           <span className="text-sm font-bold text-white">테스트 콘솔</span>
@@ -40,15 +40,15 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-neutral-800 hover:text-white"
+              className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-black hover:text-white"
             >
-              <span className="w-4 text-center text-neutral-500">{item.icon}</span>
+              <span className="w-4 text-center text-ink-300">{item.icon}</span>
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="border-t border-neutral-800 px-5 py-4 text-xs text-neutral-500">
-          <p className="truncate text-neutral-300">{user.nickname}</p>
+        <div className="border-t border-ink-700 px-5 py-4 text-xs text-ink-300">
+          <p className="truncate text-ink-600">{user.nickname}</p>
           <p className="mt-0.5">{isAdmin ? "운영자" : "구매자"}</p>
           <Link href="/" className="mt-3 inline-block hover:text-white">
             ← 사이트로 돌아가기
@@ -57,20 +57,20 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-neutral-200 bg-white px-4 md:px-6">
+        <header className="flex h-14 items-center justify-between border-b border-ink-200 bg-white px-4 md:px-6">
           <div className="flex items-center gap-3 md:hidden">
             <Link href="/console" className="text-sm font-bold">
               테스트 콘솔
             </Link>
           </div>
-          <p className="hidden text-xs text-neutral-500 md:block">
+          <p className="hidden text-xs text-ink-600 md:block">
             유료 테스터 이행 현황 — 출석 · 스크린샷 · 코멘트
           </p>
           <div className="flex items-center gap-3 text-xs">
-            <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-neutral-700">
+            <span className="bg-surface-1 px-2.5 py-1 font-semibold text-ink-700">
               {isAdmin ? "운영자" : "구매자"} · {user.nickname}
             </span>
-            <Link href="/" className="text-neutral-500 hover:text-neutral-900 md:hidden">
+            <Link href="/" className="text-ink-600 hover:text-ink-900 md:hidden">
               사이트 ↗
             </Link>
           </div>

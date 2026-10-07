@@ -20,8 +20,8 @@ export function DigestActions({ message, openChatUrl }: { message: string; openC
       <button
         type="button"
         onClick={copy}
-        className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm ${
-          copied ? "bg-mint-500" : "bg-trust-600 hover:bg-trust-700"
+        className={` px-5 py-2.5 text-sm font-semibold text-white  ${
+          copied ? "bg-success-700" : "bg-ink-900 hover:bg-black"
         }`}
       >
         {copied ? "✓ 복사됨 — 이제 오픈채팅에 붙여넣기" : "1. 메시지 복사"}
@@ -30,7 +30,7 @@ export function DigestActions({ message, openChatUrl }: { message: string; openC
         href={openChatUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-lg bg-[#FEE500] px-5 py-2.5 text-sm font-bold text-[#191919] shadow-sm hover:brightness-95"
+        className="bg-[#FEE500] px-5 py-2.5 text-sm font-bold text-[#191919] hover:brightness-95"
       >
         2. 오픈 카톡방 열기 ↗
       </a>

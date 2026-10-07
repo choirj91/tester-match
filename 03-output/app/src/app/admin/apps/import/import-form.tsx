@@ -173,13 +173,13 @@ export function ImportForm() {
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
         <div className="flex items-center justify-between">
-          <label htmlFor="import-text" className="text-sm font-semibold text-neutral-900">
+          <label htmlFor="import-text" className="text-sm font-semibold text-ink-900">
             JSON 입력
           </label>
           <button
             type="button"
             onClick={() => setText(SAMPLE)}
-            className="text-trust-600 hover:text-trust-700 text-xs"
+            className="text-ink-900 hover:text-ink-900 text-xs"
           >
             예시 채우기
           </button>
@@ -192,22 +192,22 @@ export function ImportForm() {
           required
           spellCheck={false}
           placeholder="JSON 배열 붙여넣기..."
-          className="focus:border-trust-600 focus:ring-trust-500/20 mt-2 w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2.5 font-mono text-xs leading-relaxed shadow-sm placeholder:text-neutral-400 focus:ring-2 focus:outline-none"
+          className="focus:border-ink-900 focus:ring-accent-600 mt-2 w-full resize-y border border-ink-900 bg-white px-3 py-2.5 font-mono text-xs leading-relaxed placeholder:text-ink-600 focus:ring-2 focus:outline-none"
         />
       </div>
 
       {parseError && (
-        <p role="alert" className="bg-crimson-500/10 text-crimson-500 rounded-lg px-3 py-2 text-sm">
+        <p role="alert" className="bg-danger-50 text-danger-700 px-3 py-2 text-sm">
           {parseError}
         </p>
       )}
 
       <div className="flex items-center justify-end">
-        {progress && <p className="mr-4 text-sm text-neutral-500">{progress}</p>}
+        {progress && <p className="mr-4 text-sm text-ink-600">{progress}</p>}
         <button
           type="submit"
           disabled={submitting || text.trim().length === 0}
-          className="bg-trust-600 hover:bg-trust-700 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+          className="bg-ink-900 hover:bg-black px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
         >
           {submitting ? "등록 중..." : "일괄 등록"}
         </button>
@@ -235,20 +235,20 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
   }
 
   return (
-    <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+    <section className="border border-warning-700 bg-warning-50 p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-amber-800">
+          <h3 className="text-sm font-semibold text-warning-700">
             검증 실패 — {rows.length}개 행 건너뜀
           </h3>
-          <p className="mt-0.5 text-xs text-amber-700">
+          <p className="mt-0.5 text-xs text-warning-700">
             아래 행은 등록되지 않았습니다. 복사 후 수정해서 다시 붙여넣으세요.
           </p>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+          className="shrink-0 border border-warning-700 bg-white px-3 py-1.5 text-xs font-semibold text-warning-700 hover:bg-warning-50"
         >
           {copied ? "복사됨 ✓" : "JSON 복사"}
         </button>
@@ -256,14 +256,14 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
 
       <ul className="mt-3 space-y-1.5">
         {rows.map((r) => (
-          <li key={r.rowNum} className="rounded-lg bg-white px-3 py-2 text-xs">
-            <span className="font-semibold text-amber-700">row {r.rowNum}</span>
+          <li key={r.rowNum} className="bg-white px-3 py-2 text-xs">
+            <span className="font-semibold text-warning-700">row {r.rowNum}</span>
             {typeof (r.raw as Record<string, unknown>)?.email === "string" && (
-              <span className="ml-1.5 text-neutral-500">
+              <span className="ml-1.5 text-ink-600">
                 · {String((r.raw as Record<string, unknown>).email)}
               </span>
             )}
-            <span className="text-crimson-500 ml-1.5">{r.reason}</span>
+            <span className="text-danger-700 ml-1.5">{r.reason}</span>
           </li>
         ))}
       </ul>
@@ -274,35 +274,35 @@ function ValidationErrorsPanel({ rows }: { rows: InvalidRow[] }) {
 function ImportResult({ result }: { result: Result }) {
   if (!result.ok) {
     return (
-      <div className="bg-crimson-500/10 text-crimson-500 rounded-lg px-4 py-3 text-sm">
+      <div className="bg-danger-50 text-danger-700 px-4 py-3 text-sm">
         실패: {result.message ?? "unknown"}
       </div>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-neutral-900">등록 결과</h3>
+    <section className="border border-ink-200 bg-white p-5">
+      <h3 className="text-sm font-semibold text-ink-900">등록 결과</h3>
       <dl className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
         <Stat label="총 입력" value={result.total ?? 0} />
-        <Stat label="등록 성공" value={result.imported ?? 0} tone="text-mint-500" />
+        <Stat label="등록 성공" value={result.imported ?? 0} tone="text-success-700" />
         <Stat label="중복 건너뜀" value={result.duplicates?.length ?? 0} />
         <Stat
           label="실패"
           value={result.skipped ?? 0}
-          tone={(result.skipped ?? 0) > 0 ? "text-crimson-500" : "text-neutral-700"}
+          tone={(result.skipped ?? 0) > 0 ? "text-danger-700" : "text-ink-700"}
         />
         <Stat label="신규 사용자" value={result.placeholders_created ?? 0} />
       </dl>
 
       {result.errors && result.errors.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <h4 className="text-xs font-semibold tracking-wider text-ink-600 uppercase">
             DB 오류 상세
           </h4>
           <ul className="mt-2 space-y-1 text-xs">
             {result.errors.map((e, i) => (
-              <li key={i} className="bg-crimson-500/5 text-crimson-500 rounded px-2 py-1 font-mono">
+              <li key={i} className="bg-danger-50 text-danger-700 px-2 py-1 font-mono">
                 row {e.row}
                 {e.email && ` · ${e.email}`} → {e.reason}
               </li>
@@ -313,12 +313,12 @@ function ImportResult({ result }: { result: Result }) {
 
       {result.duplicates && result.duplicates.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-xs font-semibold tracking-wider text-neutral-500 uppercase">
+          <h4 className="text-xs font-semibold tracking-wider text-ink-600 uppercase">
             중복 건너뜀 — 같은 소유자·앱 이름·스토어 링크가 이미 등록됨
           </h4>
           <ul className="mt-2 space-y-1 text-xs">
             {result.duplicates.map((d, i) => (
-              <li key={i} className="rounded bg-neutral-100 px-2 py-1 font-mono text-neutral-600">
+              <li key={i} className="bg-surface-1 px-2 py-1 font-mono text-ink-700">
                 row {d.row} · {d.email} → {d.app_name}
               </li>
             ))}
@@ -331,9 +331,9 @@ function ImportResult({ result }: { result: Result }) {
 
 function Stat({ label, value, tone }: { label: string; value: number; tone?: string }) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className={`tabular mt-0.5 text-lg font-bold ${tone ?? "text-neutral-900"}`}>{value}</dd>
+    <div className="border border-ink-200 bg-surface-1 px-3 py-2">
+      <dt className="text-xs text-ink-600">{label}</dt>
+      <dd className={`tabular mt-0.5 text-lg font-bold ${tone ?? "text-ink-900"}`}>{value}</dd>
     </div>
   );
 }

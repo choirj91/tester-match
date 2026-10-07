@@ -31,7 +31,7 @@ export function InstallBlockedButton({ matchId }: { matchId: number }) {
       type="button"
       onClick={onClick}
       disabled={busy}
-      className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:border-amber-400 hover:text-amber-700 disabled:opacity-50"
+      className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-warning-700 hover:text-warning-700 disabled:opacity-50"
     >
       {busy ? "처리 중..." : "설치가 안 돼요"}
     </button>

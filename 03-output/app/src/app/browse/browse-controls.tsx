@@ -46,10 +46,10 @@ export function BrowseControls({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       {/* 건수 */}
-      <p className="text-sm text-neutral-500">
-        총 <strong className="text-neutral-700">{total}</strong>개
+      <p className="text-sm text-ink-600">
+        총 <strong className="text-ink-700">{total}</strong>개
         {totalPages > 1 && (
-          <span className="ml-1 text-neutral-400">
+          <span className="ml-1 text-ink-600">
             · {startItem}–{endItem} 표시
           </span>
         )}
@@ -60,7 +60,7 @@ export function BrowseControls({
         <select
           value={sort}
           onChange={(e) => setParam("sort", e.target.value)}
-          className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-700 shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 sm:flex-none"
+          className="min-w-0 flex-1 border border-ink-200 bg-white px-3 py-1.5 text-sm text-ink-700 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600 sm:flex-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -69,13 +69,13 @@ export function BrowseControls({
           ))}
         </select>
 
-        <div className="flex shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+        <div className="flex shrink-0 overflow-hidden border border-ink-200 bg-white">
           <button
             type="button"
             onClick={() => setParam("view", "card")}
             aria-label="카드 보기"
             className={`px-3 py-1.5 text-sm font-medium transition ${
-              view === "card" ? "bg-trust-600 text-white" : "text-neutral-500 hover:bg-neutral-50"
+              view === "card" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-1"
             }`}
           >
             ⊞
@@ -84,8 +84,8 @@ export function BrowseControls({
             type="button"
             onClick={() => setParam("view", "list")}
             aria-label="리스트 보기"
-            className={`border-l border-neutral-200 px-3 py-1.5 text-sm font-medium transition ${
-              view === "list" ? "bg-trust-600 text-white" : "text-neutral-500 hover:bg-neutral-50"
+            className={`border-l border-ink-200 px-3 py-1.5 text-sm font-medium transition ${
+              view === "list" ? "bg-ink-900 text-white" : "text-ink-600 hover:bg-surface-1"
             }`}
           >
             ≡

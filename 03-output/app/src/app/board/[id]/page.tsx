@@ -109,21 +109,21 @@ export default async function PostDetailPage({ params }: Props) {
       />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <Link href="/board" className="text-sm text-neutral-500 hover:text-neutral-900">
+        <Link href="/board" className="text-sm text-ink-600 hover:text-ink-900">
           ← 게시판
         </Link>
 
         <article className="mt-4">
-          <span className="rounded-full bg-trust-50 px-2 py-0.5 text-xs font-semibold text-trust-700">
+          <span className="bg-surface-1 px-2 py-0.5 text-xs font-semibold text-ink-900">
             {post.category}
           </span>
-          <h1 className="mt-3 text-3xl font-bold text-neutral-900">{post.title}</h1>
-          <p className="mt-2 text-xs text-neutral-500">
+          <h1 className="mt-3 text-3xl font-bold text-ink-900">{post.title}</h1>
+          <p className="mt-2 text-xs text-ink-600">
             {author?.nickname ?? "—"} · {new Date(post.created_at).toLocaleString("ko-KR")} · 조회{" "}
             <span className="tabular">{viewCount}</span>
           </p>
 
-          <div className="mt-8 whitespace-pre-wrap text-base leading-relaxed text-neutral-800">
+          <div className="mt-8 whitespace-pre-wrap text-base leading-relaxed text-ink-900">
             <Linkify text={post.body} />
           </div>
 
@@ -131,7 +131,7 @@ export default async function PostDetailPage({ params }: Props) {
         </article>
 
         <section className="mt-12">
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <h2 className="text-lg font-semibold text-ink-900">
             댓글 <span className="tabular">{comments?.length ?? 0}</span>
           </h2>
           {user ? (
@@ -155,20 +155,20 @@ export default async function PostDetailPage({ params }: Props) {
             />
           ) : (
             <div className="mt-4">
-              <p className="text-sm text-neutral-500">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <p className="text-sm text-ink-600">댓글을 작성하려면 로그인이 필요합니다.</p>
               {(comments ?? []).length > 0 && (
-                <ul className="mt-4 divide-y divide-neutral-100">
+                <ul className="mt-4 divide-y divide-ink-200">
                   {(comments ?? []).slice(0, 20).map((c) => {
                     const a = Array.isArray(c.users_public_profile)
                       ? c.users_public_profile[0]
                       : c.users_public_profile;
                     return (
                       <li key={c.id} className="py-3">
-                        <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700">
+                        <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700">
                           {a?.nickname ?? "—"}
                           {a?.role === "admin" && <AdminBadge />}
                         </p>
-                        <p className="mt-1 text-sm text-neutral-800 whitespace-pre-wrap"><Linkify text={c.body} /></p>
+                        <p className="mt-1 text-sm text-ink-900 whitespace-pre-wrap"><Linkify text={c.body} /></p>
                       </li>
                     );
                   })}

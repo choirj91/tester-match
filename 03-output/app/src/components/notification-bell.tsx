@@ -107,7 +107,7 @@ export function NotificationBell() {
         onClick={handleToggle}
         aria-label="알림"
         aria-expanded={open}
-        className="relative inline-flex items-center rounded-lg p-1.5 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-colors"
+        className="relative inline-flex items-center p-1.5 text-ink-600 hover:bg-surface-1 hover:text-ink-900 transition-colors"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -126,7 +126,7 @@ export function NotificationBell() {
         </svg>
 
         {count > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center bg-danger-700 px-1 text-[10px] font-bold leading-none text-white">
             {count > 9 ? "9+" : count}
           </span>
         )}
@@ -134,53 +134,53 @@ export function NotificationBell() {
 
       {/* 드롭다운 팝업 */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xl">
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden border border-ink-200 bg-white">
           {/* 헤더 */}
-          <div className="border-b border-neutral-100 px-4 py-3">
-            <p className="text-sm font-semibold text-neutral-900">알림</p>
+          <div className="border-b border-ink-200 px-4 py-3">
+            <p className="text-sm font-semibold text-ink-900">알림</p>
           </div>
 
           {/* 목록 */}
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-12 text-sm text-neutral-400">
+              <div className="flex items-center justify-center py-12 text-sm text-ink-600">
                 불러오는 중…
               </div>
             ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
+              <div className="flex flex-col items-center justify-center py-12 text-ink-600">
                 <span className="text-3xl">🔔</span>
                 <p className="mt-2 text-sm">새로운 알림이 없습니다.</p>
               </div>
             ) : (
-              <ul className="divide-y divide-neutral-100">
+              <ul className="divide-y divide-ink-200">
                 {notifications.map((n) => {
                   const icon = TYPE_ICON[n.type] ?? "🔔";
                   const inner = (
                     <div className="flex gap-3 px-4 py-3">
                       <span className="mt-0.5 shrink-0 text-lg leading-none">{icon}</span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-neutral-900">{n.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{n.body}</p>
-                        <p className="mt-1 text-[11px] text-neutral-400">{formatRelative(n.created_at)}</p>
+                        <p className="truncate text-sm font-semibold text-ink-900">{n.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-ink-600">{n.body}</p>
+                        <p className="mt-1 text-[11px] text-ink-600">{formatRelative(n.created_at)}</p>
                       </div>
                       {!n.is_read && (
-                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-trust-500" />
+                        <span className="mt-1.5 h-2 w-2 shrink-0 bg-ink-900" />
                       )}
                     </div>
                   );
 
                   return (
-                    <li key={n.id} className={n.is_read ? "" : "bg-trust-50/30"}>
+                    <li key={n.id} className={n.is_read ? "" : "bg-surface-1"}>
                       {n.link ? (
                         <Link
                           href={n.link}
                           onClick={() => setOpen(false)}
-                          className="block transition-colors hover:bg-neutral-50"
+                          className="block transition-colors hover:bg-surface-1"
                         >
                           {inner}
                         </Link>
                       ) : (
-                        <div className="hover:bg-neutral-50">{inner}</div>
+                        <div className="hover:bg-surface-1">{inner}</div>
                       )}
                     </li>
                   );
@@ -190,11 +190,11 @@ export function NotificationBell() {
           </div>
 
           {/* 푸터 — 전체 알림 페이지 이동 */}
-          <div className="border-t border-neutral-100 p-2">
+          <div className="border-t border-ink-200 p-2">
             <Link
               href="/notifications"
               onClick={() => setOpen(false)}
-              className="flex w-full items-center justify-center gap-1 rounded-lg px-4 py-2 text-sm font-medium text-trust-600 transition-colors hover:bg-trust-50"
+              className="flex w-full items-center justify-center gap-1 px-4 py-2 text-sm font-medium text-ink-900 transition-colors hover:bg-surface-1"
             >
               전체 알림 보기
               <svg

@@ -37,12 +37,12 @@ export function GoogleSignInButton() {
         type="button"
         onClick={onClick}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 shadow-sm hover:bg-neutral-50 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-3 border border-ink-900 bg-white px-4 py-3 text-sm font-semibold text-ink-900 hover:bg-surface-1 disabled:opacity-50"
       >
         <GoogleLogo />
         {loading ? "Google로 이동 중..." : "Google로 계속하기"}
       </button>
-      {error && <p className="mt-3 text-sm text-crimson-500">{error}</p>}
+      {error && <p className="mt-3 text-sm text-danger-700">{error}</p>}
     </>
   );
 }

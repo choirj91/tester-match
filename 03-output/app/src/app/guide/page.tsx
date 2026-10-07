@@ -16,8 +16,8 @@ export default async function GuideIndexPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-bold text-neutral-900">출시 가이드</h1>
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+        <h1 className="text-3xl font-bold text-ink-900">출시 가이드</h1>
+        <p className="mt-3 text-sm leading-relaxed text-ink-700">
           Google Play 출시 관문을 넘는 데 필요한 것들을 실전 순서대로 정리했습니다.
           비공개 테스트 요건부터 출시 후 초기 노출까지.
         </p>
@@ -27,11 +27,11 @@ export default async function GuideIndexPage() {
             <li key={g.slug}>
               <Link
                 href={`/guide/${g.slug}`}
-                className="block rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition hover:border-trust-500/40 hover:shadow"
+                className="block border border-ink-200 bg-white p-6 transition hover:border-ink-200"
               >
-                <p className="text-xs font-semibold text-trust-600">STEP {i + 1}</p>
-                <h2 className="mt-1 text-base font-bold text-neutral-900">{g.title}</h2>
-                <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                <p className="text-xs font-semibold text-ink-900">STEP {i + 1}</p>
+                <h2 className="mt-1 text-base font-bold text-ink-900">{g.title}</h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-700">
                   {g.description}
                 </p>
               </Link>

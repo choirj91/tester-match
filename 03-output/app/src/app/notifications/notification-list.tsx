@@ -39,7 +39,7 @@ function formatRelative(dateStr: string): string {
 export function NotificationList({ notifications }: { notifications: Notification[] }) {
   if (notifications.length === 0) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white px-6 py-16 text-center text-neutral-400">
+      <div className="border border-ink-200 bg-white px-6 py-16 text-center text-ink-600">
         <span className="text-4xl">🔔</span>
         <p className="mt-3 text-sm">새로운 알림이 없습니다.</p>
       </div>
@@ -47,24 +47,24 @@ export function NotificationList({ notifications }: { notifications: Notificatio
   }
 
   return (
-    <ul className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+    <ul className="divide-y divide-ink-200 overflow-hidden border border-ink-200 bg-white">
       {notifications.map((n) => {
         const icon = TYPE_ICON[n.type] ?? "🔔";
         const inner = (
           <div className="flex gap-3 px-4 py-4">
             <span className="mt-0.5 text-xl leading-none">{icon}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-neutral-900">{n.title}</p>
-              <p className="mt-0.5 text-sm text-neutral-600 line-clamp-2">{n.body}</p>
-              <p className="mt-1 text-xs text-neutral-400">{formatRelative(n.created_at)}</p>
+              <p className="truncate text-sm font-semibold text-ink-900">{n.title}</p>
+              <p className="mt-0.5 text-sm text-ink-700 line-clamp-2">{n.body}</p>
+              <p className="mt-1 text-xs text-ink-600">{formatRelative(n.created_at)}</p>
             </div>
           </div>
         );
 
         return (
-          <li key={n.id} className={n.is_read ? "bg-white" : "bg-trust-50/40"}>
+          <li key={n.id} className={n.is_read ? "bg-white" : "bg-surface-1"}>
             {n.link ? (
-              <Link href={n.link} className="block hover:bg-neutral-50 transition-colors">
+              <Link href={n.link} className="block hover:bg-surface-1 transition-colors">
                 {inner}
               </Link>
             ) : (

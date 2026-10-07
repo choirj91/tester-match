@@ -67,7 +67,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#2563EB",
+  themeColor: "#111111",
   width: "device-width",
   initialScale: 1,
 };
@@ -80,6 +80,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
         />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600&family=JetBrains+Mono:wght@500&display=swap"
+        />
         <meta name="google-adsense-account" content={ADSENSE_CLIENT} />
         <script
           async
@@ -87,7 +91,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
       </head>
-      <body className="bg-white text-neutral-900 antialiased">
+      <body className="bg-white text-ink-900 antialiased">
         <div className="flex min-h-screen flex-col">
           <div className="flex-1">{children}</div>
           <SiteFooter />

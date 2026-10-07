@@ -74,22 +74,22 @@ export default async function ConsoleOrderPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <nav className="text-xs text-neutral-500">
-        <Link href="/console" className="hover:text-neutral-900">
+      <nav className="text-xs text-ink-600">
+        <Link href="/console" className="hover:text-ink-900">
           대시보드
         </Link>{" "}
-        / <span className="text-neutral-700">{order.apps?.name ?? "주문"}</span>
+        / <span className="text-ink-700">{order.apps?.name ?? "주문"}</span>
       </nav>
 
       <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{order.apps?.name ?? "삭제된 앱"}</h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-ink-600">
             테스터 {order.tester_count}명 · {formatKrw(order.amount_krw)}원 · {order.order_code}
             {isAdmin && order.users ? ` · 구매자 ${order.users.nickname} (${order.users.email})` : ""}
           </p>
         </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-neutral-200">
+        <span className="bg-white px-3 py-1 text-xs font-semibold text-ink-700 ring-1 ring-ink-200">
           {PAID_ORDER_STATUS_LABEL[order.status] ?? order.status}
         </span>
       </div>
@@ -106,17 +106,17 @@ export default async function ConsoleOrderPage({
             ? { label: "결제", value: fmt(order.paid_at) }
             : { label: "충원 마감 (이후 빈 시트 환불)", value: fmt(fillDeadline(order.paid_at).toISOString()) },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
-            <p className="text-xs text-neutral-500">{s.label}</p>
+          <div key={s.label} className="border border-ink-200 bg-white px-4 py-3">
+            <p className="text-xs text-ink-600">{s.label}</p>
             <p className="mt-1 text-sm font-bold sm:text-base">{s.value}</p>
           </div>
         ))}
       </div>
 
       {order.apps && (
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-ink-600">
           앱 상세·플랫폼 테스터 모니터링은{" "}
-          <Link href={`/apps/${order.apps.id}`} className="text-trust-600 underline underline-offset-2">
+          <Link href={`/apps/${order.apps.id}`} className="text-ink-900 underline underline-offset-2">
             /apps/{order.apps.id}
           </Link>
           에서 확인할 수 있습니다.
@@ -124,7 +124,7 @@ export default async function ConsoleOrderPage({
       )}
 
       {!order.started_at ? (
-        <div className="mt-8 rounded-xl border border-amber-300 bg-amber-50 p-6 text-sm text-amber-900">
+        <div className="mt-8 border border-warning-700 bg-warning-50 p-6 text-sm text-warning-700">
           <p className="font-semibold">아직 시트에 참여한 테스터가 없습니다.</p>
           <p className="mt-1">
             {isAdmin
@@ -136,20 +136,20 @@ export default async function ConsoleOrderPage({
           {isAdmin && (
             <Link
               href="/admin/paid-orders"
-              className="mt-3 inline-block rounded-lg bg-trust-600 px-4 py-2 text-xs font-semibold text-white hover:bg-trust-700"
+              className="mt-3 inline-block bg-ink-900 px-4 py-2 text-xs font-semibold text-white hover:bg-black"
             >
               주문 관리로 이동
             </Link>
           )}
         </div>
       ) : slots.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-6 text-sm text-neutral-600">
+        <div className="mt-8 border border-ink-200 bg-white p-6 text-sm text-ink-700">
           슬롯이 아직 없습니다.{" "}
           {isAdmin ? <EnsureSlotsButton orderId={order.id} /> : "운영팀이 곧 준비합니다."}
         </div>
       ) : (
         <>
-          <p className="mt-6 text-xs text-neutral-500">
+          <p className="mt-6 text-xs text-ink-600">
             열 번호는 달력 날짜가 아니라 <strong>각 테스터의 참여일 기준 n일차</strong>입니다. 14일
             중 12일 이상 출석하면 완주이며, 결석 3일째 테스터는 자동 교체됩니다.
           </p>
@@ -167,7 +167,7 @@ export default async function ConsoleOrderPage({
       {settlement.length > 0 && <SeatSettlement orderId={order.id} rows={settlement} />}
 
       {order.admin_note && isAdmin && (
-        <p className="mt-6 text-xs text-neutral-400">운영 메모: {order.admin_note}</p>
+        <p className="mt-6 text-xs text-ink-600">운영 메모: {order.admin_note}</p>
       )}
     </div>
   );

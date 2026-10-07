@@ -15,15 +15,15 @@ function Medal({ rank }: { rank: number }) {
   if (rank === 1) return <span className="text-base">🥇</span>;
   if (rank === 2) return <span className="text-base">🥈</span>;
   if (rank === 3) return <span className="text-base">🥉</span>;
-  return <span className="tabular w-5 text-center text-sm text-neutral-400">{rank}</span>;
+  return <span className="tabular w-5 text-center text-sm text-ink-600">{rank}</span>;
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">{label}</p>
-      <p className="mt-1 text-3xl font-bold tabular text-neutral-900">{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>}
+    <div className="border border-ink-200 bg-white p-5">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-600">{label}</p>
+      <p className="mt-1 text-3xl font-bold tabular text-ink-900">{value}</p>
+      {sub && <p className="mt-0.5 text-xs text-ink-600">{sub}</p>}
     </div>
   );
 }
@@ -54,23 +54,23 @@ function RankingList({
 }) {
   return (
     <section>
-      <h2 className="text-lg font-bold text-neutral-900">{title}</h2>
-      <p className="mt-0.5 text-xs text-neutral-500">{sub}</p>
-      <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <h2 className="text-lg font-bold text-ink-900">{title}</h2>
+      <p className="mt-0.5 text-xs text-ink-600">{sub}</p>
+      <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
         {rows.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-neutral-400">{emptyText}</p>
+          <p className="px-5 py-8 text-center text-sm text-ink-600">{emptyText}</p>
         ) : (
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-ink-200">
             {rows.map((u, i) => (
               <li key={u.id}>
                 <Link
                   href={`/u/${u.id}`}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-neutral-50"
+                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-surface-1"
                 >
                   <Medal rank={i + 1} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-neutral-900">{u.nickname}</p>
-                    {showStar && <p className="text-xs text-spark-500">★{u.trust_score}</p>}
+                    <p className="truncate text-sm font-medium text-ink-900">{u.nickname}</p>
+                    {showStar && <p className="text-xs text-accent-600">★{u.trust_score}</p>}
                   </div>
                   <span className={`shrink-0 tabular text-sm font-bold ${accent}`}>
                     {u.count}
@@ -211,20 +211,20 @@ export default async function PublicStatsPage() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-5xl px-6 py-12">
-        <h1 className="text-2xl font-bold text-neutral-900">활동 랭킹</h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <h1 className="text-2xl font-bold text-ink-900">활동 랭킹</h1>
+        <p className="mt-2 text-sm text-ink-700">
           Tester Match 커뮤니티의 활동 통계입니다. 닉네임을 클릭하면 등록한 앱을 볼 수 있습니다.
         </p>
 
         {/* 크레딧은 유료 시트 참여로만 적립된다 (ADR-0014) */}
         <Link
           href="/browse"
-          className="mt-6 block rounded-2xl border border-amber-300 bg-amber-50 p-5 transition hover:border-amber-400"
+          className="mt-6 block border border-warning-700 bg-warning-50 p-5 transition hover:border-warning-700"
         >
-          <p className="text-sm font-bold text-neutral-900">
+          <p className="text-sm font-bold text-ink-900">
             💰 크레딧은 유료 시트 테스트로 적립됩니다
           </p>
-          <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+          <p className="mt-1 text-xs leading-relaxed text-ink-700">
             {SEAT_REWARD_SUMMARY}. 매칭 목록에서 💰 배지가 붙은 앱에 참여하세요. 이 랭킹은 활동
             기록이며 별도 크레딧 보상은 없습니다. →
           </p>
@@ -240,14 +240,14 @@ export default async function PublicStatsPage() {
 
         {/* 방문자 현황 */}
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-neutral-900">방문자 현황</h2>
-          <p className="mt-0.5 text-xs text-neutral-500">기기별 일 1회 집계 (KST)</p>
+          <h2 className="text-lg font-bold text-ink-900">방문자 현황</h2>
+          <p className="mt-0.5 text-xs text-ink-600">기기별 일 1회 집계 (KST)</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <StatCard label="오늘 방문자" value={todayVisitors} sub="고유 기기 수" />
             <StatCard label="7일 방문자" value={weekVisitors} sub="최근 1주 누계" />
           </div>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <p className="mb-5 text-sm font-semibold text-neutral-700">일별 방문자 추이</p>
+          <div className="mt-4 overflow-hidden border border-ink-200 bg-white p-6">
+            <p className="mb-5 text-sm font-semibold text-ink-700">일별 방문자 추이</p>
             <div className="flex items-end gap-1.5" style={{ height: "96px" }}>
               {weeklyData.map(({ date, visitors, isToday }) => {
                 const barH = Math.max(
@@ -256,9 +256,9 @@ export default async function PublicStatsPage() {
                 );
                 return (
                   <div key={date} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[11px] font-semibold text-neutral-500">{visitors}</span>
+                    <span className="text-[11px] font-semibold text-ink-600">{visitors}</span>
                     <div
-                      className={`w-full rounded-t-sm ${isToday ? "bg-trust-500" : "bg-trust-200"}`}
+                      className={`w-full  ${isToday ? "bg-ink-900" : "bg-surface-1"}`}
                       style={{ height: `${barH}px` }}
                     />
                   </div>
@@ -270,14 +270,14 @@ export default async function PublicStatsPage() {
                 <div key={date} className="flex flex-1 flex-col items-center">
                   <span
                     className={`text-[10px] leading-tight ${
-                      isToday ? "font-bold text-trust-600" : "text-neutral-400"
+                      isToday ? "font-bold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {label}
                   </span>
                   <span
                     className={`text-[9px] leading-tight ${
-                      isToday ? "font-semibold text-trust-400" : "text-neutral-300"
+                      isToday ? "font-semibold text-ink-900" : "text-ink-600"
                     }`}
                   >
                     {sub}
@@ -295,21 +295,21 @@ export default async function PublicStatsPage() {
             sub="삭제된 앱 제외 · TOP 20"
             rows={byApps}
             unit="개"
-            accent="text-trust-600"
+            accent="text-ink-900"
           />
           <RankingList
             title="테스트 참여 많은 순"
             sub="전체 매칭 횟수 기준 · TOP 20"
             rows={byMatches}
             unit="회"
-            accent="text-trust-600"
+            accent="text-ink-900"
           />
           <RankingList
             title="신뢰도 높은 순"
             sub="매일 체크인 +1점 · 최대 1,000점 · TOP 20"
             rows={byTrust}
             unit="점"
-            accent="text-spark-500"
+            accent="text-accent-600"
             showStar={false}
             emptyText="아직 집계 중입니다. 매일 체크인으로 신뢰도를 쌓아보세요!"
           />

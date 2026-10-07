@@ -193,15 +193,15 @@ export default async function HomePage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">
-        <span className="bg-spark-50 text-spark-600 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
+        <span className="bg-accent-50 text-accent-600 inline-flex items-center px-3 py-1 text-xs font-semibold">
           베타 운영 중
         </span>
-        <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-5xl">
+        <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-ink-900 sm:text-5xl">
           당신의 앱을 처음으로 열어볼
           <br />
-          <span className="text-trust-600">진짜 테스터가 필요합니다</span>
+          <span className="text-ink-900">진짜 테스터가 필요합니다</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-neutral-600">
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-ink-700">
           처음 세상에 나오는 앱의 긴장감과,
           <br className="hidden sm:block" />
           아무도 모르는 앱을 가장 먼저 발견하는 기쁨이 만나는 곳.
@@ -212,13 +212,13 @@ export default async function HomePage() {
             <>
               <Link
                 href="/apps/new"
-                className="rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="bg-ink-900 px-6 py-3 text-sm font-semibold text-white hover:bg-black"
               >
                 내 앱 등록하기
               </Link>
               <Link
                 href="/browse"
-                className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+                className="border border-ink-900 bg-white px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-surface-1"
               >
                 테스트할 앱 보기
               </Link>
@@ -227,13 +227,13 @@ export default async function HomePage() {
             <>
               <Link
                 href="/auth/login"
-                className="rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="bg-ink-900 px-6 py-3 text-sm font-semibold text-white hover:bg-black"
               >
                 Google로 시작하기
               </Link>
               <a
                 href="#waitlist"
-                className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+                className="border border-ink-900 bg-white px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-surface-1"
               >
                 사전 등록만 하기
               </a>
@@ -243,12 +243,12 @@ export default async function HomePage() {
       </section>
 
       {/* 앱 스크롤 배너 */}
-      <section className="bg-neutral-50 py-12">
+      <section className="bg-surface-1 py-12">
         <div className="mb-8 px-6 text-center">
-          <p className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+          <p className="text-sm font-semibold text-ink-600 uppercase tracking-wider">
             지금 테스터를 기다리는 앱들
           </p>
-          <h2 className="mt-2 text-xl font-bold text-neutral-900 sm:text-2xl">
+          <h2 className="mt-2 text-xl font-bold text-ink-900 sm:text-2xl">
             세상에 나오기 직전, 이 앱들을 가장 먼저 써볼 수 있습니다
           </h2>
         </div>
@@ -256,7 +256,7 @@ export default async function HomePage() {
         <div className="mt-8 text-center">
           <Link
             href={user ? "/browse" : "/auth/login"}
-            className="inline-flex rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50"
+            className="inline-flex border border-ink-900 bg-white px-5 py-2.5 text-sm font-semibold text-ink-700 hover:bg-surface-1"
           >
             전체 앱 보기 →
           </Link>
@@ -265,38 +265,38 @@ export default async function HomePage() {
 
       {/* Problem */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
+        <h2 className="text-center text-2xl font-bold text-ink-900 sm:text-3xl">
           테스터를 구하기 어려운 진짜 이유
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-base text-neutral-600">
+        <p className="mx-auto mt-3 max-w-xl text-center text-base text-ink-700">
           사람이 없는 게 아닙니다. 14일을 실제로 써줄 사람을 만나기 어려운 겁니다.
         </p>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {PAINS.map((p) => (
             <div
               key={p.title}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+              className="border border-ink-200 bg-white p-6"
             >
-              <h3 className="text-base font-semibold text-neutral-900">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{p.desc}</p>
+              <h3 className="text-base font-semibold text-ink-900">{p.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-700">{p.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* For testers */}
-      <section className="bg-neutral-50 py-20">
+      <section className="bg-surface-1 py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-12 text-center">
-            <span className="inline-flex items-center rounded-full bg-spark-50 px-3 py-1 text-xs font-semibold text-spark-600">
+            <span className="inline-flex items-center bg-accent-50 px-3 py-1 text-xs font-semibold text-accent-600">
               테스터에게
             </span>
-            <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
+            <h2 className="mt-4 text-2xl font-bold text-ink-900 sm:text-3xl">
               세상에 나오기 전 앱,
               <br />
-              <span className="text-trust-600">당신이 가장 먼저 씁니다</span>
+              <span className="text-ink-900">당신이 가장 먼저 씁니다</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink-700">
               개발자가 아니어도 괜찮습니다.
               <br />
               새로운 것을 먼저 써보고 싶은 사람이라면 누구에게나 열려 있습니다.
@@ -306,10 +306,10 @@ export default async function HomePage() {
             {TESTER_CARDS.map((c) => (
               <div
                 key={c.title}
-                className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+                className="border border-ink-200 bg-white p-6"
               >
-                <h3 className="text-base font-semibold text-neutral-900">{c.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
+                <h3 className="text-base font-semibold text-ink-900">{c.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-700">{c.desc}</p>
               </div>
             ))}
           </div>
@@ -317,19 +317,19 @@ export default async function HomePage() {
       </section>
 
       {/* For developers */}
-      <section className="bg-trust-50 py-20">
+      <section className="bg-surface-1 py-20">
         <div className="mx-auto max-w-4xl px-6">
           <div className="mb-3 text-center">
-            <span className="inline-flex items-center rounded-full bg-trust-100 px-3 py-1 text-xs font-semibold text-trust-700">
+            <span className="inline-flex items-center bg-surface-1 px-3 py-1 text-xs font-semibold text-ink-900">
               개발자에게
             </span>
           </div>
-          <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
+          <h2 className="text-center text-2xl font-bold text-ink-900 sm:text-3xl">
             진짜 쓰는 테스터 한 명이
             <br />
-            <span className="text-trust-600">지인 여럿보다 낫습니다</span>
+            <span className="text-ink-900">지인 여럿보다 낫습니다</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-neutral-600">
+          <p className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-ink-700">
             Tester Match의 테스터는 형식적으로 설치만 하지 않습니다.
             14일 동안 실제로 앱을 사용하고, 체크인으로 사용 여부를 스스로 확인합니다.
             당신의 앱은 이미 나올 준비가 됐습니다. 남은 건 진짜 테스터입니다.
@@ -338,14 +338,14 @@ export default async function HomePage() {
             {user ? (
               <Link
                 href="/apps/new"
-                className="inline-flex rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="inline-flex bg-ink-900 px-6 py-3 text-sm font-semibold text-white hover:bg-black"
               >
                 내 앱 등록하기 →
               </Link>
             ) : (
               <Link
                 href="/auth/login"
-                className="inline-flex rounded-lg bg-trust-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="inline-flex bg-ink-900 px-6 py-3 text-sm font-semibold text-white hover:bg-black"
               >
                 Google로 시작하기 →
               </Link>
@@ -358,21 +358,21 @@ export default async function HomePage() {
       <section className="mx-auto max-w-5xl px-6 py-20">
         <div className="text-center">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="bg-spark-50 text-spark-600 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold">
+            <span className="bg-accent-50 text-accent-600 inline-flex items-center px-3 py-1 text-xs font-semibold">
               급구 · 유료 테스터
             </span>
             {!PAID_TESTERS_PUBLIC_ORDERING && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              <span className="inline-flex items-center bg-warning-50 px-3 py-1 text-xs font-semibold text-warning-700">
                 결제 오픈 대기
               </span>
             )}
           </div>
-          <h2 className="mt-4 text-2xl font-bold text-neutral-900 sm:text-3xl">
+          <h2 className="mt-4 text-2xl font-bold text-ink-900 sm:text-3xl">
             부탁은 투자로,
             <br />
-            <span className="text-trust-600">하루 1분은 보상으로</span>
+            <span className="text-ink-900">하루 1분은 보상으로</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-neutral-600">
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink-700">
             테스터 구하기가 더는 눈치 보는 부탁이 아니었으면 했습니다. 개발자는 1명당 {PRICE_LABEL}
             으로 14일 동안 매일 앱을 여는 테스터를 모으고, 테스터는 하루 1분 체크인으로 출시 전 앱을
             먼저 써 보고 보상을 받습니다.
@@ -382,26 +382,26 @@ export default async function HomePage() {
           {CYCLE.map((c) => (
             <div
               key={c.who}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+              className="border border-ink-200 bg-white p-6"
             >
-              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
+              <span className="bg-surface-1 px-2 py-0.5 text-[10px] font-semibold text-ink-600">
                 {c.who}
               </span>
-              <p className="tabular mt-3 text-lg font-bold text-neutral-900">{c.value}</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{c.desc}</p>
+              <p className="tabular mt-3 text-lg font-bold text-ink-900">{c.value}</p>
+              <p className="mt-2 text-sm leading-relaxed text-ink-700">{c.desc}</p>
             </div>
           ))}
         </div>
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/paid-testers"
-            className="bg-trust-600 hover:bg-trust-700 rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-sm"
+            className="bg-ink-900 hover:bg-black px-6 py-3 text-sm font-semibold text-white"
           >
             급구 신청하기 →
           </Link>
           <Link
             href="/rewards"
-            className="rounded-lg border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+            className="border border-ink-900 bg-white px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-surface-1"
           >
             테스터 보상 보기 →
           </Link>
@@ -410,37 +410,37 @@ export default async function HomePage() {
 
       {/* How it works */}
       <section className="mx-auto max-w-6xl px-6 py-20">
-        <h2 className="text-center text-2xl font-bold text-neutral-900 sm:text-3xl">
+        <h2 className="text-center text-2xl font-bold text-ink-900 sm:text-3xl">
           어떻게 동작하나요
         </h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {STEPS.map((step) => (
             <div
               key={step.n}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+              className="border border-ink-200 bg-white p-6"
             >
               <div className="flex items-center gap-2">
-                <span className="tabular text-sm font-bold text-trust-600">{step.n}</span>
-                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold text-neutral-500">
+                <span className="tabular text-sm font-bold text-ink-900">{step.n}</span>
+                <span className="bg-surface-1 px-2 py-0.5 text-[10px] font-semibold text-ink-600">
                   {step.who}
                 </span>
               </div>
-              <h3 className="mt-3 text-lg font-semibold text-neutral-900">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{step.desc}</p>
+              <h3 className="mt-3 text-lg font-semibold text-ink-900">{step.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-700">{step.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="bg-neutral-50 py-20">
+      <section className="bg-surface-1 py-20">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-2xl font-bold text-neutral-900 sm:text-3xl">자주 묻는 질문</h2>
+          <h2 className="text-2xl font-bold text-ink-900 sm:text-3xl">자주 묻는 질문</h2>
           <dl className="mt-8 space-y-6">
             {FAQ.map((item) => (
-              <div key={item.q} className="border-b border-neutral-200 pb-6">
-                <dt className="text-base font-semibold text-neutral-900">Q. {item.q}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-neutral-600">{item.a}</dd>
+              <div key={item.q} className="border-b border-ink-200 pb-6">
+                <dt className="text-base font-semibold text-ink-900">Q. {item.q}</dt>
+                <dd className="mt-2 text-sm leading-relaxed text-ink-700">{item.a}</dd>
               </div>
             ))}
           </dl>
@@ -451,8 +451,8 @@ export default async function HomePage() {
       {!user && (
         <section id="waitlist" className="py-20">
           <div className="mx-auto max-w-md px-6 text-center">
-            <h2 className="text-2xl font-bold text-neutral-900">베타 초대를 받아보세요</h2>
-            <p className="mt-2 text-sm text-neutral-600">
+            <h2 className="text-2xl font-bold text-ink-900">베타 초대를 받아보세요</h2>
+            <p className="mt-2 text-sm text-ink-700">
               정식 오픈 시 가장 먼저 알려드립니다. 이메일 외 정보는 수집하지 않습니다.
             </p>
             <div className="mt-6">

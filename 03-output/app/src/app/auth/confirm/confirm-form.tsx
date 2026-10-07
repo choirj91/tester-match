@@ -10,7 +10,7 @@ import {
 } from "@/lib/validators/signup";
 
 const INPUT_CLASS =
-  "mt-1.5 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20";
+  "mt-1.5 w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600";
 const MISMATCH_MESSAGE = "두 칸의 비밀번호가 서로 다릅니다. 다시 입력해주세요.";
 
 /**
@@ -33,13 +33,13 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
 
   return (
     <form method="post" action="/api/auth/confirm" onSubmit={onSubmit} className="mt-6 space-y-4">
-      <label className="block text-sm font-semibold text-neutral-900">
-        닉네임 <span className="font-normal text-neutral-500">(사이트에 표시)</span>
+      <label className="block text-sm font-semibold text-ink-900">
+        닉네임 <span className="font-normal text-ink-600">(사이트에 표시)</span>
         <input type="text" name="nickname" required maxLength={NICKNAME_MAX} className={INPUT_CLASS} />
       </label>
-      <label className="block text-sm font-semibold text-neutral-900">
+      <label className="block text-sm font-semibold text-ink-900">
         카카오톡 닉네임{" "}
-        <span className="font-normal text-neutral-500">(오픈채팅방에서 쓰는 이름)</span>
+        <span className="font-normal text-ink-600">(오픈채팅방에서 쓰는 이름)</span>
         <input
           type="text"
           name="kakao_nickname"
@@ -47,12 +47,12 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
           maxLength={KAKAO_NICKNAME_MAX}
           className={INPUT_CLASS}
         />
-        <span className="mt-1 block text-xs font-normal text-neutral-500">
+        <span className="mt-1 block text-xs font-normal text-ink-600">
           커뮤니티 회원 확인과 안내에만 쓰이며 공개되지 않습니다.
         </span>
       </label>
-      <label className="block text-sm font-semibold text-neutral-900">
-        비밀번호 <span className="font-normal text-neutral-500">({PASSWORD_MIN}자 이상)</span>
+      <label className="block text-sm font-semibold text-ink-900">
+        비밀번호 <span className="font-normal text-ink-600">({PASSWORD_MIN}자 이상)</span>
         <input
           type="password"
           name="password"
@@ -63,7 +63,7 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
           className={INPUT_CLASS}
         />
       </label>
-      <label className="block text-sm font-semibold text-neutral-900">
+      <label className="block text-sm font-semibold text-ink-900">
         비밀번호 확인
         <input
           type="password"
@@ -76,7 +76,7 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
         />
       </label>
 
-      <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-neutral-600">
+      <label className="flex cursor-pointer items-start gap-2 text-xs leading-relaxed text-ink-700">
         <input type="checkbox" name="agreed" required className="mt-0.5 shrink-0" />
         <span>
           {/* 새 탭으로 연다 — 같은 탭 이동은 입력 중인 가입 정보를 날린다 */}
@@ -84,7 +84,7 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
             href="/policies/terms"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-neutral-900"
+            className="underline hover:text-ink-900"
           >
             이용약관
           </Link>
@@ -93,7 +93,7 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
             href="/policies/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-neutral-900"
+            className="underline hover:text-ink-900"
           >
             개인정보처리방침
           </Link>
@@ -101,12 +101,12 @@ export function ConfirmForm({ serverError }: { serverError: string | null }) {
         </span>
       </label>
 
-      {error && <p className="text-crimson-500 text-sm">{error}</p>}
+      {error && <p className="text-danger-700 text-sm">{error}</p>}
 
       <button
         type="submit"
         disabled={submitting}
-        className="bg-trust-600 hover:bg-trust-700 w-full rounded-lg px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+        className="bg-ink-900 hover:bg-black w-full px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
       >
         {submitting ? "처리 중..." : "가입 완료하기"}
       </button>

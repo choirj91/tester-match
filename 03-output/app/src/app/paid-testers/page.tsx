@@ -124,19 +124,19 @@ export default async function PaidTestersPage({
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-spark-600 text-xs font-semibold">급구 · 유료 테스터</p>
+          <p className="text-accent-600 text-xs font-semibold">급구 · 유료 테스터</p>
           {!PAID_TESTERS_PUBLIC_ORDERING && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800">
+            <span className="bg-warning-50 px-2.5 py-0.5 text-[11px] font-bold text-warning-700">
               결제 오픈 대기
             </span>
           )}
         </div>
-        <h1 className="mt-2 text-3xl leading-tight font-bold text-neutral-900">
+        <h1 className="mt-2 text-3xl leading-tight font-bold text-ink-900">
           테스터는 부탁하는 게 아니라,
           <br />
-          <span className="text-trust-600">내 앱에 투자하는 겁니다</span>
+          <span className="text-ink-900">내 앱에 투자하는 겁니다</span>
         </h1>
-        <p className="mt-4 text-sm leading-relaxed text-neutral-600">
+        <p className="mt-4 text-sm leading-relaxed text-ink-700">
           단톡방에 부탁하고 답을 기다리던 14일 대신, 매일 앱을 열고 스크린샷으로 증빙을 남기는
           테스터와 14일을 채우세요. 회사가 모집·관리하는 커뮤니티 테스터가 1명당 {PRICE_LABEL}
           (부가세 포함)에 참여합니다. 급구를 신청하면 매칭 목록 맨 위에 표시되고 전 회원에게 알림이
@@ -145,42 +145,42 @@ export default async function PaidTestersPage({
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {HIGHLIGHTS.map((h) => (
-            <div key={h.value} className="rounded-xl border border-neutral-200 bg-white p-4">
-              <p className="tabular text-lg font-bold text-neutral-900">{h.value}</p>
-              <p className="mt-1 text-xs leading-relaxed text-neutral-600">{h.label}</p>
+            <div key={h.value} className="border border-ink-200 bg-white p-4">
+              <p className="tabular text-lg font-bold text-ink-900">{h.value}</p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-700">{h.label}</p>
             </div>
           ))}
         </div>
 
         <FeeBreakdown className="mt-8" />
-        <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+        <p className="mt-3 text-sm leading-relaxed text-ink-700">
           수익을 늘리려고 만든 서비스가 아닙니다. 개발자는 Google Play 요건을 채우고, 테스터는 하루
           1분의 체크인으로 보상을 받아 가도록 둘 사이를 잇는 데 결제 금액을 씁니다.
         </p>
 
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-neutral-900">진행 방식</h2>
+          <h2 className="text-lg font-bold text-ink-900">진행 방식</h2>
           <ol className="mt-4 space-y-3">
             {STEPS.map((s, i) => (
               <li
                 key={s.title}
-                className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4"
+                className="flex gap-3 border border-ink-200 bg-white p-4"
               >
-                <span className="bg-trust-600 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                <span className="bg-ink-900 flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold text-white">
                   {i + 1}
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-neutral-900">{s.title}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-neutral-600">{s.desc}</p>
+                  <p className="text-sm font-semibold text-ink-900">{s.title}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-ink-700">{s.desc}</p>
                 </div>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className="border-trust-500/30 bg-trust-50 mt-8 rounded-2xl border p-5">
-          <h2 className="text-sm font-bold text-neutral-900">약속</h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-neutral-700">
+        <section className="border-ink-200 bg-surface-1 mt-8 border p-5">
+          <h2 className="text-sm font-bold text-ink-900">약속</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-ink-700">
             {GUARANTEES.map((g) => (
               <li key={g}>{g}</li>
             ))}
@@ -188,18 +188,18 @@ export default async function PaidTestersPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-lg font-bold text-neutral-900">환불 기준</h2>
+          <h2 className="text-lg font-bold text-ink-900">환불 기준</h2>
           <table className="mt-3 w-full text-sm">
             <tbody>
               {REFUND_SUMMARY.map(([when, how]) => (
-                <tr key={when} className="border-t border-neutral-200">
-                  <td className="py-2 pr-3 text-neutral-700">{when}</td>
-                  <td className="py-2 font-semibold text-neutral-900">{how}</td>
+                <tr key={when} className="border-t border-ink-200">
+                  <td className="py-2 pr-3 text-ink-700">{when}</td>
+                  <td className="py-2 font-semibold text-ink-900">{how}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-xs text-neutral-500">
+          <p className="mt-2 text-xs text-ink-600">
             환불은 결제대행사를 통해 원결제 수단으로 돌려드립니다 (카드 영업일 3~5일). 전체 기준은{" "}
             <Link href="/policies/refund" className="underline underline-offset-2">
               환불 정책
@@ -209,33 +209,33 @@ export default async function PaidTestersPage({
         </section>
 
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-neutral-900">급구 신청하기</h2>
+          <h2 className="text-lg font-bold text-ink-900">급구 신청하기</h2>
           {!user ? (
-            <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
-              <p className="text-sm text-neutral-600">
+            <div className="mt-4 border border-ink-200 bg-white p-6 text-center">
+              <p className="text-sm text-ink-700">
                 로그인 후 앱을 고르고 인원을 선택해 신청합니다.
               </p>
               {!PAID_TESTERS_PUBLIC_ORDERING && (
-                <p className="mt-1 text-xs text-amber-800">
+                <p className="mt-1 text-xs text-warning-700">
                   카드 결제는 오픈 준비 중입니다. 오픈 시 게시판 공지로 안내드립니다.
                 </p>
               )}
               <Link
                 href={`/auth/login?next=${encodeURIComponent(loginNext)}`}
-                className="bg-trust-600 hover:bg-trust-700 mt-3 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
+                className="bg-ink-900 hover:bg-black mt-3 inline-block px-5 py-2.5 text-sm font-semibold text-white"
               >
                 로그인
               </Link>
             </div>
           ) : apps.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 text-center">
-              <p className="text-sm text-neutral-600">
+            <div className="mt-4 border border-ink-200 bg-white p-6 text-center">
+              <p className="text-sm text-ink-700">
                 모집중(매칭 중) 상태의 앱이 없습니다. 앱을 등록하거나, 내 앱에서 상태를 모집중으로
                 바꾼 뒤 신청해주세요.
               </p>
               <Link
                 href="/apps/new"
-                className="bg-trust-600 hover:bg-trust-700 mt-3 inline-block rounded-lg px-5 py-2.5 text-sm font-semibold text-white"
+                className="bg-ink-900 hover:bg-black mt-3 inline-block px-5 py-2.5 text-sm font-semibold text-white"
               >
                 앱 등록하기
               </Link>
@@ -243,7 +243,7 @@ export default async function PaidTestersPage({
           ) : (
             <>
               {requestedAppUnavailable && (
-                <p className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p className="mt-4 border border-warning-700 bg-warning-50 px-4 py-3 text-sm text-warning-700">
                   선택한 앱은 지금 급구를 신청할 수 없습니다(모집중 상태가 아님). 아래에서 신청할
                   앱을 다시 골라주세요.
                 </p>
@@ -261,24 +261,24 @@ export default async function PaidTestersPage({
 
         {orders.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-lg font-bold text-neutral-900">내 주문</h2>
+            <h2 className="text-lg font-bold text-ink-900">내 주문</h2>
             <ul className="mt-4 space-y-2">
               {orders.map((o) => (
                 <li key={o.id}>
                   <Link
                     href={`/console/orders/${o.id}`}
-                    className="hover:border-trust-500 flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm transition"
+                    className="hover:border-ink-900 flex items-center justify-between border border-ink-200 bg-white px-4 py-3 text-sm transition"
                   >
                     <div>
-                      <p className="font-semibold text-neutral-900">
+                      <p className="font-semibold text-ink-900">
                         {o.apps?.name ?? "삭제된 앱"} — {o.tester_count}명
                       </p>
-                      <p className="mt-0.5 text-xs text-neutral-500">
+                      <p className="mt-0.5 text-xs text-ink-600">
                         {new Date(o.created_at).toLocaleDateString("ko-KR")} ·{" "}
                         {formatKrw(o.amount_krw)}원 · {o.order_code} · 출석표·스크린샷 보기 →
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
+                    <span className="shrink-0 bg-surface-1 px-3 py-1 text-xs font-semibold text-ink-700">
                       {PAID_ORDER_STATUS_LABEL[o.status] ?? o.status}
                     </span>
                   </Link>
@@ -288,7 +288,7 @@ export default async function PaidTestersPage({
           </section>
         )}
 
-        <p className="mt-10 text-xs leading-relaxed text-neutral-400">
+        <p className="mt-10 text-xs leading-relaxed text-ink-600">
           유료 테스터는 회사가 모집·관리하는 커뮤니티 실사용자가 참여하며(테스터 보상 시트당 최대{" "}
           {formatKrw(SEAT_REWARD_MAX)} 크레딧), 리뷰·평점 작성이나 인위적 참여는 제공하지 않습니다.
           테스터에게 현금을 지급하지 않으며, 크레딧은 구매·양도·현금 환급이 불가능합니다 (

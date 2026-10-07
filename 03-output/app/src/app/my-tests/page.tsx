@@ -19,10 +19,10 @@ import { InstalledButton } from "./installed-button";
 export const metadata = { title: "내 테스트" };
 
 const STATUS_LABEL: Record<string, { text: string; tone: string }> = {
-  active: { text: "진행중", tone: "bg-trust-50 text-trust-700" },
-  completed: { text: "완주", tone: "bg-mint-500/10 text-mint-500" },
-  opted_out: { text: "옵트아웃", tone: "bg-neutral-100 text-neutral-500" },
-  penalized: { text: "페널티", tone: "bg-crimson-500/10 text-crimson-500" },
+  active: { text: "진행중", tone: "bg-surface-1 text-ink-900" },
+  completed: { text: "완주", tone: "bg-success-50 text-success-700" },
+  opted_out: { text: "옵트아웃", tone: "bg-surface-1 text-ink-600" },
+  penalized: { text: "페널티", tone: "bg-danger-50 text-danger-700" },
 };
 
 export default async function MyTestsPage() {
@@ -43,8 +43,8 @@ export default async function MyTestsPage() {
       <SiteHeader user={user} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <header>
-          <h1 className="text-2xl font-bold text-neutral-900">내 테스트</h1>
-          <p className="mt-1 text-sm text-neutral-600">
+          <h1 className="text-2xl font-bold text-ink-900">내 테스트</h1>
+          <p className="mt-1 text-sm text-ink-700">
             참여중인 앱과 14일 체크인을 한 화면에서 추적합니다. 💰 유료 시트는 매일 스크린샷 체크인 — {SEAT_REWARD_SUMMARY}. 12일 이상 출석 + 구매자 확정 후 지급.
           </p>
         </header>
@@ -71,19 +71,19 @@ export default async function MyTestsPage() {
                 return (
                   <li
                     key={m.id}
-                    className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+                    className="border border-ink-200 bg-white p-5"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-lg font-semibold text-neutral-900">
+                        <h2 className="truncate text-lg font-semibold text-ink-900">
                           {app.name}
                         </h2>
-                        <p className="mt-1 line-clamp-2 text-sm text-neutral-600">
+                        <p className="mt-1 line-clamp-2 text-sm text-ink-700">
                           {app.short_description}
                         </p>
                       </div>
                       <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${label.tone}`}
+                        className={`shrink-0  px-2.5 py-1 text-xs font-semibold ${label.tone}`}
                       >
                         {label.text}
                       </span>
@@ -91,14 +91,14 @@ export default async function MyTestsPage() {
 
                     {(isActive || m.status === "completed") && (
                       <div className="mt-4">
-                        <div className="flex items-center justify-between text-xs text-neutral-500">
+                        <div className="flex items-center justify-between text-xs text-ink-600">
                           <span className="tabular">
-                            체크인 <strong className="text-trust-600">{checkedCount}</strong>일
+                            체크인 <strong className="text-ink-900">{checkedCount}</strong>일
                             {" / 14일"}
                           </span>
                           <span>
                             {m.paid_order_id != null && (
-                              <strong className="text-amber-600">
+                              <strong className="text-warning-700">
                                 💰 유료 시트 · 지금까지 {seatProgress.total} 크레딧 (7일 연속{" "}
                                 {Math.min(seatProgress.longestStreak, SEAT_STREAK_DAYS)}/{SEAT_STREAK_DAYS} · 12일↑
                                 완주 시 확정 후 지급) ·{" "}
@@ -107,9 +107,9 @@ export default async function MyTestsPage() {
                             등록자 {owner?.nickname ?? "—"}
                           </span>
                         </div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-100">
+                        <div className="mt-1 h-1.5 overflow-hidden bg-surface-1">
                           <div
-                            className="h-full bg-trust-600 transition-all"
+                            className="h-full bg-ink-900 transition-all"
                             style={{ width: `${(checkedCount / 14) * 100}%` }}
                           />
                         </div>
@@ -118,12 +118,12 @@ export default async function MyTestsPage() {
 
                     {/* Google 그룹 — 초대 링크보다 먼저 표시 */}
                     {app.google_group_url === TESTER_GROUP_URL && isActive ? (
-                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                        <span className="shrink-0 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                      <div className="mt-3 flex items-start gap-2 border border-warning-700 bg-warning-50 px-3 py-2">
+                        <span className="shrink-0 bg-warning-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
                           1단계
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-amber-800">
+                          <p className="text-xs text-warning-700">
                             공용 테스터 그룹({PLAY_GROUP_EMAIL}) 가입이 필요합니다 (최초 1회).
                             이미 가입했다면 초대 링크를 바로 사용하세요.
                           </p>
@@ -131,19 +131,19 @@ export default async function MyTestsPage() {
                         </div>
                       </div>
                     ) : app.google_group_url && isActive ? (
-                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                        <span className="shrink-0 rounded-full bg-amber-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                      <div className="mt-3 flex items-start gap-2 border border-warning-700 bg-warning-50 px-3 py-2">
+                        <span className="shrink-0 bg-warning-700 px-1.5 py-0.5 text-[9px] font-bold text-white">
                           1단계
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-amber-800">
+                          <p className="text-xs text-warning-700">
                             초대 링크 전에 Google 그룹 가입이 필요합니다.
                           </p>
                           <a
                             href={app.google_group_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-1 inline-block text-xs font-semibold text-amber-700 underline"
+                            className="mt-1 inline-block text-xs font-semibold text-warning-700 underline"
                           >
                             그룹 가입하기 →
                           </a>
@@ -172,7 +172,7 @@ export default async function MyTestsPage() {
                       )}
                       {isActive &&
                         (m.installed_at ? (
-                          <span className="rounded-lg bg-mint-500/10 px-2.5 py-1.5 text-xs font-semibold text-mint-500">
+                          <span className="bg-success-50 px-2.5 py-1.5 text-xs font-semibold text-success-700">
                             📲 설치 확인됨 ✓
                           </span>
                         ) : (
@@ -183,7 +183,7 @@ export default async function MyTestsPage() {
                           href={app.store_invite_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                          className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
                         >
                           {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL
                             ? "안드로이드 (2단계) ↗"
@@ -195,7 +195,7 @@ export default async function MyTestsPage() {
                           href={app.web_invite_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                          className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
                         >
                           {app.google_group_url && app.google_group_url !== TESTER_GROUP_URL
                             ? "웹 (2단계) ↗"
@@ -204,7 +204,7 @@ export default async function MyTestsPage() {
                       )}
                       <Link
                         href={`/browse/${app.id}`}
-                        className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                        className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
                       >
                         앱 정보
                       </Link>
@@ -215,16 +215,16 @@ export default async function MyTestsPage() {
               })}
             </ul>
           ) : (
-            <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-10 text-center">
-              <p className="text-base font-medium text-neutral-700">
+            <div className="border border-dashed border-ink-900 bg-surface-1 p-10 text-center">
+              <p className="text-base font-medium text-ink-700">
                 아직 참여중인 테스트가 없습니다.
               </p>
-              <p className="mt-2 text-sm text-neutral-600">
+              <p className="mt-2 text-sm text-ink-700">
                 매칭 가능 앱에서 관심 가는 앱을 골라 참여해보세요.
               </p>
               <Link
                 href="/browse"
-                className="mt-6 inline-flex rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700"
+                className="mt-6 inline-flex bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
               >
                 매칭 가능 앱 보기 →
               </Link>

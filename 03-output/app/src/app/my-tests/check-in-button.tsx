@@ -61,7 +61,7 @@ export function CheckInButton({
       <button
         type="button"
         disabled
-        className="rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-semibold text-neutral-500"
+        className="bg-surface-1 px-3 py-1.5 text-xs font-semibold text-ink-600"
       >
         체크인 기간 만료
       </button>
@@ -73,7 +73,7 @@ export function CheckInButton({
       <button
         type="button"
         disabled
-        className="rounded-lg bg-mint-500/10 px-3 py-1.5 text-xs font-semibold text-mint-500"
+        className="bg-success-50 px-3 py-1.5 text-xs font-semibold text-success-700"
       >
         ✓ 오늘 체크인 완료
       </button>
@@ -124,11 +124,11 @@ export function CheckInButton({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="rounded-lg bg-trust-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {busy ? "업로드 중..." : "📷 스크린샷 올리고 체크인"}
         </button>
-        <span className="text-[10px] text-neutral-400">
+        <span className="text-[10px] text-ink-600">
           앱 실행 화면 1장 · 알림·개인정보는 가려주세요
           {deadlineIso && ` · 오늘 마감 ${deadlineLabel(deadlineIso)}`}
         </span>
@@ -141,7 +141,7 @@ export function CheckInButton({
       type="button"
       onClick={() => void submit(null)}
       disabled={busy}
-      className="rounded-lg bg-trust-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+      className="bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-black disabled:opacity-50"
     >
       {busy ? "처리 중..." : "오늘 체크인"}
     </button>

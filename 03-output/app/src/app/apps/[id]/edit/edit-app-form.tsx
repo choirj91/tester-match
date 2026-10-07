@@ -17,7 +17,7 @@ type Initial = {
 };
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 disabled:bg-neutral-50";
+  "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600 disabled:bg-surface-1";
 
 export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
   const router = useRouter();
@@ -102,20 +102,20 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
       </Field>
 
       {/* 공용 테스터 그룹 (고정) */}
-      <div className="rounded-2xl border border-mint-500/30 bg-mint-500/5 p-4">
+      <div className="border border-success-700 bg-success-50 p-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="bg-success-700 px-2 py-0.5 text-[10px] font-bold text-white">
             자동 설정
           </span>
-          <p className="text-sm font-semibold text-neutral-900">Google 그룹 — 공용 테스터 그룹</p>
+          <p className="text-sm font-semibold text-ink-900">Google 그룹 — 공용 테스터 그룹</p>
         </div>
-        <p className="mt-1.5 text-xs leading-relaxed text-neutral-600">
-          저장 시 공용 그룹 <strong className="font-semibold text-neutral-800">{PLAY_GROUP_EMAIL}</strong> 으로
+        <p className="mt-1.5 text-xs leading-relaxed text-ink-700">
+          저장 시 공용 그룹 <strong className="font-semibold text-ink-900">{PLAY_GROUP_EMAIL}</strong> 으로
           설정됩니다. Play Console 비공개 테스트 트랙의 테스터 목록에 이 그룹 이메일을 등록해주세요.
           Tester Match 회원은 자동으로 이 그룹에 가입되어 있습니다.
         </p>
         {initial.google_group_url && initial.google_group_url !== TESTER_GROUP_URL && (
-          <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-800">
+          <p className="mt-2 bg-warning-50 px-2.5 py-1.5 text-[11px] leading-relaxed text-warning-700">
             현재 개별 그룹(<span className="break-all">{initial.google_group_url}</span>)을 쓰고 있습니다.
             저장하면 공용 그룹으로 변경되니, Play Console 테스터 목록에도 공용 그룹 이메일을 추가해주세요.
           </p>
@@ -155,7 +155,7 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
       </Field>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="bg-danger-50 px-3 py-2 text-sm text-danger-700">
           {error}
         </p>
       )}
@@ -164,7 +164,7 @@ export function EditAppForm({ id, initial }: { id: number; initial: Initial }) {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {submitting ? "저장 중..." : "저장"}
         </button>
@@ -184,8 +184,8 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-neutral-900">{label}</span>
-      {hint && <span className="mt-0.5 block text-xs text-neutral-500">{hint}</span>}
+      <span className="text-sm font-semibold text-ink-900">{label}</span>
+      {hint && <span className="mt-0.5 block text-xs text-ink-600">{hint}</span>}
       <div className="mt-2">{children}</div>
     </label>
   );

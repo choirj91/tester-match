@@ -36,12 +36,12 @@ export function RemindButton({ appId, pendingCount }: { appId: number; pendingCo
 
   return (
     <div className="flex items-center gap-2">
-      {result && <span className="text-xs text-neutral-500">{result}</span>}
+      {result && <span className="text-xs text-ink-600">{result}</span>}
       <button
         type="button"
         onClick={send}
         disabled={busy}
-        className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+        className="border border-warning-700 bg-warning-50 px-3 py-1.5 text-xs font-semibold text-warning-700 hover:bg-warning-50 disabled:opacity-50"
         title="오늘 체크인하지 않은 테스터에게 알림 (하루 1회)"
       >
         {busy ? "발송 중..." : `🔔 미체크인 ${pendingCount}명 리마인드`}

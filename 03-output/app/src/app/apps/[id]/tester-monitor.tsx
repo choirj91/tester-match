@@ -1,11 +1,11 @@
 import { RemindButton } from "./remind-button";
 
 const MATCH_STATUS_LABEL: Record<string, { text: string; tone: string }> = {
-  active: { text: "진행중", tone: "bg-trust-50 text-trust-700" },
-  completed: { text: "완주", tone: "bg-mint-500/10 text-mint-500" },
-  opted_out: { text: "옵트아웃", tone: "bg-neutral-100 text-neutral-500" },
-  penalized: { text: "페널티", tone: "bg-crimson-500/10 text-crimson-500" },
-  pending: { text: "대기", tone: "bg-neutral-100 text-neutral-700" },
+  active: { text: "진행중", tone: "bg-surface-1 text-ink-900" },
+  completed: { text: "완주", tone: "bg-success-50 text-success-700" },
+  opted_out: { text: "옵트아웃", tone: "bg-surface-1 text-ink-600" },
+  penalized: { text: "페널티", tone: "bg-danger-50 text-danger-700" },
+  pending: { text: "대기", tone: "bg-surface-1 text-ink-700" },
 };
 
 export type MonitorRow = {
@@ -60,9 +60,9 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
   return (
     <section className="mt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-neutral-900">
+        <h2 className="text-lg font-semibold text-ink-900">
           테스터 모니터링{" "}
-          <span className="tabular text-neutral-500">{rows.length}</span>
+          <span className="tabular text-ink-600">{rows.length}</span>
         </h2>
         {notCheckedToday > 0 && (
           <RemindButton appId={appId} pendingCount={notCheckedToday} />
@@ -76,9 +76,9 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
         <MiniStat label="진행중" value={`${active.length}명`} />
       </dl>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <div className="mt-4 overflow-hidden border border-ink-200 bg-white">
         {rows.length > 0 ? (
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-ink-200">
             {rows.map((r) => {
               const label = MATCH_STATUS_LABEL[r.status] ?? MATCH_STATUS_LABEL.pending;
               const days = new Set(r.checkins.map((c) => c.day_n));
@@ -95,25 +95,25 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
               return (
                 <li key={r.matchId} className="px-5 py-4">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">
+                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
                       {r.nickname}
-                      <span className="ml-2 text-xs font-normal text-neutral-500">
+                      <span className="ml-2 text-xs font-normal text-ink-600">
                         신뢰 <span className="tabular">{r.trustScore}</span>
                       </span>
                     </p>
                     <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${label.tone}`}
+                      className={`shrink-0  px-2.5 py-1 text-xs font-semibold ${label.tone}`}
                     >
                       {label.text}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-700">
                     <span>
                       {r.installedAt ? (
-                        <span className="font-semibold text-mint-500">📲 설치 확인 ✓</span>
+                        <span className="font-semibold text-success-700">📲 설치 확인 ✓</span>
                       ) : (
-                        <span className="text-amber-600">📲 설치 미확인</span>
+                        <span className="text-warning-700">📲 설치 미확인</span>
                       )}
                     </span>
                     <span>
@@ -122,8 +122,8 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
                         className={
                           r.lastSeenAt &&
                           Date.now() - new Date(r.lastSeenAt).getTime() < dayMs
-                            ? "font-semibold text-mint-500"
-                            : "text-neutral-500"
+                            ? "font-semibold text-success-700"
+                            : "text-ink-600"
                         }
                       >
                         {relativeTime(r.lastSeenAt)}
@@ -132,12 +132,12 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
                     <span>
                       체크인{" "}
                       {checkedTodayRow ? (
-                        <span className="font-semibold text-mint-500">오늘 완료 ✓</span>
+                        <span className="font-semibold text-success-700">오늘 완료 ✓</span>
                       ) : (
-                        <span className="text-neutral-500">{relativeTime(lastCheckin)}</span>
+                        <span className="text-ink-600">{relativeTime(lastCheckin)}</span>
                       )}
                     </span>
-                    <span className="tabular text-neutral-500">{days.size}/14일</span>
+                    <span className="tabular text-ink-600">{days.size}/14일</span>
                   </div>
 
                   {/* 14일 그리드 */}
@@ -146,8 +146,8 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
                       <span
                         key={d}
                         title={`Day ${d}`}
-                        className={`h-2 flex-1 rounded-sm ${
-                          days.has(d) ? "bg-trust-600" : "bg-neutral-100"
+                        className={`h-2 flex-1  ${
+                          days.has(d) ? "bg-ink-900" : "bg-surface-1"
                         }`}
                       />
                     ))}
@@ -157,13 +157,13 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
             })}
           </ul>
         ) : (
-          <div className="px-6 py-10 text-center text-sm text-neutral-500">
+          <div className="px-6 py-10 text-center text-sm text-ink-600">
             아직 참여한 테스터가 없습니다.
           </div>
         )}
       </div>
 
-      <p className="mt-2 text-[11px] leading-relaxed text-neutral-400">
+      <p className="mt-2 text-[11px] leading-relaxed text-ink-600">
         ℹ️ Google Play 는 개별 테스터의 실제 설치·실행 여부를 개발자에게 제공하지 않습니다
         (공개/비공개 테스트 무관). 위 지표는 Tester Match 의 설치 자가확인·플랫폼 접속·일일
         체크인 기록입니다. 공식 옵트인 수는 Play Console 대시보드에서 확인하세요.
@@ -174,9 +174,9 @@ export function TesterMonitor({ appId, rows }: { appId: number; rows: MonitorRow
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3">
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="mt-1 text-base font-semibold text-neutral-900 tabular">{value}</dd>
+    <div className="border border-ink-200 bg-white px-4 py-3">
+      <dt className="text-xs text-ink-600">{label}</dt>
+      <dd className="mt-1 text-base font-semibold text-ink-900 tabular">{value}</dd>
     </div>
   );
 }

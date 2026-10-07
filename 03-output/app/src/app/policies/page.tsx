@@ -33,8 +33,8 @@ export default async function PoliciesIndex() {
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-bold text-neutral-900">정책 안내</h1>
-        <p className="mt-2 text-sm text-neutral-600">
+        <h1 className="text-3xl font-bold text-ink-900">정책 안내</h1>
+        <p className="mt-2 text-sm text-ink-700">
           낰낰컴퍼니가 운영하는 Tester Match 의 이용 조건·개인정보 처리·환불·크레딧 운영 기준입니다. 변경 시
           시행 7일 전에 게시판 공지로 안내합니다.
         </p>
@@ -44,13 +44,13 @@ export default async function PoliciesIndex() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition hover:border-trust-600"
+                className="flex items-center justify-between border border-ink-200 bg-white p-5 transition hover:border-ink-900"
               >
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900">{item.title}</h2>
-                  <p className="mt-1 text-sm text-neutral-600">{item.desc}</p>
+                  <h2 className="text-lg font-semibold text-ink-900">{item.title}</h2>
+                  <p className="mt-1 text-sm text-ink-700">{item.desc}</p>
                 </div>
-                <span className="text-trust-600">→</span>
+                <span className="text-ink-900">→</span>
               </Link>
             </li>
           ))}

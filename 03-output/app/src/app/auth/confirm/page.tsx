@@ -37,20 +37,20 @@ export default async function ConfirmPage({
   const hasToken = isValidTokenHash(cookieStore.get(CONFIRM_COOKIE)?.value);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 px-6 py-12">
-      <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+    <main className="flex min-h-screen items-center justify-center bg-surface-1 px-6 py-12">
+      <div className="w-full max-w-sm border border-ink-200 bg-white p-8">
         <Link
           href="/"
-          className="text-trust-600 hover:text-trust-700 text-sm font-bold tracking-tight"
+          className="text-ink-900 hover:text-ink-900 text-sm font-bold tracking-tight"
         >
           ← Tester Match
         </Link>
 
-        <h1 className="mt-6 text-2xl font-bold text-neutral-900">가입 완료하기</h1>
+        <h1 className="mt-6 text-2xl font-bold text-ink-900">가입 완료하기</h1>
 
         {hasToken ? (
           <>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+            <p className="mt-2 text-sm leading-relaxed text-ink-700">
               이메일이 확인되었습니다. 닉네임과 로그인에 쓸 비밀번호를 정하면 가입이 완료됩니다.
               본인이 가입을 신청하지 않았다면 아무것도 입력하지 말고 이 창을 닫아주세요.
             </p>
@@ -58,13 +58,13 @@ export default async function ConfirmPage({
           </>
         ) : (
           <>
-            <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+            <p className="mt-2 text-sm leading-relaxed text-ink-700">
               인증 정보를 찾지 못했습니다. 메일의 [이메일 인증하기] 버튼을 같은 브라우저에서 다시
               눌러주세요. 이미 가입을 마쳤다면 바로 로그인할 수 있습니다.
             </p>
             <Link
               href="/auth/login"
-              className="bg-trust-600 hover:bg-trust-700 mt-8 block w-full rounded-lg px-4 py-3 text-center text-sm font-semibold text-white shadow-sm"
+              className="bg-ink-900 hover:bg-black mt-8 block w-full px-4 py-3 text-center text-sm font-semibold text-white"
             >
               로그인으로 이동
             </Link>

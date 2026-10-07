@@ -22,10 +22,10 @@ export function PostActions({ id }: { id: number }) {
   }
 
   return (
-    <div className="mt-8 flex items-center gap-2 border-t border-neutral-200 pt-4">
+    <div className="mt-8 flex items-center gap-2 border-t border-ink-200 pt-4">
       <Link
         href={`/board/${id}/edit`}
-        className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+        className="border border-ink-900 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
       >
         수정
       </Link>
@@ -33,7 +33,7 @@ export function PostActions({ id }: { id: number }) {
         type="button"
         onClick={onDelete}
         disabled={busy}
-        className="rounded-lg border border-crimson-500/30 bg-white px-3 py-1.5 text-xs font-semibold text-crimson-500 hover:bg-crimson-500/10 disabled:opacity-50"
+        className="border border-danger-700 bg-white px-3 py-1.5 text-xs font-semibold text-danger-700 hover:bg-danger-50 disabled:opacity-50"
       >
         {busy ? "삭제 중..." : "삭제"}
       </button>

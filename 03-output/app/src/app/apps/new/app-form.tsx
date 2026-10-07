@@ -10,7 +10,7 @@ type Props = {
 };
 
 const inputClass =
-  "w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-sm shadow-sm placeholder:text-neutral-400 focus:border-trust-600 focus:outline-none focus:ring-2 focus:ring-trust-500/20 disabled:bg-neutral-50 disabled:text-neutral-500";
+  "w-full  border border-ink-900 bg-white px-3 py-2.5 text-sm  placeholder:text-ink-600 focus:border-ink-900 focus:outline-none focus:ring-2 focus:ring-accent-600 disabled:bg-surface-1 disabled:text-ink-600";
 
 type ParsedApp = {
   package_id: string;
@@ -116,16 +116,16 @@ export function AppForm({ initialNickname, email }: Props) {
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-5">
       {/* Play Store URL 자동 채움 */}
-      <section className="rounded-2xl border border-trust-500/30 bg-trust-50 p-4">
+      <section className="border border-ink-200 bg-surface-1 p-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-trust-600 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="bg-ink-900 px-2 py-0.5 text-[10px] font-bold text-white">
             자동 채움
           </span>
-          <p className="text-sm font-semibold text-neutral-900">
+          <p className="text-sm font-semibold text-ink-900">
             Play Store URL 붙여넣기
           </p>
         </div>
-        <p className="mt-1 text-xs text-neutral-600">
+        <p className="mt-1 text-xs text-ink-700">
           Play Store 앱 상세 URL 을 붙여넣으면 이름·설명·초대 링크를 자동으로 채웁니다.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -140,7 +140,7 @@ export function AppForm({ initialNickname, email }: Props) {
             type="button"
             onClick={autofillFromPlayStore}
             disabled={parsing}
-            className="shrink-0 rounded-lg bg-trust-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+            className="shrink-0 bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
           >
             {parsing ? "가져오는 중..." : "자동 채움"}
           </button>
@@ -149,8 +149,8 @@ export function AppForm({ initialNickname, email }: Props) {
           <p
             className={`mt-2 text-xs ${
               parseMsg.tone === "ok"
-                ? "font-semibold text-mint-500"
-                : "font-semibold text-crimson-500"
+                ? "font-semibold text-success-700"
+                : "font-semibold text-danger-700"
             }`}
           >
             {parseMsg.text}
@@ -211,27 +211,27 @@ export function AppForm({ initialNickname, email }: Props) {
       </Field>
 
       {/* 공용 테스터 그룹 안내 (고정) */}
-      <section className="rounded-2xl border border-mint-500/30 bg-mint-500/5 p-4">
+      <section className="border border-success-700 bg-success-50 p-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-bold text-white">
+          <span className="bg-success-700 px-2 py-0.5 text-[10px] font-bold text-white">
             자동 설정
           </span>
-          <p className="text-sm font-semibold text-neutral-900">Tester Match 공용 테스터 그룹</p>
+          <p className="text-sm font-semibold text-ink-900">Tester Match 공용 테스터 그룹</p>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-neutral-600">
-          모든 앱은 공용 그룹 <strong className="font-semibold text-neutral-800">{PLAY_GROUP_EMAIL}</strong> 을
+        <p className="mt-2 text-xs leading-relaxed text-ink-700">
+          모든 앱은 공용 그룹 <strong className="font-semibold text-ink-900">{PLAY_GROUP_EMAIL}</strong> 을
           사용합니다. 테스터에게는 그룹 1클릭 가입 안내가 자동으로 표시되고, 한 번
           가입한 테스터는 모든 앱에 바로 참여할 수 있습니다.
         </p>
-        <div className="mt-3 rounded-xl border border-neutral-200 bg-white p-3">
-          <p className="text-xs font-bold text-neutral-800">
+        <div className="mt-3 border border-ink-200 bg-white p-3">
+          <p className="text-xs font-bold text-ink-900">
             📌 등록 전 Play Console 설정 (1회, 1분)
           </p>
-          <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-neutral-600">
+          <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs leading-relaxed text-ink-700">
             <li>Play Console → 테스트 → <strong>비공개 테스트</strong> 트랙 → 테스터 탭</li>
             <li>
               &ldquo;Google 그룹으로 이메일 목록 만들기&rdquo;에{" "}
-              <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] font-semibold text-trust-700">
+              <code className="bg-surface-1 px-1 py-0.5 text-[11px] font-semibold text-ink-900">
                 {PLAY_GROUP_EMAIL}
               </code>{" "}
               추가
@@ -241,7 +241,7 @@ export function AppForm({ initialNickname, email }: Props) {
           <button
             type="button"
             onClick={() => navigator.clipboard.writeText(PLAY_GROUP_EMAIL).catch(() => {})}
-            className="mt-2 rounded-lg border border-neutral-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+            className="mt-2 border border-ink-900 bg-white px-2.5 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface-1"
           >
             그룹 이메일 복사
           </button>
@@ -274,7 +274,7 @@ export function AppForm({ initialNickname, email }: Props) {
       </Field>
 
       {error && (
-        <p role="alert" className="rounded-lg bg-crimson-500/10 px-3 py-2 text-sm text-crimson-500">
+        <p role="alert" className="bg-danger-50 px-3 py-2 text-sm text-danger-700">
           {error}
         </p>
       )}
@@ -283,7 +283,7 @@ export function AppForm({ initialNickname, email }: Props) {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-trust-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-trust-700 disabled:opacity-50"
+          className="bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-black disabled:opacity-50"
         >
           {submitting ? "등록 중..." : "앱 등록하기"}
         </button>
@@ -303,8 +303,8 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-sm font-semibold text-neutral-900">{label}</span>
-      {hint && <span className="mt-0.5 block text-xs text-neutral-500">{hint}</span>}
+      <span className="text-sm font-semibold text-ink-900">{label}</span>
+      {hint && <span className="mt-0.5 block text-xs text-ink-600">{hint}</span>}
       <div className="mt-2">{children}</div>
     </label>
   );

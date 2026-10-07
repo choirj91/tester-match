@@ -8,7 +8,7 @@ export function FloatButtons() {
 
       {/* 이메일 문의 버튼 */}
       <div className="group relative">
-        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100">
+        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           이메일 문의
         </span>
         <a
@@ -16,7 +16,7 @@ export function FloatButtons() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="이메일 문의하기"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-neutral-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-95"
+          className="flex h-12 w-12 items-center justify-center bg-white ring-1 ring-ink-200 transition-all duration-200 hover:-translate-y-1 active:scale-95"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="2" y="4" width="20" height="16" rx="3" stroke="#374151" strokeWidth="1.8" fill="none"/>
@@ -27,7 +27,7 @@ export function FloatButtons() {
 
       {/* 카카오 오픈채팅 버튼 */}
       <div className="group relative">
-        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100">
+        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           카카오 오픈채팅 참여하기
         </span>
         <a
@@ -35,7 +35,7 @@ export function FloatButtons() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="카카오톡 오픈채팅 참여하기"
-          className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:scale-95"
+          className="flex h-12 w-12 items-center justify-center transition-all duration-200 hover:-translate-y-1 active:scale-95"
           style={{ backgroundColor: "#FEE500" }}
         >
           <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">

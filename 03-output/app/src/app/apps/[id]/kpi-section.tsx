@@ -67,8 +67,8 @@ export function KpiSection({ matches }: { matches: Match[] }) {
 
   return (
     <section className="mt-8">
-      <h2 className="text-lg font-semibold text-neutral-900">참여 지표</h2>
-      <p className="mt-0.5 text-xs text-neutral-500">
+      <h2 className="text-lg font-semibold text-ink-900">참여 지표</h2>
+      <p className="mt-0.5 text-xs text-ink-600">
         총 매칭 · 완주율 · 이탈률 · 평균 체크인 진행률
       </p>
 
@@ -84,8 +84,8 @@ export function KpiSection({ matches }: { matches: Match[] }) {
         />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <p className="mb-4 text-sm font-semibold text-neutral-700">일별 신규 매칭 (최근 7일)</p>
+      <div className="mt-4 border border-ink-200 bg-white p-6">
+        <p className="mb-4 text-sm font-semibold text-ink-700">일별 신규 매칭 (최근 7일)</p>
         <div className="flex items-end gap-1.5" style={{ height: "72px" }}>
           {buckets.map((b, i) => {
             const barH = Math.max(
@@ -94,10 +94,10 @@ export function KpiSection({ matches }: { matches: Match[] }) {
             );
             return (
               <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                <span className="text-[11px] font-semibold text-neutral-500">{b.count}</span>
+                <span className="text-[11px] font-semibold text-ink-600">{b.count}</span>
                 <div
-                  className={`w-full rounded-t-sm transition-all ${
-                    b.isToday ? "bg-trust-500" : "bg-trust-200"
+                  className={`w-full  transition-all ${
+                    b.isToday ? "bg-ink-900" : "bg-surface-1"
                   }`}
                   style={{ height: `${barH}px` }}
                 />
@@ -110,14 +110,14 @@ export function KpiSection({ matches }: { matches: Match[] }) {
             <div key={i} className="flex flex-1 flex-col items-center">
               <span
                 className={`text-[10px] ${
-                  b.isToday ? "font-bold text-trust-600" : "text-neutral-400"
+                  b.isToday ? "font-bold text-ink-900" : "text-ink-600"
                 }`}
               >
                 {b.label}
               </span>
               <span
                 className={`text-[9px] ${
-                  b.isToday ? "font-semibold text-trust-400" : "text-neutral-300"
+                  b.isToday ? "font-semibold text-ink-900" : "text-ink-600"
                 }`}
               >
                 {b.sub}
@@ -142,18 +142,18 @@ function KpiCard({
   tone: "mint" | "crimson" | "trust" | "neutral";
 }) {
   const toneClass = {
-    mint: "text-mint-500",
-    crimson: "text-crimson-500",
-    trust: "text-trust-600",
-    neutral: "text-neutral-900",
+    mint: "text-success-700",
+    crimson: "text-danger-700",
+    trust: "text-ink-900",
+    neutral: "text-ink-900",
   }[tone];
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+    <div className="border border-ink-200 bg-white p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-600">
         {label}
       </p>
       <p className={`mt-1 text-2xl font-bold tabular ${toneClass}`}>{value}</p>
-      <p className="mt-0.5 text-[11px] text-neutral-500">{sub}</p>
+      <p className="mt-0.5 text-[11px] text-ink-600">{sub}</p>
     </div>
   );
 }
