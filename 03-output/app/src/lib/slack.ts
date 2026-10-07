@@ -40,7 +40,7 @@ export async function postSlackMessage(
   payload: SlackPayload,
 ): Promise<SlackResult> {
   if (!webhookUrl) {
-    console.warn("[slack] SLACK_INQUIRY_WEBHOOK_URL is not set — message not sent");
+    console.warn("[slack] webhook URL is not set — message not sent");
     return { ok: false, reason: "no_webhook" };
   }
   if (!isSlackWebhookUrl(webhookUrl)) {
@@ -106,6 +106,62 @@ export function inquirySlackPayload(args: {
             text: `작성자 ${escapeSlackText(args.nickname)} (회원 #${args.userId}) · <${adminUrl}|관리자 페이지에서 처리>`,
           },
         ],
+      },
+    ],
+  };
+}
+
+/**
+ * 운영 알림(일일 리포트 등) 채널 웹훅. 따로 정하지 않았으면 문의 알림 채널로 보낸다 —
+ * 웹훅을 새로 만들지 않아도 바로 받도록. 채널을 나누려면 SLACK_OPS_WEBHOOK_URL 만 넣으면 된다.
+ */
+export function opsSlackWebhookUrl(): string | undefined {
+  return process.env.SLACK_OPS_WEBHOOK_URL || process.env.SLACK_INQUIRY_WEBHOOK_URL || undefined;
+}
+
+const REPORT_ALERTS_MAX = 20;
+/** 경보 한 줄 상한 — 운영 메모가 길게 붙은 경보가 메시지 전체를 막지 않게 */
+const REPORT_ALERT_CHARS = 200;
+/** 섹션 하나에 넣는 경보 수 — Slack 섹션 텍스트는 3,000자까지 (10 × 200 < 3,000) */
+const REPORT_ALERTS_PER_SECTION = 10;
+
+/** 일일 관리자 리포트 요약 — 메일과 같은 숫자·경보. 경보 문장에는 앱 이름(사용자 입력)이 섞여 있어 이스케이프한다. */
+export function dailyReportSlackPayload(args: {
+  dateLabel: string;
+  activeOrders: number;
+  autoCanceledCount: number;
+  yearlyPaidCount: number;
+  alerts: ReadonlyArray<string>;
+}): SlackPayload {
+  const headline =
+    args.alerts.length > 0
+      ? `일일 리포트 ${args.dateLabel} — 확인 필요 ${args.alerts.length}건`
+      : `일일 리포트 ${args.dateLabel} — 이상 없음`;
+  const stats = `진행 중 주문 ${args.activeOrders}건 · 24시간 자동 취소 ${args.autoCanceledCount}건 · 올해 결제 ${args.yearlyPaidCount}건`;
+  // 이스케이프하면 길이가 늘어난다(< → &lt;) — 이스케이프한 뒤 자르고, 잘린 엔티티 조각은 버린다
+  const clip = (text: string) =>
+    text.length > REPORT_ALERT_CHARS
+      ? `${text.slice(0, REPORT_ALERT_CHARS).replace(/&[a-z]{0,3}$/, "")}…`
+      : text;
+  const shown = args.alerts.slice(0, REPORT_ALERTS_MAX).map((a) => `• ${clip(escapeSlackText(a))}`);
+  const more =
+    args.alerts.length > REPORT_ALERTS_MAX ? [`… 외 ${args.alerts.length - REPORT_ALERTS_MAX}건`] : [];
+  const lines = [...shown, ...more];
+  const alertSections = [];
+  for (let i = 0; i < lines.length; i += REPORT_ALERTS_PER_SECTION) {
+    alertSections.push({
+      type: "section",
+      text: { type: "mrkdwn", text: lines.slice(i, i + REPORT_ALERTS_PER_SECTION).join("\n") },
+    });
+  }
+  return {
+    text: `${args.alerts.length > 0 ? "⚠️" : "✅"} ${headline}`,
+    blocks: [
+      { type: "section", text: { type: "mrkdwn", text: `*${headline}*\n${stats}` } },
+      ...alertSections,
+      {
+        type: "context",
+        elements: [{ type: "mrkdwn", text: `<${SITE_URL}/admin/paid-orders|주문 관리>` }],
       },
     ],
   };

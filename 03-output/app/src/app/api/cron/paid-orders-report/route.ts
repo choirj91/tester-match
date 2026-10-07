@@ -3,10 +3,12 @@ import { verifyCronAuth } from "@/lib/cron-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrdersDailyReportEmail } from "@/lib/email-templates";
+import { loadCreditAnomalyAlerts } from "@/lib/credit-anomalies";
 import { buildOrderReport } from "@/lib/paid-order-report";
 import { runSweepStep } from "@/lib/paid-order-sweep";
 import { AUTO_CANCEL_NOTE_PREFIX } from "@/lib/paid-order-sweep-rules";
 import { CONTACT_EMAIL } from "@/lib/site";
+import { dailyReportSlackPayload, opsSlackWebhookUrl, postSlackMessage } from "@/lib/slack";
 
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -22,7 +24,8 @@ function kstYearStartIso(now: Date): string {
  *
  *   ?mode=sweep   : 스윕 한 단계만 (메일 없음). 응답의 more 가 true 면 다시 호출 — 요청당 처리량 상한 때문.
  *   ?mode=preview : 리포트 내용만 JSON 으로 (메일 없음) — 운영자가 경보를 바로 확인할 때.
- *   (기본)        : 리포트 메일. 처리할 일이 있으면 제목에 [ACTION].
+ *   (기본)        : 리포트 메일 + Slack(운영 채널). 처리할 일이 있으면 제목에 [ACTION].
+ * 경보에는 크레딧 이상 징후(credit_anomaly_report)가 함께 실린다.
  * 워크플로우는 sweep 을 more=false 까지 반복한 뒤 기본 모드를 한 번 호출한다.
  */
 export async function GET(request: Request) {
@@ -47,9 +50,13 @@ export async function GET(request: Request) {
     }
   }
 
-  const report = await buildOrderReport(supabase, now);
+  const [report, creditAlerts] = await Promise.all([
+    buildOrderReport(supabase, now),
+    loadCreditAnomalyAlerts(supabase, now),
+  ]);
+  const alerts = [...report.alerts, ...creditAlerts];
   if (mode === "preview") {
-    return NextResponse.json({ ok: true, activeOrders: report.rows, alerts: report.alerts });
+    return NextResponse.json({ ok: true, activeOrders: report.rows, alerts });
   }
 
   const [yearlyPaid, autoCanceled] = await Promise.all([
@@ -77,16 +84,27 @@ export async function GET(request: Request) {
     orders: report.rows,
     autoCanceledCount: autoCanceled.count ?? 0,
     yearlyPaidCount: yearlyPaid.count ?? 0,
-    alerts: report.alerts,
+    alerts,
   });
   const emailResult = await sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...tmpl });
+  const slackResult = await postSlackMessage(
+    opsSlackWebhookUrl(),
+    dailyReportSlackPayload({
+      dateLabel,
+      activeOrders: report.rows.length,
+      autoCanceledCount: autoCanceled.count ?? 0,
+      yearlyPaidCount: yearlyPaid.count ?? 0,
+      alerts,
+    }),
+  );
 
   return NextResponse.json({
     ok: true,
     activeOrders: report.rows.length,
-    alerts: report.alerts,
+    alerts,
     yearlyPaidCount: yearlyPaid.count ?? 0,
     emailSent: emailResult.ok,
+    slackSent: slackResult.ok,
   });
 }
 

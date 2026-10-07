@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { callCron, hasMore, MAX_ROUNDS } from "../src/cron-client.js";
+import { callCron, hasMore, MAX_ROUNDS, mergeTotals } from "../src/cron-client.js";
 
 function fakeFetch(responses) {
   const calls = [];
@@ -18,7 +18,7 @@ const base = { appUrl: "https://app.example", secret: "s3cret" };
 test("sends Bearer secret, POST, no redirect following", async () => {
   const { impl, calls } = fakeFetch([{ status: 200, body: "{}" }]);
   const r = await callCron({ ...base, path: "/api/cron/x", fetchImpl: impl });
-  assert.deepEqual(r, { ok: true, rounds: 1, lastStatus: 200 });
+  assert.deepEqual(r, { ok: true, rounds: 1, lastStatus: 200, lastBody: "{}", totals: {} });
   assert.equal(calls[0].url, "https://app.example/api/cron/x");
   assert.equal(calls[0].init.method, "POST");
   assert.equal(calls[0].init.headers.Authorization, "Bearer s3cret");
@@ -53,7 +53,7 @@ test("fails on non-200, including redirects", async () => {
   for (const status of [401, 308, 500]) {
     const { impl } = fakeFetch([{ status }]);
     const r = await callCron({ ...base, path: "/p", loop: true, fetchImpl: impl });
-    assert.deepEqual(r, { ok: false, rounds: 1, lastStatus: status });
+    assert.deepEqual({ ok: r.ok, rounds: r.rounds, lastStatus: r.lastStatus }, { ok: false, rounds: 1, lastStatus: status });
   }
 });
 
@@ -72,4 +72,29 @@ test("hasMore only trusts parsed JSON", () => {
   assert.equal(hasMore('{"more":true}'), true);
   assert.equal(hasMore('{"note":"\\"more\\":true"}'), false);
   assert.equal(hasMore("not json"), false);
+});
+
+test("looped jobs sum work done across rounds, keep the latest backlog", async () => {
+  const { impl } = fakeFetch([
+    { status: 200, body: '{"ok":true,"released":4,"stuckDue":3,"referral":{"granted":1,"remaining":2},"more":true}' },
+    { status: 200, body: '{"ok":true,"released":2,"stuckDue":1,"referral":{"granted":1,"remaining":0},"more":false}' },
+  ]);
+  const r = await callCron({ ...base, path: "/p", loop: true, fetchImpl: impl });
+  assert.equal(r.totals.released.value, 6);
+  assert.equal(r.totals.stuckDue.value, 1);
+  assert.equal(r.totals["referral.granted"].value, 2);
+  assert.equal(r.totals["referral.remaining"].value, 0);
+  assert.equal(r.lastBody.includes('"released":2'), true);
+});
+
+test("request failure returns empty body and the totals gathered so far", async () => {
+  const { impl } = fakeFetch([{ status: 200, body: '{"released":1,"more":true}' }, new Error("timeout")]);
+  const r = await callCron({ ...base, path: "/p", loop: true, fetchImpl: impl });
+  assert.equal(r.ok, false);
+  assert.equal(r.lastBody, "");
+  assert.equal(r.totals.released.value, 1);
+});
+
+test("mergeTotals ignores non-JSON bodies", () => {
+  assert.deepEqual(mergeTotals({}, "<html>"), {});
 });
