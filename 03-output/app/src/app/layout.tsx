@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-white text-ink-900 antialiased">
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen flex-col max-[760px]:pb-[88px]">
           <div className="flex-1">{children}</div>
           <SiteFooter />
         </div>

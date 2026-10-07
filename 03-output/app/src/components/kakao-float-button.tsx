@@ -1,52 +1,63 @@
+"use client";
+
+import { Mail, MessageCircle, MoreVertical, X } from "lucide-react";
+import { useState } from "react";
 import { NoticeFloatButton } from "@/components/notice-float-button";
+import { CONTACT_EMAIL, OPEN_CHAT_URL } from "@/lib/site";
 
+const MAIL_COMPOSE_URL = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(CONTACT_EMAIL)}&su=${encodeURIComponent("Tester Match 문의")}`;
+
+const FLOAT_BUTTON_CLASS =
+  "relative flex size-11 items-center justify-center bg-ink-900 text-white hover:bg-black";
+
+/**
+ * 떠 있는 버튼 (Design C §5.16) — 공지·문의 메일·오픈채팅을 하나의 세로 스택으로.
+ * 모바일에서는 하단 탭 바 위로 올리고, 본문을 가리지 않게 버튼 하나로 접어 둔다.
+ */
 export function FloatButtons() {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-      {/* 공지사항 버튼 */}
-      <NoticeFloatButton />
-
-      {/* 이메일 문의 버튼 */}
-      <div className="group relative">
-        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-          이메일 문의
-        </span>
+    <div className="fixed right-4 bottom-[calc(72px+env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-px min-[761px]:right-6 min-[761px]:bottom-6">
+      <div
+        id="float-actions"
+        className={`${open ? "flex" : "hidden"} flex-col gap-px bg-white min-[761px]:flex`}
+      >
+        <NoticeFloatButton />
         <a
-          href="https://mail.google.com/mail/?view=cm&fs=1&to=admin%40knockknock.company&su=Tester%20Match%20%EB%AC%B8%EC%9D%98"
+          href={MAIL_COMPOSE_URL}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="이메일 문의하기"
-          className="flex h-12 w-12 items-center justify-center bg-white ring-1 ring-ink-200 transition-all duration-200 hover:-translate-y-1 active:scale-95"
+          title="이메일 문의"
+          className={FLOAT_BUTTON_CLASS}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="2" y="4" width="20" height="16" rx="3" stroke="#374151" strokeWidth="1.8" fill="none"/>
-            <path d="M2 7.5l10 6.5 10-6.5" stroke="#374151" strokeWidth="1.8" strokeLinecap="round"/>
-          </svg>
+          <Mail className="size-5" strokeWidth={1.8} aria-hidden="true" />
         </a>
-      </div>
-
-      {/* 카카오 오픈채팅 버튼 */}
-      <div className="group relative">
-        <span className="pointer-events-none absolute right-full top-1/2 mr-2.5 -translate-y-1/2 whitespace-nowrap bg-ink-900 px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-          카카오 오픈채팅 참여하기
-        </span>
         <a
-          href="https://open.kakao.com/o/ghJ9350f"
+          href={OPEN_CHAT_URL}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="카카오톡 오픈채팅 참여하기"
-          className="flex h-12 w-12 items-center justify-center transition-all duration-200 hover:-translate-y-1 active:scale-95"
-          style={{ backgroundColor: "#FEE500" }}
+          title="카카오 오픈채팅"
+          className={FLOAT_BUTTON_CLASS}
         >
-          <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <ellipse cx="24" cy="22" rx="20" ry="16" fill="#3C1E1E" />
-            <path d="M16 36 C14 40 10 42 8 44 C12 42 18 40 20 36" fill="#3C1E1E" />
-            <circle cx="16" cy="22" r="2.5" fill="#FEE500" />
-            <circle cx="24" cy="22" r="2.5" fill="#FEE500" />
-            <circle cx="32" cy="22" r="2.5" fill="#FEE500" />
-          </svg>
+          <MessageCircle className="size-5" strokeWidth={1.8} aria-hidden="true" />
         </a>
       </div>
+      <button
+        type="button"
+        aria-label={open ? "공지·문의 닫기" : "공지·문의 열기"}
+        aria-expanded={open}
+        aria-controls="float-actions"
+        onClick={() => setOpen((v) => !v)}
+        className={`${FLOAT_BUTTON_CLASS} min-[761px]:hidden`}
+      >
+        {open ? (
+          <X className="size-5" strokeWidth={1.8} aria-hidden="true" />
+        ) : (
+          <MoreVertical className="size-5" strokeWidth={1.8} aria-hidden="true" />
+        )}
+      </button>
     </div>
   );
 }

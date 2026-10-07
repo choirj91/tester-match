@@ -107,7 +107,7 @@ export function NotificationBell() {
         onClick={handleToggle}
         aria-label="알림"
         aria-expanded={open}
-        className="relative inline-flex items-center p-1.5 text-ink-600 hover:bg-surface-1 hover:text-ink-900 transition-colors"
+        className="relative inline-flex size-11 items-center justify-center text-ink-900 transition-colors hover:bg-surface-1"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
