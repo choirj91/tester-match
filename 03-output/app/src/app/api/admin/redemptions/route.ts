@@ -4,6 +4,7 @@ import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { REDEMPTION_LEDGER_REF, appendLedger } from "@/lib/credits";
 import { createNotification } from "@/lib/notifications";
+import { redemptionLabel } from "@/lib/rewards";
 
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
@@ -11,7 +12,7 @@ const ActionSchema = z.object({
   admin_note: z.string().trim().max(200).default(""),
 });
 
-/** 기프티콘 교환 처리. done = 수동 발송 완료, reject = 크레딧 환급. 상태 조건부 UPDATE 로 멱등. */
+/** 보상 교환 처리. done = 수동 발송 완료, reject = 크레딧 복구. 상태 조건부 UPDATE 로 멱등. */
 export async function PATCH(req: Request) {
   const admin = await getAdminUser();
   if (!admin) {
@@ -45,7 +46,7 @@ export async function PATCH(req: Request) {
     })
     .eq("id", payload.id)
     .eq("status", "requested")
-    .select("id, user_id, amount, contact");
+    .select("id, user_id, amount, contact, kind, item_code, quantity");
 
   if (error) {
     console.error("[admin/redemptions] update failed", error);
@@ -58,6 +59,7 @@ export async function PATCH(req: Request) {
       { status: 409 },
     );
   }
+  const label = redemptionLabel(row);
 
   if (payload.action === "reject") {
     const refund = await appendLedger(supabase, {
@@ -66,7 +68,7 @@ export async function PATCH(req: Request) {
       type: "refund",
       refType: REDEMPTION_LEDGER_REF,
       refId: row.id,
-      description: `기프티콘 교환 거절 환급${payload.admin_note ? ` — ${payload.admin_note}` : ""}`,
+      description: `보상 교환 거절 복구 (${label})${payload.admin_note ? ` — ${payload.admin_note}` : ""}`,
     });
     if (!refund.ok) {
       // 환급 실패 → 상태를 되돌려 다시 처리할 수 있게 한다 (크레딧 증발 방지)
@@ -93,11 +95,11 @@ export async function PATCH(req: Request) {
   await createNotification({
     userId: row.user_id,
     type: "redemption_done",
-    title: payload.action === "done" ? "기프티콘이 발송되었습니다" : "기프티콘 교환이 거절되었습니다",
+    title: payload.action === "done" ? "보상 교환 상품을 보냈습니다" : "보상 교환 신청이 거절되었습니다",
     body:
       payload.action === "done"
-        ? `${row.amount.toLocaleString("ko-KR")} 크레딧 교환분을 신청하신 연락처로 보냈습니다.${payload.admin_note ? ` ${payload.admin_note}` : ""}`
-        : `${row.amount.toLocaleString("ko-KR")} 크레딧이 환급되었습니다.${payload.admin_note ? ` 사유: ${payload.admin_note}` : ""}`,
+        ? `${label}(${row.amount.toLocaleString("ko-KR")} 크레딧)을 신청하신 연락처로 보냈습니다.${payload.admin_note ? ` ${payload.admin_note}` : ""}`
+        : `${label} 신청의 ${row.amount.toLocaleString("ko-KR")} 크레딧을 되돌렸습니다.${payload.admin_note ? ` 사유: ${payload.admin_note}` : ""}`,
     link: "/credits",
   });
 

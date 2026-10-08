@@ -2,14 +2,17 @@ import { SiteHeader } from "@/components/site-header";
 import { requireAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { formatKrw } from "@/lib/credits";
-import { REWARD_CATALOG, type RewardKind } from "@/lib/rewards";
+import { redemptionLabel } from "@/lib/rewards";
 import { RedemptionActions } from "./redemption-actions";
 
 export const metadata = { title: "보상 교환" };
 
 type Row = {
   id: number;
-  kind: RewardKind;
+  kind: string;
+  /** 2026-10-08 전 신청(금액 직접 선택)은 null — 종류·금액으로 보여 준다 (ADR-0020) */
+  item_code: string | null;
+  quantity: number | null;
   amount: number;
   status: "requested" | "done" | "rejected";
   contact: string;
@@ -41,13 +44,13 @@ export default async function AdminRedemptionsPage() {
   const { data, error } = await supabase
     .from("credit_redemptions")
     .select(
-      "id, kind, amount, status, contact, note, admin_note, created_at, processed_at, users!credit_redemptions_user_id_fkey(nickname, email)",
+      "id, kind, item_code, quantity, amount, status, contact, note, admin_note, created_at, processed_at, users!credit_redemptions_user_id_fkey(nickname, email)",
     )
     .order("created_at", { ascending: false })
     .limit(200);
   const rows = (data ?? []) as unknown as Row[];
   const pending = rows.filter((r) => r.status === "requested");
-  const pendingKrw = pending.reduce((s, r) => s + r.amount, 0);
+  const pendingCredits = pending.reduce((s, r) => s + r.amount, 0);
 
   return (
     <>
@@ -55,8 +58,8 @@ export default async function AdminRedemptionsPage() {
       <main className="mx-auto max-w-4xl px-6 py-12">
         <h1 className="text-2xl font-bold text-ink-900">보상 교환</h1>
         <p className="mt-1 text-sm text-ink-700">
-          대기 <strong>{pending.length}건</strong> · 발송 예정 금액{" "}
-          <strong>{formatKrw(pendingKrw)}원</strong>. 기프티콘·네이버페이 포인트 쿠폰을 연락처로 직접 보낸 뒤 [발송 완료].
+          대기 <strong>{pending.length}건</strong> · 차감 합계{" "}
+          <strong>{formatKrw(pendingCredits)} 크레딧</strong>. 신청한 상품(기프티콘·네이버페이 포인트 쿠폰)을 연락처로 직접 보낸 뒤 [발송 완료].
           신청 시 크레딧은 이미 차감돼 있고, 거절하면 자동 복구.
         </p>
 
@@ -77,7 +80,7 @@ export default async function AdminRedemptionsPage() {
                         {LABEL[r.status]}
                       </span>
                       <p className="font-semibold text-ink-900">
-                        {REWARD_CATALOG[r.kind]?.label ?? r.kind} {formatKrw(r.amount)} 크레딧 — {r.users?.nickname ?? "-"}
+                        {redemptionLabel(r)} · {formatKrw(r.amount)} 크레딧 — {r.users?.nickname ?? "-"}
                       </p>
                     </div>
                     <p className="mt-1.5 text-xs text-ink-700">

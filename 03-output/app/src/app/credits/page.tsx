@@ -9,12 +9,8 @@ import { EmptyState } from "@/components/ui/state";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CREDIT_TYPE_LABEL, formatKrw, getRedeemable } from "@/lib/credits";
-import {
-  PAID_SEAT_REWARD,
-  REDEMPTION_MIN_CREDITS,
-  REDEMPTION_UNIT_CREDITS,
-} from "@/lib/paid-seats";
-import { REWARD_CATALOG, type RewardKind } from "@/lib/rewards";
+import { PAID_SEAT_REWARD } from "@/lib/paid-seats";
+import { REWARD_MIN_ITEM_CREDITS, findRewardItem, redemptionLabel } from "@/lib/rewards";
 import { SEAT_MIN_CHECKIN_DAYS, SEAT_REWARD_HOLD_DAYS, SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 import { CreditRulesSection } from "../rewards/credit-rules-section";
 import { RedemptionForm } from "./redemption-form";
@@ -35,9 +31,19 @@ const REDEMPTION_TONE: Record<string, BadgeTone> = {
 
 const LINK = "text-ink-900 underline underline-offset-2 hover:text-accent-600";
 
-export default async function CreditsPage() {
+export default async function CreditsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ item?: string | string[] }>;
+}) {
+  const { item } = await searchParams;
+  // /rewards 의 상품 카드에서 오면 그 상품을 골라 둔다 — 카탈로그에 있는 코드만
+  const initialItem = findRewardItem(typeof item === "string" ? item : null);
   const user = await getCurrentUser();
-  if (!user) redirect("/auth/login?next=/credits");
+  if (!user) {
+    const next = initialItem ? `/credits?item=${initialItem.code}#exchange` : "/credits";
+    redirect(`/auth/login?next=${encodeURIComponent(next)}`);
+  }
 
   const supabase = createSupabaseAdminClient();
   const [{ data: rows }, redeemable, { data: pendingRewards }, { data: redemptions }] = await Promise.all([
@@ -55,7 +61,7 @@ export default async function CreditsPage() {
       .in("status", ["held", "disputed"]),
     supabase
       .from("credit_redemptions")
-      .select("id, kind, amount, status, created_at, processed_at")
+      .select("id, kind, item_code, quantity, amount, status, created_at, processed_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10),
@@ -63,6 +69,7 @@ export default async function CreditsPage() {
 
   const pendingTotal = (pendingRewards ?? []).reduce((sum, r) => sum + r.amount, 0);
   const disputedCount = (pendingRewards ?? []).filter((r) => r.status === "disputed").length;
+  const hasPendingRedemption = (redemptions ?? []).some((r) => r.status === "requested");
 
   return (
     <>
@@ -73,8 +80,8 @@ export default async function CreditsPage() {
             <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">크레딧</h1>
             <p className="m-0 text-[15px] leading-[1.75] text-ink-700">
               크레딧은 유료 시트 테스트로만 적립됩니다 — {SEAT_REWARD_SUMMARY}. 개발자 확정 후 지급.{" "}
-              <span className="font-mono tabular-nums">{REDEMPTION_MIN_CREDITS.toLocaleString("ko-KR")}</span>{" "}
-              이상 모으면 기프티콘·네이버페이 포인트로 바꾸거나, 내 앱의 테스터 시트를 여는 데 쓸 수
+              <span className="font-mono tabular-nums">{REWARD_MIN_ITEM_CREDITS.toLocaleString("ko-KR")}</span>{" "}
+              크레딧부터 기프티콘·네이버페이 포인트로 바꾸거나, 내 앱의 테스터 시트를 여는 데 쓸 수
               있습니다. 구매·양도·현금 환급은 안 됩니다.
             </p>
           </header>
@@ -113,27 +120,31 @@ export default async function CreditsPage() {
             </Receipt>
 
             {/* 보상 교환 */}
-            <section aria-labelledby="redeem-title" className="flex flex-col gap-4 border-t-[1.5px] border-ink-900 pt-5">
+            <section
+              id="exchange"
+              aria-labelledby="redeem-title"
+              className="flex scroll-mt-20 flex-col gap-4 border-t-[1.5px] border-ink-900 pt-5"
+            >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 id="redeem-title" className="m-0 font-display text-h3 font-semibold text-ink-900">
                   보상 교환 — 기프티콘 · 네이버페이 포인트
                 </h2>
                 <Link href="/rewards" className={`inline-flex min-h-11 items-center gap-1 text-[13px] ${LINK}`}>
-                  보상 안내
+                  교환 상품 안내
                   <ArrowRight className="size-3.5" strokeWidth={1.8} aria-hidden="true" />
                 </Link>
               </div>
               <RedemptionForm
                 redeemable={redeemable}
-                minCredits={REDEMPTION_MIN_CREDITS}
-                unitCredits={REDEMPTION_UNIT_CREDITS}
+                initialItemCode={initialItem?.code ?? null}
+                hasPending={hasPendingRedemption}
               />
               {redemptions && redemptions.length > 0 && (
                 <ul className="m-0 list-none border-t border-ink-900 p-0 text-sm">
                   {redemptions.map((r) => (
                     <li key={r.id} className="flex items-center justify-between gap-3 border-b border-ink-200 py-2.5">
                       <span className="text-ink-900">
-                        {REWARD_CATALOG[r.kind as RewardKind]?.label ?? r.kind}{" "}
+                        {redemptionLabel(r)} ·{" "}
                         <span className="font-mono tabular-nums">{formatKrw(r.amount)}</span> 크레딧 ·{" "}
                         <span className="font-mono text-ink-600 tabular-nums">
                           {new Date(r.created_at).toLocaleDateString("ko-KR")}

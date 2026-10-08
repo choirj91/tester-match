@@ -12,7 +12,8 @@ import { StatTile, StatTiles } from "@/components/ui/stat-tile";
 import { Steps } from "@/components/ui/steps";
 import { getCurrentUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
-import { PAID_SEAT_FILL_DAYS, REDEMPTION_MIN_CREDITS } from "@/lib/paid-seats";
+import { PAID_SEAT_FILL_DAYS } from "@/lib/paid-seats";
+import { REWARD_MIN_ITEM_CREDITS } from "@/lib/rewards";
 import {
   PAID_TESTERS_PUBLIC_ORDERING,
   PAID_TESTER_MAX_COUNT,
@@ -275,7 +276,7 @@ export default async function HomePage() {
             <p className="m-0 max-w-[460px] text-[15px] leading-[1.75] text-ink-700">
               매일 앱을 열고 스크린샷 한 장으로 체크인합니다. 유료 시트를 완주하면 회사가 크레딧을
               지급하고(최대 {formatKrw(SEAT_REWARD_MAX_AT_COMPLETION)}, 앱 출시 시 +{SEAT_REWARDS.launch}),{" "}
-              {formatKrw(REDEMPTION_MIN_CREDITS)}부터 기프티콘·네이버페이 포인트로 교환합니다.
+              {formatKrw(REWARD_MIN_ITEM_CREDITS)}부터 기프티콘·네이버페이 포인트로 교환합니다.
             </p>
             <ArrowLink href={browseHref}>매칭 목록 보기</ArrowLink>
           </article>

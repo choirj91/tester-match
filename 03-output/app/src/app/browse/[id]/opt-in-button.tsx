@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/form";
 import { Notice } from "@/components/ui/notice";
+import { REWARD_MIN_ITEM_CREDITS } from "@/lib/rewards";
 import { SEAT_REWARD_MAX, SEAT_REWARD_SUMMARY } from "@/lib/seat-reward-rules";
 
 type Props = {
@@ -24,7 +25,7 @@ const SEAT_RULES = [
   "보상은 완주 후 개발자가 확정하거나, 3일간 응답이 없으면 자동으로 지급됩니다.",
   "이 앱에 리뷰·별점을 남기지 않습니다. 위반 시 보상이 몰수됩니다.",
   "스크린샷은 앱 등록자와 운영팀에 공개됩니다. 개인정보가 보이지 않게 찍어주세요.",
-  "크레딧은 5,000부터 기프티콘·네이버페이 포인트 교환, 또는 내 앱 테스터 시트 열기(1,100 = 1명)에 쓸 수 있습니다. 구매·양도·현금 환급은 없습니다.",
+  `크레딧은 ${REWARD_MIN_ITEM_CREDITS.toLocaleString("ko-KR")}부터 기프티콘·네이버페이 포인트 교환, 또는 내 앱 테스터 시트 열기(1,100 = 1명)에 쓸 수 있습니다. 구매·양도·현금 환급은 없습니다.`,
   "설치가 안 되면 72시간 안에 [설치가 안 돼요]로 신고하세요. 신뢰도 차감 없이 빠질 수 있습니다.",
 ];
 

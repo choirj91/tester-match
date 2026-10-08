@@ -35,10 +35,7 @@ export const PAID_SEAT_REQUIRES_GOOGLE = true;
 export const PAID_SEAT_BOOST_DAYS = 14;
 /** 충원 기간 — 결제 후 이 일수가 지나면 빈 시트를 마감하고 환불한다 */
 export const PAID_SEAT_FILL_DAYS = 7;
-export const REDEMPTION_MIN_CREDITS = 5000;
-export const REDEMPTION_UNIT_CREDITS = 5000;
-/** 건당 5만원 이하 — 기타소득 과세최저한 이내로 유지 */
-export const REDEMPTION_MAX_CREDITS = 50000;
+// 보상 교환 규칙(상품별 크레딧·1회 상한 REDEMPTION_MAX_CREDITS)은 lib/rewards.ts (ADR-0020)
 
 export const SEAT_OPEN_STATUSES = ["paid", "in_progress"] as const;
 const NOTE_PREFIXES_TO_KEEP = [REFUND_FAILED_NOTE_PREFIX, ATTENTION_NOTE_PREFIX];

@@ -1,18 +1,19 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { RewardIcon } from "@/components/reward-icon";
 import { SiteHeader } from "@/components/site-header";
+import { AppCard } from "@/components/ui/app-card";
 import { ButtonLink } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Receipt, ReceiptDivider, ReceiptRow, ReceiptRows } from "@/components/ui/receipt";
 import { getCurrentUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 import {
   REDEMPTION_MAX_CREDITS,
-  REDEMPTION_MIN_CREDITS,
-  REDEMPTION_UNIT_CREDITS,
-} from "@/lib/paid-seats";
-import { REWARD_CATALOG, REWARD_KINDS, REWARD_PROCESSING_BUSINESS_DAYS } from "@/lib/rewards";
+  REWARD_ITEMS,
+  REWARD_MIN_ITEM_CREDITS,
+  REWARD_PROCESSING_BUSINESS_DAYS,
+} from "@/lib/rewards";
 import {
   SEAT_MIN_CHECKIN_DAYS,
   SEAT_REWARDS,
@@ -43,13 +44,18 @@ const EARNING_ROWS = [
 
 const LINK = "text-ink-900 underline underline-offset-2 hover:text-accent-600";
 
+/** 상품의 교환 신청 화면 — 로그인 전이면 로그인 뒤 같은 상품으로 돌아온다 */
+function exchangeHref(code: string, loggedIn: boolean): string {
+  const target = `/credits?item=${encodeURIComponent(code)}#exchange`;
+  return loggedIn ? target : `/auth/login?next=${encodeURIComponent(target)}`;
+}
+
 /**
- * 보상 교환 상점 (ADR-0017) — 로그인 없이 볼 수 있는 안내 페이지.
+ * 보상 교환 상점 (ADR-0017, ADR-0020) — 로그인 없이 볼 수 있는 안내 페이지.
  * 실제 교환 신청은 /credits 에서 한다 (잔액·교환 가능액이 필요하므로).
  */
 export default async function RewardsPage() {
   const user = await getCurrentUser();
-  const unitLabel = formatKrw(REDEMPTION_UNIT_CREDITS);
 
   return (
     <>
@@ -72,7 +78,7 @@ export default async function RewardsPage() {
               </span>{" "}
               크레딧(앱이 출시되면 +
               <span className="font-mono tabular-nums">{SEAT_REWARDS.launch}</span>)이 쌓이고,{" "}
-              <span className="font-mono tabular-nums">{formatKrw(REDEMPTION_MIN_CREDITS)}</span>{" "}
+              <span className="font-mono tabular-nums">{formatKrw(REWARD_MIN_ITEM_CREDITS)}</span>{" "}
               크레딧부터 커피 기프티콘이나 네이버페이 포인트로 바꿀 수 있습니다.
             </p>
             <p className="text-ink-700 m-0 max-w-[560px] text-[15px] leading-[1.75]">
@@ -125,35 +131,46 @@ export default async function RewardsPage() {
           >
             무엇으로 바꿀 수 있나요
           </h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))] gap-6">
-            {REWARD_KINDS.map((kind) => {
-              const item = REWARD_CATALOG[kind];
-              return (
-                <Receipt
-                  key={kind}
-                  title={item.title}
-                  badge={<Badge tone="outline">{item.label}</Badge>}
-                >
-                  <p className="text-ink-700 m-0 text-[15px]">{item.desc}</p>
-                  <ReceiptDivider />
-                  <ReceiptRows className="gap-1.5 text-[13px]">
-                    <p className="m-0">
-                      {unitLabel} 크레딧부터 · {unitLabel} 크레딧 단위 · 1회 최대{" "}
-                      {formatKrw(REDEMPTION_MAX_CREDITS)} 크레딧
-                    </p>
-                    <p className="m-0">{item.howDelivered}</p>
-                    <p className="m-0">
-                      신청 후 영업일 {REWARD_PROCESSING_BUSINESS_DAYS}일 내 발송
-                    </p>
-                  </ReceiptRows>
-                </Receipt>
-              );
-            })}
-          </div>
+          <p className="text-ink-700 m-0 max-w-[760px] text-[15px] leading-[1.75]">
+            교환 상품마다 정해 둔 크레딧만큼 바꿉니다. 같은 상품을 여러 개 신청할 수 있고, 1회 최대{" "}
+            <span className="font-mono tabular-nums">{formatKrw(REDEMPTION_MAX_CREDITS)}</span> 크레딧.
+          </p>
+          <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(min(320px,100%),1fr))] gap-4 p-0">
+            {REWARD_ITEMS.map((item) => (
+              <li key={item.code} className="flex">
+                <AppCard
+                  className="w-full"
+                  name={
+                    <span className="flex items-center gap-3">
+                      <RewardIcon icon={item.icon} />
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-ink-600 font-sans text-[13px] font-normal">
+                          {item.brand}
+                        </span>
+                        <span>{item.name}</span>
+                      </span>
+                    </span>
+                  }
+                  description={item.deliveryNote}
+                  meta={`${formatKrw(item.credits)} 크레딧`}
+                  action={
+                    <ButtonLink
+                      href={exchangeHref(item.code, Boolean(user))}
+                      variant="secondary"
+                      size="sm"
+                    >
+                      교환 신청
+                    </ButtonLink>
+                  }
+                />
+              </li>
+            ))}
+          </ul>
           <p className="text-ink-600 m-0 max-w-[760px] text-[13px] leading-relaxed">
-            {formatKrw(REDEMPTION_MIN_CREDITS)} 크레딧부터 신청할 수 있습니다. 신청 즉시 크레딧이
-            차감되고, 거절되면 전액 복구됩니다. 한 휴대폰 번호는 한 계정에서만 쓸 수 있습니다.
-            보상은 회사가 비용으로 지급하며, 리뷰·평점 작성은 보상 대상이 아니라 금지 행위입니다.
+            신청 즉시 크레딧이 차감되고, 관리자가 확인한 뒤 영업일 {REWARD_PROCESSING_BUSINESS_DAYS}일 내
+            휴대폰으로 보내 드립니다. 거절되면 전액 복구됩니다. 한 휴대폰 번호는 한 계정에서만 쓸 수
+            있습니다. 보상은 회사가 비용으로 지급하며, 리뷰·평점 작성은 보상 대상이 아니라 금지
+            행위입니다. 상품명·브랜드명은 각 회사의 상표입니다.
           </p>
         </section>
 
