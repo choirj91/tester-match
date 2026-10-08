@@ -11,12 +11,12 @@ export async function getBalance(
   return (data ?? []).reduce((sum, row) => sum + row.amount, 0);
 }
 
+/** 원장 유형 이름 — 크레딧 화면이라 "충전·환불" 대신 "복구"를 쓴다 (ADR-0017). charge 는 쓰는 경로가 없다 */
 export const CREDIT_TYPE_LABEL: Record<string, string> = {
   welcome: "가입 보너스",
   earn: "적립",
-  charge: "충전",
   spend: "사용",
-  refund: "환불",
+  refund: "복구",
   penalty: "페널티",
   adjust: "조정",
   expire: "만료",

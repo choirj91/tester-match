@@ -209,8 +209,8 @@ export async function releaseSeatReward(
     title: `${before.amount.toLocaleString("ko-KR")} 크레딧이 지급되었습니다`,
     body:
       by === "auto"
-        ? "자동 확정되었습니다. 시트 구매 또는 기프티콘 교환에 사용할 수 있습니다."
-        : "보상이 확정되었습니다. 시트 구매 또는 기프티콘 교환에 사용할 수 있습니다.",
+        ? "자동 확정되었습니다. 시트 열기 또는 보상 교환에 사용할 수 있습니다."
+        : "보상이 확정되었습니다. 시트 열기 또는 보상 교환에 사용할 수 있습니다.",
     link: "/credits",
   });
   if (by !== "buyer") {

@@ -25,6 +25,7 @@ npx supabase db push
 ```
 
 - **순서 중요**: 스키마가 바뀌는 코드는 마이그레이션 먼저 → 코드 배포
+- **Azure PostgreSQL (PostgREST 사이드카)**: 열·함수를 더하거나 바꾼 마이그레이션을 psql 로 적용했으면 같은 DB 에 `notify pgrst, 'reload schema';` 를 실행한 뒤 코드를 배포한다. 안 하면 PostgREST 가 옛 스키마 캐시로 새 열·RPC 를 PGRST204/PGRST202 로 거절한다 (예: ADR-0020 `20261008000001`·`20261008000002`)
 - 여러 세션이 같은 트리를 쓴다 — 마이그레이션 번호대를 세션별로 띄울 것
 
 ## 환경 변수
