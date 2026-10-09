@@ -15,11 +15,16 @@ describe("formatKrw", () => {
 });
 
 describe("CREDIT_TYPE_LABEL", () => {
-  it("covers all enum values", () => {
+  it("covers the written ledger types", () => {
     expect(CREDIT_TYPE_LABEL.earn).toBe("적립");
-    expect(CREDIT_TYPE_LABEL.charge).toBe("충전");
     expect(CREDIT_TYPE_LABEL.spend).toBe("사용");
-    expect(CREDIT_TYPE_LABEL.refund).toBe("환불");
+    expect(CREDIT_TYPE_LABEL.refund).toBe("복구");
     expect(CREDIT_TYPE_LABEL.penalty).toBe("페널티");
+  });
+
+  it("has no purchase-style labels (ADR-0017 wording)", () => {
+    expect(CREDIT_TYPE_LABEL.charge).toBeUndefined();
+    const labels = Object.values(CREDIT_TYPE_LABEL).join(" ");
+    for (const word of ["충전", "환불", "환급", "구매", "현금"]) expect(labels).not.toContain(word);
   });
 });

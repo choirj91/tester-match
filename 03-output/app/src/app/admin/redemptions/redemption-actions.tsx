@@ -16,7 +16,7 @@ export function RedemptionActions({ id }: { id: number }) {
       "",
     );
     if (note === null) return;
-    if (action === "reject" && !window.confirm("거절하면 크레딧이 환급됩니다. 진행할까요?")) return;
+    if (action === "reject" && !window.confirm("거절하면 차감한 크레딧이 복구됩니다. 진행할까요?")) return;
     setBusy(true);
     setError(null);
     try {
@@ -52,7 +52,7 @@ export function RedemptionActions({ id }: { id: number }) {
           onClick={() => run("reject")}
           className="border border-ink-900 px-3.5 py-2 text-xs font-semibold text-ink-700 hover:border-danger-700 hover:text-danger-700 disabled:opacity-50"
         >
-          거절·환급
+          거절·복구
         </button>
       </div>
       {error && <p className="mt-1.5 text-xs text-danger-700">{error}</p>}

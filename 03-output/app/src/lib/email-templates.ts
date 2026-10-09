@@ -310,26 +310,26 @@ export function paidOrdersDailyReportEmail(args: {
   return { subject, html, text };
 }
 
-/** 보상 교환 신청(기프티콘·네이버페이 포인트) — 관리자 알림 (ADR-0012, ADR-0017) */
+/** 보상 교환 신청(기프티콘·네이버페이 포인트) — 관리자 알림 (ADR-0012, ADR-0017, ADR-0020) */
 export function redemptionRequestedEmail(args: {
   redemptionId: number;
   nickname: string;
   email: string;
-  /** 보상 종류 이름 (기프티콘 / 네이버페이 포인트) */
-  kindLabel: string;
+  /** 교환 상품 × 수량 (예: 스타벅스 카페 아메리카노 T ×2) */
+  rewardLabel: string;
   amount: number;
   contact: string;
   note: string;
 }): Email {
   const amount = args.amount.toLocaleString("ko-KR");
-  const kind = escapeHtml(args.kindLabel);
-  const subject = `[Tester Match] ${args.kindLabel} 교환 신청 — ${args.nickname} ${amount} 크레딧`;
+  const reward = escapeHtml(args.rewardLabel);
+  const subject = `[Tester Match] ${args.rewardLabel} 교환 신청 — ${args.nickname} ${amount} 크레딧`;
   const html = layoutHtml(`
     <p style="margin:0 0 16px;font-weight:700;">보상 교환 신청이 들어왔습니다.</p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
-      <tr><td style="padding:6px 0;color:#64748b;">보상</td><td><strong>${kind}</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">교환 상품</td><td><strong>${reward}</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">신청자</td><td>${escapeHtml(args.nickname)} (${escapeHtml(args.email)})</td></tr>
-      <tr><td style="padding:6px 0;color:#64748b;">금액</td><td><strong>${amount} 크레딧</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#64748b;">차감 크레딧</td><td><strong>${amount} 크레딧</strong></td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">수신 연락처</td><td>${escapeHtml(args.contact)}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">메모</td><td>${escapeHtml(args.note || "-")}</td></tr>
       <tr><td style="padding:6px 0;color:#64748b;">신청번호</td><td>#${args.redemptionId}</td></tr>
@@ -341,7 +341,7 @@ export function redemptionRequestedEmail(args: {
       </a>
     </p>
   `);
-  const text = `${args.kindLabel} 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
+  const text = `${args.rewardLabel} 교환 신청 #${args.redemptionId} — ${args.nickname}(${args.email}) ${amount} 크레딧 / 연락처 ${args.contact} / ${args.note || "-"}\n${APP_URL}/admin/redemptions`;
   return { subject, html, text };
 }
 

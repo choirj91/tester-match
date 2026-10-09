@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z, ZodError } from "zod";
 import { getAdminUser } from "@/lib/admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { REDEMPTION_LEDGER_REF, appendLedger } from "@/lib/credits";
 import { createNotification } from "@/lib/notifications";
+import { dbErrorLog, maskContact, parseRedemptionRejectResult } from "@/lib/redemptions";
+import { redemptionLabel } from "@/lib/rewards";
 
 const ActionSchema = z.object({
   id: z.coerce.number().int().positive(),
@@ -11,7 +12,30 @@ const ActionSchema = z.object({
   admin_note: z.string().trim().max(200).default(""),
 });
 
-/** 기프티콘 교환 처리. done = 수동 발송 완료, reject = 크레딧 환급. 상태 조건부 UPDATE 로 멱등. */
+const ROW_COLUMNS = "id, user_id, amount, contact, kind, item_code, quantity";
+
+type ProcessedRow = {
+  id: number;
+  user_id: number;
+  amount: number;
+  contact: string;
+  kind: string;
+  item_code: string | null;
+  quantity: number | null;
+};
+
+function alreadyProcessed() {
+  return NextResponse.json({ ok: false, message: "이미 처리된 신청입니다." }, { status: 409 });
+}
+
+function updateFailed() {
+  return NextResponse.json({ ok: false, message: "갱신에 실패했습니다." }, { status: 500 });
+}
+
+/**
+ * 보상 교환 처리. done = 수동 발송 완료(상태 조건부 UPDATE + 연락처 마스킹),
+ * reject = DB 함수 redemption_reject 한 번으로 상태 변경·연락처 마스킹·크레딧 복구 (ADR-0020). 둘 다 멱등.
+ */
 export async function PATCH(req: Request) {
   const admin = await getAdminUser();
   if (!admin) {
@@ -35,69 +59,75 @@ export async function PATCH(req: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("credit_redemptions")
-    .update({
-      status: payload.action === "done" ? "done" : "rejected",
-      admin_note: payload.admin_note || null,
-      processed_by: admin.id,
-      processed_at: new Date().toISOString(),
-    })
-    .eq("id", payload.id)
-    .eq("status", "requested")
-    .select("id, user_id, amount, contact");
-
-  if (error) {
-    console.error("[admin/redemptions] update failed", error);
-    return NextResponse.json({ ok: false, message: "갱신에 실패했습니다." }, { status: 500 });
-  }
-  const row = data?.[0];
-  if (!row) {
-    return NextResponse.json(
-      { ok: false, message: "이미 처리된 신청입니다." },
-      { status: 409 },
-    );
-  }
+  let row: ProcessedRow;
 
   if (payload.action === "reject") {
-    const refund = await appendLedger(supabase, {
-      userId: row.user_id,
-      amount: row.amount,
-      type: "refund",
-      refType: REDEMPTION_LEDGER_REF,
-      refId: row.id,
-      description: `기프티콘 교환 거절 환급${payload.admin_note ? ` — ${payload.admin_note}` : ""}`,
+    const { data, error } = await supabase.rpc("redemption_reject", {
+      p_id: payload.id,
+      p_admin: admin.id,
+      p_note: payload.admin_note,
     });
-    if (!refund.ok) {
-      // 환급 실패 → 상태를 되돌려 다시 처리할 수 있게 한다 (크레딧 증발 방지)
-      await supabase
+    if (error) {
+      console.error("[admin/redemptions] redemption_reject failed", dbErrorLog(error));
+      return updateFailed();
+    }
+    const result = parseRedemptionRejectResult(data);
+    if (result === "already") return alreadyProcessed();
+    if (result === "unknown") {
+      console.error("[admin/redemptions] unexpected redemption_reject result");
+      return updateFailed();
+    }
+    // 거절·복구는 끝났다. 알림 문구에 쓸 상품·금액만 읽는다
+    const { data: read, error: readError } = await supabase
+      .from("credit_redemptions")
+      .select(ROW_COLUMNS)
+      .eq("id", payload.id)
+      .maybeSingle();
+    if (readError || !read) {
+      if (readError) console.error("[admin/redemptions] read after reject failed", dbErrorLog(readError));
+      return NextResponse.json({ ok: true });
+    }
+    row = read as ProcessedRow;
+  } else {
+    const { data, error } = await supabase
+      .from("credit_redemptions")
+      .update({
+        status: "done",
+        admin_note: payload.admin_note || null,
+        processed_by: admin.id,
+        processed_at: new Date().toISOString(),
+      })
+      .eq("id", payload.id)
+      .eq("status", "requested")
+      .select(ROW_COLUMNS);
+    if (error) {
+      console.error("[admin/redemptions] update failed", dbErrorLog(error));
+      return updateFailed();
+    }
+    const updated = data?.[0] as ProcessedRow | undefined;
+    if (!updated) return alreadyProcessed();
+    row = updated;
+
+    // 발송이 끝난 연락처는 뒤 4자리만 남긴다 (계정 간 중복 검사는 contact_hash 로 한다)
+    const masked = maskContact(row.contact);
+    if (masked !== row.contact) {
+      const { error: maskError } = await supabase
         .from("credit_redemptions")
-        .update({ status: "requested", processed_at: null, processed_by: null, admin_note: null })
-        .eq("id", row.id)
-        .eq("status", "rejected");
-      return NextResponse.json(
-        { ok: false, message: `환급 기록 실패 — 다시 시도해주세요. (${refund.message})` },
-        { status: 500 },
-      );
+        .update({ contact: masked })
+        .eq("id", row.id);
+      if (maskError) console.error("[admin/redemptions] contact mask failed", dbErrorLog(maskError));
     }
   }
 
-  // 발송이 끝난 연락처는 뒤 4자리만 남긴다 (계정 간 중복 검사는 신청 시점에 이미 수행)
-  if (payload.action === "done" && row.contact.length > 4) {
-    await supabase
-      .from("credit_redemptions")
-      .update({ contact: `${"*".repeat(row.contact.length - 4)}${row.contact.slice(-4)}` })
-      .eq("id", row.id);
-  }
-
+  const label = redemptionLabel(row);
   await createNotification({
     userId: row.user_id,
     type: "redemption_done",
-    title: payload.action === "done" ? "기프티콘이 발송되었습니다" : "기프티콘 교환이 거절되었습니다",
+    title: payload.action === "done" ? "보상 교환 상품을 보냈습니다" : "보상 교환 신청이 거절되었습니다",
     body:
       payload.action === "done"
-        ? `${row.amount.toLocaleString("ko-KR")} 크레딧 교환분을 신청하신 연락처로 보냈습니다.${payload.admin_note ? ` ${payload.admin_note}` : ""}`
-        : `${row.amount.toLocaleString("ko-KR")} 크레딧이 환급되었습니다.${payload.admin_note ? ` 사유: ${payload.admin_note}` : ""}`,
+        ? `${label}(${row.amount.toLocaleString("ko-KR")} 크레딧)을 신청하신 연락처로 보냈습니다.${payload.admin_note ? ` ${payload.admin_note}` : ""}`
+        : `${label} 신청의 ${row.amount.toLocaleString("ko-KR")} 크레딧을 되돌렸습니다.${payload.admin_note ? ` 사유: ${payload.admin_note}` : ""}`,
     link: "/credits",
   });
 

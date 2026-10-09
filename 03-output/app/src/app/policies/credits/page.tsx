@@ -3,12 +3,7 @@ import { PolicyLayout } from "@/components/policy-layout";
 import { getCurrentUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
-import {
-  REDEMPTION_MAX_CREDITS,
-  REDEMPTION_MIN_CREDITS,
-  REDEMPTION_UNIT_CREDITS,
-} from "@/lib/paid-seats";
-import { REWARD_PROCESSING_BUSINESS_DAYS } from "@/lib/rewards";
+import { REDEMPTION_MAX_CREDITS, REWARD_PROCESSING_BUSINESS_DAYS } from "@/lib/rewards";
 import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 
 export const metadata = { title: "크레딧 운영 정책" };
@@ -71,11 +66,10 @@ export default async function CreditsPolicyPage() {
       <ul>
         <li>
           <strong>보상 교환</strong> — 기프티콘 또는 네이버페이 포인트(쿠폰)로 교환합니다. 유료 시트 완주로
-          적립한 크레딧에 한해 {formatKrw(REDEMPTION_MIN_CREDITS)} 크레딧부터{" "}
-          {formatKrw(REDEMPTION_UNIT_CREDITS)} 크레딧 단위(1회 최대 {formatKrw(REDEMPTION_MAX_CREDITS)})로
-          신청하며, 본인 휴대폰 번호로 관리자 확인 후 영업일 {REWARD_PROCESSING_BUSINESS_DAYS}일 내 발송합니다.
-          한 번호는 한 계정에서만 사용할 수 있습니다. 신청 시 크레딧이 차감되며 거절 시 전액 복구됩니다. 보상
-          종류와 절차는{" "}
+          적립한 크레딧에 한해 교환 상품별로 정한 크레딧(1회 최대 {formatKrw(REDEMPTION_MAX_CREDITS)}{" "}
+          크레딧)으로 신청하며, 본인 휴대폰 번호로 관리자 확인 후 영업일 {REWARD_PROCESSING_BUSINESS_DAYS}일 내
+          발송합니다. 한 번호는 한 계정에서만 사용할 수 있습니다. 신청 시 크레딧이 차감되며 거절 시 전액
+          복구됩니다. 교환 상품과 상품별 크레딧, 절차는{" "}
           <Link href="/rewards">테스터 보상 안내</Link>에 게시합니다.
         </li>
         <li>
