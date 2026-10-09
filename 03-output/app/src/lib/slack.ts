@@ -4,6 +4,15 @@
  * 전송 실패는 호출부의 본 작업(문의 접수)을 막지 않는다 — 결과만 돌려준다.
  */
 
+import {
+  GAIN_KINDS,
+  GAIN_KIND_LABEL,
+  GAIN_SLACK_MAX,
+  type GainLists,
+  type GainReport,
+  formatGainLine,
+  formatGainSummary,
+} from "@/lib/gain-report";
 import { SITE_URL } from "@/lib/site";
 
 const SLACK_WEBHOOK_HOST = "hooks.slack.com";
@@ -125,6 +134,42 @@ const REPORT_ALERT_CHARS = 200;
 /** 섹션 하나에 넣는 경보 수 — Slack 섹션 텍스트는 3,000자까지 (10 × 200 < 3,000) */
 const REPORT_ALERTS_PER_SECTION = 10;
 
+type SlackSection = { type: "section"; text: { type: "mrkdwn"; text: string } };
+
+/** 이스케이프하면 길이가 늘어난다(< → &lt;) — 이스케이프한 뒤 자르고, 잘린 엔티티 조각은 버린다 */
+function clipReportLine(text: string): string {
+  return text.length > REPORT_ALERT_CHARS
+    ? `${text.slice(0, REPORT_ALERT_CHARS).replace(/&[a-z]{0,3}$/, "")}…`
+    : text;
+}
+
+/** 줄을 섹션 여러 개로 — 섹션마다 REPORT_ALERTS_PER_SECTION 줄. head 가 있으면 첫 섹션 맨 위에 (줄이 없어도) */
+function sectionsOf(lines: ReadonlyArray<string>, head?: string): SlackSection[] {
+  const chunks: string[] = [];
+  for (let i = 0; i < lines.length; i += REPORT_ALERTS_PER_SECTION) {
+    chunks.push(lines.slice(i, i + REPORT_ALERTS_PER_SECTION).join("\n"));
+  }
+  const texts = head ? [[head, ...chunks.slice(0, 1)].join("\n"), ...chunks.slice(1)] : chunks;
+  return texts.map((text) => ({ type: "section", text: { type: "mrkdwn", text } }));
+}
+
+/**
+ * 회원별 증가 목록 — 종류마다 "*크레딧 증가* (최근 24시간) 3명 · 합계 …" 다음 상위 15명, 나머지는 "외 n명".
+ * 닉네임은 사용자 입력이라 이스케이프한다. 한 섹션은 머리 1줄 + 10줄 × 200자 이하라 3,000자 안이다.
+ */
+function gainSlackSections(lists: GainLists, periodLabel: string): SlackSection[] {
+  return GAIN_KINDS.flatMap((kind) => {
+    const list = lists[kind];
+    const summary = list.members === 0 ? "없음" : formatGainSummary(kind, list);
+    const head = `*${GAIN_KIND_LABEL[kind]}* (${periodLabel}) ${summary}`;
+    const shown = list.rows
+      .slice(0, GAIN_SLACK_MAX)
+      .map((r) => `• ${clipReportLine(formatGainLine(r, escapeSlackText))}`);
+    const more = list.members > GAIN_SLACK_MAX ? [`… 외 ${list.members - GAIN_SLACK_MAX}명`] : [];
+    return sectionsOf([...shown, ...more], head);
+  });
+}
+
 /** 일일 관리자 리포트 요약 — 메일과 같은 숫자·경보. 경보 문장에는 앱 이름(사용자 입력)이 섞여 있어 이스케이프한다. */
 export function dailyReportSlackPayload(args: {
   dateLabel: string;
@@ -132,36 +177,58 @@ export function dailyReportSlackPayload(args: {
   autoCanceledCount: number;
   yearlyPaidCount: number;
   alerts: ReadonlyArray<string>;
+  /** 최근 24시간 회원별 증가 — 조회 실패는 호출부가 alerts 에 한 줄로 넣는다 */
+  gains?: GainReport;
 }): SlackPayload {
   const headline =
     args.alerts.length > 0
       ? `일일 리포트 ${args.dateLabel} — 확인 필요 ${args.alerts.length}건`
       : `일일 리포트 ${args.dateLabel} — 이상 없음`;
   const stats = `진행 중 주문 ${args.activeOrders}건 · 24시간 자동 취소 ${args.autoCanceledCount}건 · 올해 결제 ${args.yearlyPaidCount}건`;
-  // 이스케이프하면 길이가 늘어난다(< → &lt;) — 이스케이프한 뒤 자르고, 잘린 엔티티 조각은 버린다
-  const clip = (text: string) =>
-    text.length > REPORT_ALERT_CHARS
-      ? `${text.slice(0, REPORT_ALERT_CHARS).replace(/&[a-z]{0,3}$/, "")}…`
-      : text;
-  const shown = args.alerts.slice(0, REPORT_ALERTS_MAX).map((a) => `• ${clip(escapeSlackText(a))}`);
+  const shown = args.alerts
+    .slice(0, REPORT_ALERTS_MAX)
+    .map((a) => `• ${clipReportLine(escapeSlackText(a))}`);
   const more =
     args.alerts.length > REPORT_ALERTS_MAX ? [`… 외 ${args.alerts.length - REPORT_ALERTS_MAX}건`] : [];
-  const lines = [...shown, ...more];
-  const alertSections = [];
-  for (let i = 0; i < lines.length; i += REPORT_ALERTS_PER_SECTION) {
-    alertSections.push({
-      type: "section",
-      text: { type: "mrkdwn", text: lines.slice(i, i + REPORT_ALERTS_PER_SECTION).join("\n") },
-    });
-  }
+  const alertSections = sectionsOf([...shown, ...more]);
+  const gainSections = args.gains?.ok ? gainSlackSections(args.gains, "최근 24시간") : [];
   return {
     text: headline,
     blocks: [
       { type: "section", text: { type: "mrkdwn", text: `*${headline}*\n${stats}` } },
       ...alertSections,
+      ...gainSections,
       {
         type: "context",
         elements: [{ type: "mrkdwn", text: `<${SITE_URL}/admin/paid-orders|주문 관리>` }],
+      },
+    ],
+  };
+}
+
+/**
+ * 주간 관리자 리포트 (금 KST 22:00) — 지난 한 주 회원별 크레딧·신뢰도 증가.
+ * 조회 실패는 "증가 없음"이 아니라 확인 필요 한 줄로 보낸다.
+ */
+export function weeklyReportSlackPayload(args: {
+  windowLabel: string;
+  gains: GainReport;
+}): SlackPayload {
+  const { gains } = args;
+  const headline = gains.ok
+    ? `주간 리포트 ${args.windowLabel} — 크레딧 증가 ${gains.credit.members}명 · 신뢰도 증가 ${gains.trust.members}명`
+    : `주간 리포트 ${args.windowLabel} — 확인 필요 1건`;
+  const body = gains.ok
+    ? gainSlackSections(gains, "지난 7일")
+    : sectionsOf([`• ${escapeSlackText(gains.alert)}`]);
+  return {
+    text: headline,
+    blocks: [
+      { type: "section", text: { type: "mrkdwn", text: `*${headline}*` } },
+      ...body,
+      {
+        type: "context",
+        elements: [{ type: "mrkdwn", text: `<${SITE_URL}/admin|관리자 페이지>` }],
       },
     ],
   };

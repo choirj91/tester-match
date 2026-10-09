@@ -1,4 +1,14 @@
 import { paidSeatNudgeLines, type ReminderItem } from "@/lib/checkin-reminder";
+import {
+  GAIN_KINDS,
+  GAIN_KIND_LABEL,
+  GAIN_MAIL_MAX,
+  type GainLists,
+  type GainReport,
+  formatGain,
+  formatGainLine,
+  formatGainSummary,
+} from "@/lib/gain-report";
 import { PAID_TESTER_PRICE_KRW } from "@/lib/paid-testers";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -247,8 +257,11 @@ export function paidOrdersDailyReportEmail(args: {
   yearlyPaidCount: number;
   /** 사람이 처리해야 할 일 — 있으면 제목에 [ACTION] */
   alerts?: string[];
+  /** 최근 24시간 회원별 증가 — 조회 실패는 호출부가 alerts 에 한 줄로 넣는다 */
+  gains?: GainReport;
 }): Email {
   const alerts = args.alerts ?? [];
+  const gains = args.gains?.ok ? args.gains : null;
   const subject = `${alerts.length > 0 ? "[ACTION] " : ""}[Tester Match] 유료 테스터 일일 리포트 ${args.dateLabel} — 진행 ${args.orders.length}건${alerts.length > 0 ? ` · 처리 필요 ${alerts.length}건` : ""}`;
   const alertsHtml =
     alerts.length === 0
@@ -284,6 +297,7 @@ export function paidOrdersDailyReportEmail(args: {
     <p style="margin:0 0 16px;font-weight:700;">유료 테스터 일일 리포트 — ${args.dateLabel}</p>
     ${alertsHtml}
     ${tableHtml}
+    ${gains ? gainSectionsHtml(gains, "최근 24시간") : ""}
     <p style="margin:0 0 8px;font-size:13px;color:#64748b;">
       미결제 24시간 경과 자동 취소: ${args.autoCanceledCount}건
     </p>
@@ -305,7 +319,80 @@ export function paidOrdersDailyReportEmail(args: {
         `- ${o.appName} [${o.status}] ${o.dayN === null ? "-" : `D+${o.dayN}/14`} 투입 ${o.activeMatches}/${o.testerCount} 오늘 체크인 ${o.checkedInToday}`,
     ),
     `자동 취소 ${args.autoCanceledCount}건 / 올해 누적 결제 ${args.yearlyPaidCount}건`,
+    ...(gains ? gainSectionsText(gains, "최근 24시간") : []),
     `${APP_URL}/admin/paid-orders`,
+  ].join("\n");
+  return { subject, html, text };
+}
+
+const GAIN_CELL = "padding:6px;border-bottom:1px solid #e2e8f0;";
+
+/** 회원별 증가 표 — 종류마다 합계(회원 수·총량)와 상위 100명. 닉네임은 사용자 입력이라 이스케이프한다. */
+function gainSectionsHtml(lists: GainLists, periodLabel: string): string {
+  return GAIN_KINDS.map((kind) => {
+    const list = lists[kind];
+    const title = `<p style="margin:16px 0 4px;font-weight:700;">${GAIN_KIND_LABEL[kind]} — ${periodLabel}</p>`;
+    if (list.members === 0) {
+      return `${title}<p style="margin:0 0 12px;font-size:13px;color:#64748b;">증가한 회원이 없습니다.</p>`;
+    }
+    const rows = list.rows
+      .slice(0, GAIN_MAIL_MAX)
+      .map(
+        (r) => `
+      <tr>
+        <td style="${GAIN_CELL}">#${r.user_id}</td>
+        <td style="${GAIN_CELL}">${escapeHtml(r.nickname ?? "-")}</td>
+        <td style="${GAIN_CELL}text-align:right;white-space:nowrap;">${formatGain(r.kind, r.gained)}</td>
+        <td style="${GAIN_CELL}font-size:12px;color:#64748b;">${r.entries}건${r.detail ? `: ${escapeHtml(r.detail)}` : ""}</td>
+      </tr>`,
+      )
+      .join("");
+    const more =
+      list.members > GAIN_MAIL_MAX
+        ? `<p style="margin:0 0 12px;font-size:13px;color:#64748b;">외 ${list.members - GAIN_MAIL_MAX}명</p>`
+        : "";
+    return `${title}
+    <p style="margin:0 0 4px;font-size:13px;color:#64748b;">${formatGainSummary(kind, list)}</p>
+    <table style="width:100%;border-collapse:collapse;margin:4px 0 12px;font-size:13px;">
+      <tr style="color:#64748b;text-align:left;"><th style="padding:6px;">회원</th><th style="padding:6px;">닉네임</th><th style="padding:6px;text-align:right;">증가</th><th style="padding:6px;">내역</th></tr>
+      ${rows}
+    </table>${more}`;
+  }).join("");
+}
+
+function gainSectionsText(lists: GainLists, periodLabel: string): string[] {
+  return GAIN_KINDS.flatMap((kind) => {
+    const list = lists[kind];
+    const head = `[${GAIN_KIND_LABEL[kind]} — ${periodLabel}] ${list.members === 0 ? "없음" : formatGainSummary(kind, list)}`;
+    const lines = list.rows.slice(0, GAIN_MAIL_MAX).map((r) => `- ${formatGainLine(r)}`);
+    const more = list.members > GAIN_MAIL_MAX ? [`… 외 ${list.members - GAIN_MAIL_MAX}명`] : [];
+    return [head, ...lines, ...more];
+  });
+}
+
+/**
+ * 주간 관리자 리포트 (금 KST 22:00) — 지난 한 주 회원별 크레딧·신뢰도 증가 (2026-10-09 운영자 요청).
+ * 조회 실패는 "증가 없음"이 아니라 [ACTION] 과 확인 필요 문장으로 보낸다.
+ */
+export function weeklyReportEmail(args: { windowLabel: string; gains: GainReport }): Email {
+  const { gains } = args;
+  const subject = gains.ok
+    ? `[Tester Match] 주간 리포트 ${args.windowLabel} — 크레딧 증가 ${gains.credit.members}명 · 신뢰도 증가 ${gains.trust.members}명`
+    : `[ACTION] [Tester Match] 주간 리포트 ${args.windowLabel} — 조회 실패`;
+  const bodyHtml = gains.ok
+    ? gainSectionsHtml(gains, "지난 7일")
+    : `<div style="margin:0 0 16px;padding:12px 14px;border:1px solid #fca5a5;background:#fef2f2;border-radius:10px;font-size:13px;color:#991b1b;">
+        <strong>처리 필요</strong><br>${escapeHtml(gains.alert)}
+      </div>`;
+  const html = layoutHtml(`
+    <p style="margin:0 0 4px;font-weight:700;">주간 리포트 — ${args.windowLabel} (KST)</p>
+    <p style="margin:0 0 12px;font-size:13px;color:#64748b;">기간 안에 크레딧·신뢰도가 늘어난 회원 (줄어든 기록은 빼고 더함)</p>
+    ${bodyHtml}
+  `);
+  const text = [
+    `주간 리포트 ${args.windowLabel} (KST)`,
+    ...(gains.ok ? gainSectionsText(gains, "지난 7일") : [`[처리 필요] ${gains.alert}`]),
+    `${APP_URL}/admin`,
   ].join("\n");
   return { subject, html, text };
 }
