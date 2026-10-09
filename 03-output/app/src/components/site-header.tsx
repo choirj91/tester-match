@@ -3,7 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { AppUser } from "@/lib/auth";
 import { formatKrw } from "@/lib/credits";
 import { NotificationBell } from "@/components/notification-bell";
@@ -22,7 +22,24 @@ import { cx } from "@/components/ui/cx";
  * 헤더 (Design C §5.13) — 높이 64px, 1차 메뉴 4개.
  * 1차 메뉴에 올리거나 포커스하면 2차 메뉴가 드롭다운이 아니라 헤더 아래 한 줄로 펼쳐진다.
  * 760px 이하에서는 로그인(또는 알림) + 햄버거, 하단 탭 바.
+ *
+ * 2차 줄은 올린 1차 메뉴 바로 아래에서 시작한다(마우스를 곧게 내리면 닿게).
+ * 대각선으로 내려가다 다른 1차 메뉴를 스쳐도 바뀌지 않게 전환을 잠깐 늦추고,
+ * 헤더 밖으로 살짝 벗어나도 바로 닫히지 않게 닫기를 늦춘다.
  */
+/** 다른 1차 메뉴로 바꾸기 전 기다리는 시간 — 지나가며 스친 메뉴는 무시 */
+const SWITCH_DELAY_MS = 150;
+/** 헤더를 벗어난 뒤 2차 줄을 닫기까지 기다리는 시간 */
+const CLOSE_DELAY_MS = 300;
+/** 2차 줄 오른쪽 여백 (컨테이너 px-5) */
+const ROW_GUTTER_PX = 20;
+
+type Timer = ReturnType<typeof setTimeout> | null;
+
+function clearTimer(ref: { current: Timer }) {
+  if (ref.current) clearTimeout(ref.current);
+  ref.current = null;
+}
 export function SiteHeader({ user }: { user: AppUser | null }) {
   const pathname = usePathname() ?? "";
   const active = activeSection(pathname);
@@ -30,6 +47,53 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const shown = hovered ?? active;
   const signedIn = Boolean(user);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rowRef = useRef<HTMLUListElement>(null);
+  const linkRefs = useRef(new Map<NavSection["key"], HTMLAnchorElement>());
+  const switchTimer = useRef<Timer>(null);
+  const closeTimer = useRef<Timer>(null);
+  const [rowOffset, setRowOffset] = useState(0);
+
+  useEffect(
+    () => () => {
+      clearTimer(switchTimer);
+      clearTimer(closeTimer);
+    },
+    [],
+  );
+
+  const enterSection = useCallback(
+    (section: NavSection, immediate = false) => {
+      clearTimer(closeTimer);
+      clearTimer(switchTimer);
+      if (immediate || hovered === null || hovered.key === section.key) {
+        setHovered(section);
+        return;
+      }
+      switchTimer.current = setTimeout(() => setHovered(section), SWITCH_DELAY_MS);
+    },
+    [hovered],
+  );
+
+  // 2차 줄을 올린 1차 메뉴의 왼쪽 끝에 맞춘다. 넘치면 오른쪽 여백 안으로 당긴다
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const link = shown ? linkRefs.current.get(shown.key) : undefined;
+    const row = rowRef.current;
+    if (!container || !link || !row || link.offsetWidth === 0) {
+      setRowOffset(0);
+      return;
+    }
+    const containerBox = container.getBoundingClientRect();
+    const linkLeft = link.getBoundingClientRect().left - containerBox.left;
+    const itemsWidth = Array.from(row.children).reduce(
+      (sum, li) => sum + (li as HTMLElement).offsetWidth,
+      0,
+    );
+    const maxOffset = containerBox.width - itemsWidth - ROW_GUTTER_PX;
+    setRowOffset(Math.max(0, Math.min(linkLeft, maxOffset)));
+  }, [shown]);
 
   // 페이지가 바뀌면 열린 메뉴를 닫는다
   useEffect(() => {
@@ -39,8 +103,15 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
 
   return (
     <>
-      <header className="border-b border-ink-900 bg-white" onMouseLeave={() => setHovered(null)}>
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-5">
+      <header
+        className="border-b border-ink-900 bg-white"
+        onMouseEnter={() => clearTimer(closeTimer)}
+        onMouseLeave={() => {
+          clearTimer(switchTimer);
+          closeTimer.current = setTimeout(() => setHovered(null), CLOSE_DELAY_MS);
+        }}
+      >
+        <div ref={containerRef} className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-5">
           <Link
             href="/"
             className="flex shrink-0 items-center gap-2.5 font-display text-xl font-semibold tracking-[-0.01em] text-ink-900 no-underline"
@@ -54,8 +125,13 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
               <Link
                 key={section.key}
                 href={sectionHref(section, signedIn)}
-                onMouseEnter={() => setHovered(section)}
-                onFocus={() => setHovered(section)}
+                ref={(el) => {
+                  if (el) linkRefs.current.set(section.key, el);
+                  else linkRefs.current.delete(section.key);
+                }}
+                onMouseEnter={() => enterSection(section)}
+                onMouseLeave={() => clearTimer(switchTimer)}
+                onFocus={() => enterSection(section, true)}
                 aria-current={active?.key === section.key ? "true" : undefined}
                 className={cx(
                   "px-3.5 py-2.5 text-[15px] font-medium text-ink-900 no-underline hover:text-accent-600",
@@ -97,8 +173,16 @@ export function SiteHeader({ user }: { user: AppUser | null }) {
         </div>
 
         {shown && !menuOpen && (
-          <nav aria-label={`${shown.label} 메뉴`} className="border-t border-ink-900">
-            <ul className="mx-auto flex max-w-[1200px] list-none gap-1 overflow-x-auto px-5">
+          <nav
+            aria-label={`${shown.label} 메뉴`}
+            className="border-t border-ink-900"
+            onMouseEnter={() => clearTimer(switchTimer)}
+          >
+            <ul
+              ref={rowRef}
+              className="mx-auto flex max-w-[1200px] list-none gap-1 overflow-x-auto px-5"
+              style={rowOffset > 0 ? { paddingLeft: rowOffset } : undefined}
+            >
               {shown.links.map((link) => {
                 const current = isActiveLink(pathname, link.href);
                 return (

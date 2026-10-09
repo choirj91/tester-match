@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SiteHeader } from "./site-header";
 
 describe("SiteHeader", () => {
@@ -67,5 +67,60 @@ describe("SiteHeader", () => {
     render(<SiteHeader user={user} />);
     const tabs = screen.getByRole("navigation", { name: "하단 탭" });
     expect(within(tabs).getAllByRole("link")).toHaveLength(4);
+  });
+
+  describe("second-level row timing", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const primary = (label: string) =>
+      within(screen.getByRole("navigation", { name: "주 메뉴" })).getByRole("link", { name: label });
+
+    it("ignores a menu the pointer only brushes past on the way down", () => {
+      vi.useFakeTimers();
+      render(<SiteHeader user={user} />);
+      fireEvent.mouseEnter(primary("내 공간"));
+      fireEvent.mouseEnter(primary("커뮤니티"));
+      // 스친 뒤 곧바로 2차 줄에 도착
+      fireEvent.mouseEnter(screen.getByRole("navigation", { name: "내 공간 메뉴" }));
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(screen.getByRole("navigation", { name: "내 공간 메뉴" })).toBeInTheDocument();
+    });
+
+    it("switches to another menu when the pointer rests on it", () => {
+      vi.useFakeTimers();
+      render(<SiteHeader user={user} />);
+      fireEvent.mouseEnter(primary("내 공간"));
+      fireEvent.mouseEnter(primary("커뮤니티"));
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.getByRole("navigation", { name: "커뮤니티 메뉴" })).toBeInTheDocument();
+    });
+
+    it("keeps the row open briefly after leaving the header", () => {
+      vi.useFakeTimers();
+      const { container } = render(<SiteHeader user={user} />);
+      const header = container.querySelector("header")!;
+      fireEvent.mouseEnter(primary("테스트하기"));
+      fireEvent.mouseLeave(header);
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(screen.getByRole("navigation", { name: "테스트하기 메뉴" })).toBeInTheDocument();
+      fireEvent.mouseEnter(header);
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+      expect(screen.getByRole("navigation", { name: "테스트하기 메뉴" })).toBeInTheDocument();
+      fireEvent.mouseLeave(header);
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+      expect(screen.queryByRole("navigation", { name: "테스트하기 메뉴" })).not.toBeInTheDocument();
+    });
   });
 });
