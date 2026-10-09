@@ -37,14 +37,19 @@ export async function GET(request: Request) {
     weeklyReportSlackPayload({ windowLabel, gains }),
   );
 
-  return NextResponse.json({
-    ok: true,
-    since: window.since.toISOString(),
-    until: window.until.toISOString(),
-    ...gainCounts(gains),
-    emailSent: emailResult.ok,
-    slackSent: slackResult.ok,
-  });
+  // 조회 실패이거나 메일·Slack 둘 다 못 보냈으면 500 — 주간 리포트가 조용히 사라지지 않게 실행 실패로 남긴다
+  const ok = gains.ok && (emailResult.ok || slackResult.ok);
+  return NextResponse.json(
+    {
+      ok,
+      since: window.since.toISOString(),
+      until: window.until.toISOString(),
+      ...gainCounts(gains),
+      emailSent: emailResult.ok,
+      slackSent: slackResult.ok,
+    },
+    { status: ok ? 200 : 500 },
+  );
 }
 
 export const POST = GET;

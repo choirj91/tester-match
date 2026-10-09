@@ -151,7 +151,9 @@ describe("weekly-report — Friday 22:00 KST admin report", () => {
     const res = await GET(new Request("http://localhost/api/cron/weekly-report"));
     const body = await res.json();
 
-    expect(body).toMatchObject({ ok: true, gainsLoaded: false, emailSent: true, slackSent: true });
+    // 경보는 보내되 실행은 실패로 남긴다 — Functions 기록·Slack 결과 보고에 ❌ 로 드러나게
+    expect(res.status).toBe(500);
+    expect(body).toMatchObject({ ok: false, gainsLoaded: false, emailSent: true, slackSent: true });
     expect(body).not.toHaveProperty("creditGain");
     const mail = vi.mocked(sendEmail).mock.calls[0]?.[0] as { subject: string; html: string };
     expect(mail.subject.startsWith("[ACTION]")).toBe(true);
@@ -160,6 +162,18 @@ describe("weekly-report — Friday 22:00 KST admin report", () => {
     const slack = JSON.stringify(vi.mocked(postSlackMessage).mock.calls[0]?.[1]);
     expect(slack).toContain(GAIN_REPORT_FAILED_ALERT);
     expect(slack).toContain("확인 필요 1건");
+  });
+
+  test("fails the run when neither mail nor Slack went out", async () => {
+    stubRpc({ data: ROWS, error: null });
+    vi.mocked(sendEmail).mockResolvedValueOnce({ ok: false } as never);
+    vi.mocked(postSlackMessage).mockResolvedValueOnce({ ok: false, reason: "http_error" });
+
+    const res = await GET(new Request("http://localhost/api/cron/weekly-report"));
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body).toMatchObject({ ok: false, emailSent: false, slackSent: false });
   });
 
   test("rejects calls without the cron secret", async () => {
