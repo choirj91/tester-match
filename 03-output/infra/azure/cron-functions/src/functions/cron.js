@@ -25,6 +25,8 @@ const JOBS = [
   { name: "weekly-hot-posts", schedule: "0 0 1 * * 1", path: "/api/cron/weekly-hot-posts" },
   // 6시간 간격(:15) — 시트 보상 자동 확정·보정·출시 보너스 (반복)
   { name: "seat-reward-release", schedule: "0 15 */6 * * *", path: "/api/cron/seat-reward-release", loop: true },
+  // 금 KST 22:00 — 주간 관리자 리포트 (지난 금 22:00 → 이번 금 22:00 회원별 크레딧·신뢰도 증가)
+  { name: "weekly-report", schedule: "0 0 13 * * 5", path: "/api/cron/weekly-report" },
 ];
 
 function env() {

@@ -12,7 +12,7 @@
 | PostgreSQL Flexible | Burstable B1ms (1 vCore·2 GiB) | $19.0 |
 | └ 스토리지 | Premium SSD 32 GB ($0.131/GB) | $4.2 |
 | └ 백업 | 7일 보존 (프로비저닝 용량까지 무료) | $0 |
-| Functions Flex Consumption | 타이머 7개, 무료 할당 이내 | ~$0 |
+| Functions Flex Consumption | 타이머 8개, 무료 할당 이내 (2026-10-09 주간 리포트 추가: 주 1회 실행·메일 1통 — 증가 ~$0) | ~$0 |
 | Blob Storage | Hot LRS, 스크린샷 수 GB | ~$0.1 |
 | ACS Email | 월 수천 통 ($0.00025/통 + $0.00012/MB) | ~$1 |
 | Azure DNS | 공개 영역 1개 $0.5 + 질의 $0.4/백만 | ~$1 |

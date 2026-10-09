@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getAdminNotifyEmail, sendEmail } from "@/lib/email";
 import { paidOrdersDailyReportEmail } from "@/lib/email-templates";
 import { loadCreditAnomalyAlerts } from "@/lib/credit-anomalies";
+import { dailyGainWindow, gainCounts, loadGainReport } from "@/lib/gain-report";
 import { buildOrderReport } from "@/lib/paid-order-report";
 import { runSweepStep } from "@/lib/paid-order-sweep";
 import { AUTO_CANCEL_NOTE_PREFIX } from "@/lib/paid-order-sweep-rules";
@@ -26,6 +27,7 @@ function kstYearStartIso(now: Date): string {
  *   ?mode=preview : 리포트 내용만 JSON 으로 (메일 없음) — 운영자가 경보를 바로 확인할 때.
  *   (기본)        : 리포트 메일 + Slack(운영 채널). 처리할 일이 있으면 제목에 [ACTION].
  * 경보에는 크레딧 이상 징후(credit_anomaly_report)가 함께 실린다.
+ * 기본 모드는 최근 24시간 회원별 크레딧·신뢰도 증가 목록(member_gain_report)도 싣는다 — 조회 실패는 경보 한 줄.
  * 워크플로우는 sweep 을 more=false 까지 반복한 뒤 기본 모드를 한 번 호출한다.
  */
 export async function GET(request: Request) {
@@ -59,7 +61,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: true, activeOrders: report.rows, alerts });
   }
 
-  const [yearlyPaid, autoCanceled] = await Promise.all([
+  const [gains, yearlyPaid, autoCanceled] = await Promise.all([
+    loadGainReport(supabase, dailyGainWindow(now)),
     // 통신판매업 신고 기준(연 50회) 관찰용 — 올해 결제 건수
     supabase
       .from("payments")
@@ -76,6 +79,9 @@ export async function GET(request: Request) {
       .gte("swept_at", new Date(now.getTime() - DAY_MS).toISOString()),
   ]);
 
+  // 증가 내역 조회 실패는 "증가 없음"이 아니라 처리 필요 한 줄로
+  const reportAlerts = gains.ok ? alerts : [...alerts, gains.alert];
+
   const kstNow = new Date(now.getTime() + KST_OFFSET_MS);
   const dateLabel = `${kstNow.getUTCFullYear()}-${String(kstNow.getUTCMonth() + 1).padStart(2, "0")}-${String(kstNow.getUTCDate()).padStart(2, "0")}`;
 
@@ -84,7 +90,8 @@ export async function GET(request: Request) {
     orders: report.rows,
     autoCanceledCount: autoCanceled.count ?? 0,
     yearlyPaidCount: yearlyPaid.count ?? 0,
-    alerts,
+    alerts: reportAlerts,
+    gains,
   });
   const emailResult = await sendEmail({ to: getAdminNotifyEmail(CONTACT_EMAIL), ...tmpl });
   const slackResult = await postSlackMessage(
@@ -94,15 +101,17 @@ export async function GET(request: Request) {
       activeOrders: report.rows.length,
       autoCanceledCount: autoCanceled.count ?? 0,
       yearlyPaidCount: yearlyPaid.count ?? 0,
-      alerts,
+      alerts: reportAlerts,
+      gains,
     }),
   );
 
   return NextResponse.json({
     ok: true,
     activeOrders: report.rows.length,
-    alerts,
+    alerts: reportAlerts,
     yearlyPaidCount: yearlyPaid.count ?? 0,
+    ...gainCounts(gains),
     emailSent: emailResult.ok,
     slackSent: slackResult.ok,
   });
