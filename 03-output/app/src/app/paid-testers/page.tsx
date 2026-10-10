@@ -139,7 +139,7 @@ export default async function PaidTestersPage({
     <>
       <SiteHeader user={user} />
       <main className="mx-auto max-w-[1200px] px-5 pt-12 pb-16">
-        {/* 첫 화면: 소개 → 영수증 → 환불 기준 (모바일 순서). 데스크톱은 소개·진행 방식 | 영수증 2열 */}
+        {/* 첫 화면: 소개 → 영수증 → 환불 기준 (모바일 순서). 데스크톱은 소개 | 영수증 2열, 그 아래 진행 방식 4단계를 전폭 한 줄로 */}
         <div className="grid items-start gap-x-14 gap-y-10 min-[921px]:grid-cols-[minmax(0,1fr)_420px]">
           <div className="flex flex-col gap-5 min-[921px]:col-start-1 min-[921px]:row-start-1">
             <p className="m-0 font-mono text-xs tracking-[0.04em] text-accent-600">급구 · 유료 테스터</p>
@@ -166,7 +166,7 @@ export default async function PaidTestersPage({
           </div>
 
           <Receipt
-            className="min-[921px]:col-start-2 min-[921px]:row-span-2 min-[921px]:row-start-1"
+            className="min-[921px]:col-start-2 min-[921px]:row-start-1"
             title="급구 · 유료 테스터"
             badge={!PAID_TESTERS_PUBLIC_ORDERING && <PaymentPendingBadge />}
             meta="판매자 낰낰컴퍼니 · 부가세 포함 가격"
@@ -227,7 +227,7 @@ export default async function PaidTestersPage({
 
           <section
             aria-labelledby="steps-heading"
-            className="flex flex-col gap-5 border-t border-ink-900 pt-8 min-[921px]:col-start-1 min-[921px]:row-start-2"
+            className="flex flex-col gap-5 border-t border-ink-900 pt-8 min-[921px]:col-span-2 min-[921px]:row-start-2"
           >
             <h2 id="steps-heading" className="m-0 font-display text-h2 font-semibold text-ink-900">
               진행 방식
