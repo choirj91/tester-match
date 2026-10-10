@@ -19,8 +19,6 @@ import {
   PAID_TESTER_MAX_COUNT,
   PAID_TESTER_MIN_COUNT,
   PAID_TESTER_PRICE_KRW,
-  PAID_TESTER_RECOMMENDED_COUNT,
-  paidTesterAmountKrw,
 } from "@/lib/paid-testers";
 import {
   SEAT_MIN_CHECKIN_DAYS,
@@ -213,8 +211,8 @@ export default async function HomePage() {
           <ReceiptRows>
             <ReceiptRow label="테스터 1명" value={PRICE} />
             <ReceiptRow
-              label={`기본 ${PAID_TESTER_RECOMMENDED_COUNT}명 (${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택)`}
-              value={`${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`}
+              label="인원"
+              value={`${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택`}
             />
             <ReceiptRow label="진행 기간" value={`${SEAT_TOTAL_DAYS}일`} />
             <ReceiptRow label="충원 기간" value={`결제 후 ${PAID_SEAT_FILL_DAYS}일`} />
