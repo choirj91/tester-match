@@ -19,10 +19,8 @@ import {
   PAID_TESTER_MAX_COUNT,
   PAID_TESTER_MIN_COUNT,
   PAID_TESTER_PRICE_KRW,
-  PAID_TESTER_RECOMMENDED_COUNT,
   canOrderPaidTesters,
   isReviewOrderer,
-  paidTesterAmountKrw,
   type PaidOrderStatus,
 } from "@/lib/paid-testers";
 import { formatKrw } from "@/lib/credits";
@@ -77,8 +75,8 @@ const GUARANTEES = [
 
 const HIGHLIGHTS = [
   {
-    value: `${PAID_TESTER_RECOMMENDED_COUNT}명 ${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`,
-    label: "Google 요건 12명에 이탈 대비 2명 (부가세 포함)",
+    value: `1명 ${PRICE_LABEL}`,
+    label: `부가세 포함 · 필요한 만큼 ${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명`,
   },
   { value: "매일 증빙", label: "14일 동안 실기기 실행 화면 스크린샷 1장씩" },
   { value: "미완주 시트 환불", label: "못 채운 시트·이탈한 시트·이의가 인용된 시트" },
@@ -189,8 +187,8 @@ export default async function PaidTestersPage({
             <ReceiptRows>
               <ReceiptRow label="테스터 1명" value={PRICE_LABEL} />
               <ReceiptRow
-                label={`기본 ${PAID_TESTER_RECOMMENDED_COUNT}명 (${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택)`}
-                value={`${formatKrw(paidTesterAmountKrw(PAID_TESTER_RECOMMENDED_COUNT))}원`}
+                label="인원"
+                value={`${PAID_TESTER_MIN_COUNT}~${PAID_TESTER_MAX_COUNT}명 선택`}
               />
               <ReceiptRow label="진행 기간" value={`${SEAT_TOTAL_DAYS}일`} />
               <ReceiptRow label="충원 기간" value={`결제 후 ${PAID_SEAT_FILL_DAYS}일`} />
