@@ -61,11 +61,21 @@ export async function POST(req: Request) {
       signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) {
+      // 비공개 테스트만 한 앱은 테스터·개발자 계정에만 상세 페이지가 보이고,
+      // 로그인 없는 서버 요청에는 404 를 준다. 초대 링크는 패키지 ID 만으로
+      // 만들 수 있으니 그것만 채우고 이름·설명은 개발자가 직접 입력한다.
       if (res.status === 404) {
-        return NextResponse.json(
-          { ok: false, message: "해당 앱을 Play Store 에서 찾지 못했습니다." },
-          { status: 404 },
-        );
+        return NextResponse.json({
+          ok: true,
+          found: false,
+          data: {
+            package_id: packageId,
+            name: "",
+            short_description: "",
+            icon_url: "",
+            ...inviteUrls(packageId),
+          },
+        });
       }
       return NextResponse.json(
         { ok: false, message: `Play Store 응답 오류 (${res.status})` },
@@ -79,13 +89,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
+      found: true,
       data: {
         package_id: packageId,
         name: cleanTitle,
         short_description: meta.description,
         icon_url: meta.image,
-        store_invite_url: `https://play.google.com/store/apps/details?id=${packageId}`,
-        web_invite_url: `https://play.google.com/apps/testing/${packageId}`,
+        ...inviteUrls(packageId),
       },
     });
   } catch (err) {
@@ -95,6 +105,13 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
+}
+
+function inviteUrls(packageId: string): { store_invite_url: string; web_invite_url: string } {
+  return {
+    store_invite_url: `https://play.google.com/store/apps/details?id=${packageId}`,
+    web_invite_url: `https://play.google.com/apps/testing/${packageId}`,
+  };
 }
 
 function extractIdFromPath(pathname: string): string | null {
