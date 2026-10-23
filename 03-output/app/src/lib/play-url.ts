@@ -18,10 +18,7 @@ function isHttpsUrlOnHost(value: string | null | undefined, host: string): value
     return false;
   }
   return (
-    url.protocol === "https:" &&
-    url.hostname === host &&
-    url.username === "" &&
-    url.password === ""
+    url.protocol === "https:" && url.hostname === host && url.username === "" && url.password === ""
   );
 }
 
