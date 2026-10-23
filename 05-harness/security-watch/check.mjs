@@ -130,10 +130,12 @@ async function checkDependencies() {
   const audit = JSON.parse(raw || "{}");
   const v = audit.metadata?.vulnerabilities ?? {};
   const advisories = Object.values(audit.advisories ?? {});
-  const top = advisories
-    .filter((a) => a.severity === "critical" || a.severity === "high")
-    .slice(0, 4)
-    .map((a) => `${a.module_name} (${a.severity}) ${a.title}`);
+  // Critical anywhere, or high in the framework itself, is "danger". Other high advisories sit in
+  // transitive build-time packages and stay "warn" so the daily report does not go red every day.
+  const FRAMEWORK = new Set(["next", "react", "react-dom"]);
+  const urgent = advisories.filter((a) => a.severity === "critical" || (a.severity === "high" && FRAMEWORK.has(a.module_name)));
+  const otherHigh = advisories.filter((a) => a.severity === "high" && !FRAMEWORK.has(a.module_name));
+  const describe = (list) => list.slice(0, 4).map((a) => `${a.module_name} (${a.severity}) ${a.title}`).join(" / ");
   // A minor line can stop receiving fixes; say which version clears the framework advisories.
   const nextFloors = advisories
     .filter((a) => a.module_name === "next" && (a.severity === "critical" || a.severity === "high"))
@@ -143,12 +145,16 @@ async function checkDependencies() {
     const floor = nextFloors.reduce((a, b) => (compareVersions(a, b) >= 0 ? a : b));
     items.push({ status: "danger", text: `Next.js 고위험 취약점 ${nextFloors.length}건은 ${floor} 이상에서만 해소 — 업그레이드 필요` });
   }
-  if ((v.critical ?? 0) + (v.high ?? 0) > 0) {
-    items.push({ status: "danger", text: `운영 의존성 고위험 취약점 critical ${v.critical ?? 0} · high ${v.high ?? 0}: ${top.join(" / ")}` });
-  } else if ((v.moderate ?? 0) > 0) {
-    items.push({ status: "warn", text: `운영 의존성 중간 위험 취약점 ${v.moderate}건` });
-  } else {
-    items.push({ status: "ok", text: "운영 의존성 알려진 취약점 없음 (pnpm audit)" });
+  if (urgent.length) {
+    items.push({ status: "danger", text: `즉시 조치할 취약점 ${urgent.length}건: ${describe(urgent)}` });
+  }
+  if (otherHigh.length) {
+    const modules = [...new Set(otherHigh.map((a) => a.module_name))].join(", ");
+    items.push({ status: "warn", text: `간접 의존성 high ${otherHigh.length}건 (${modules}) — 정기 업데이트 때 정리` });
+  }
+  if (!urgent.length && !otherHigh.length) {
+    if ((v.moderate ?? 0) > 0) items.push({ status: "warn", text: `운영 의존성 중간 위험 취약점 ${v.moderate}건` });
+    else items.push({ status: "ok", text: "운영 의존성 알려진 취약점 없음 (pnpm audit)" });
   }
   return category("deps", "② 프레임워크·의존성 취약점", items);
 }
