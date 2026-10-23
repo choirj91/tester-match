@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { GUIDES, getGuide } from "../guides";
 import { ButtonLink } from "@/components/ui/button";
 import { PLAY_CLOSED_TEST_TESTERS } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 export async function generateMetadata({
   params,
@@ -57,7 +58,7 @@ export default async function GuidePage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-[720px] px-5 pt-12 pb-[88px]">

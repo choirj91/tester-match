@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { isPlayStoreUrl } from "@/lib/play-url";
 
 const playStoreUrl = z
   .string()
   .url({ message: "올바른 URL 형식이 아닙니다." })
-  .refine((v) => /play\.google\.com/i.test(v), {
-    message: "play.google.com 도메인이 포함된 링크여야 합니다.",
+  .refine((v) => isPlayStoreUrl(v), {
+    message: "https://play.google.com 으로 시작하는 Google Play 링크만 등록할 수 있습니다.",
   });
 
 /** 빈 문자열은 undefined 로 변환 (선택 필드 처리) */
