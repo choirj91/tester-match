@@ -1,7 +1,7 @@
 name: Deploy (Azure App Service)
 
-# 수동 실행 전용. push 로 자동 배포하지 않는다 — 운영 전환 전까지는 스테이징 확인용,
-# 전환 후에도 배포는 사람이 시작한다 (DEPLOY.md 의 승인 규칙과 같다).
+# 수동 실행 전용. push 로 자동 배포하지 않는다 — 배포는 사람이 시작한다 (DEPLOY.md 의 승인 규칙과 같다).
+# 스테이징 환경은 두지 않는다 (2026-10-23 삭제). 배포 대상은 운영 앱 하나뿐이다.
 #
 # 필요한 설정 (값은 리포에 쓰지 않는다 — 리포 공개):
 #   GitHub Environment `azure-prod` (Required reviewers = 배포 승인 게이트)
