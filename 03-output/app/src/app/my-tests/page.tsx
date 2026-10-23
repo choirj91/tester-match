@@ -22,6 +22,7 @@ import {
 import { CheckInButton } from "./check-in-button";
 import { CheckinCalendar } from "./checkin-calendar";
 import { InstalledButton } from "./installed-button";
+import { isGoogleGroupUrl, isPlayStoreUrl } from "@/lib/play-url";
 
 export const metadata = { title: "내 테스트" };
 
@@ -158,7 +159,7 @@ export default async function MyTestsPage() {
                         </p>
                         <PlayGroupJoinPrompt compact />
                       </Notice>
-                    ) : app.google_group_url && isActive ? (
+                    ) : isGoogleGroupUrl(app.google_group_url) && isActive ? (
                       <Notice kind="caution" title={<span className="font-mono">1단계</span>}>
                         <p className="m-0">초대 링크 전에 Google 그룹 가입이 필요합니다.</p>
                         <a
@@ -185,12 +186,12 @@ export default async function MyTestsPage() {
                         ) : (
                           <InstalledButton matchId={m.id} />
                         ))}
-                      {app.store_invite_url && (
+                      {isPlayStoreUrl(app.store_invite_url) && (
                         <ExternalButton href={app.store_invite_url}>
                           {hasCustomGroup ? "안드로이드 (2단계)" : "안드로이드"}
                         </ExternalButton>
                       )}
-                      {app.web_invite_url && (
+                      {isPlayStoreUrl(app.web_invite_url) && (
                         <ExternalButton href={app.web_invite_url}>
                           {hasCustomGroup ? "웹 (2단계)" : "웹"}
                         </ExternalButton>

@@ -29,6 +29,7 @@ import {
 } from "@/lib/seat-reward-rules";
 import { PLAY_CLOSED_TEST_TESTERS } from "@/lib/site";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 const PRICE = `${formatKrw(PAID_TESTER_PRICE_KRW)}원`;
 
@@ -149,11 +150,11 @@ export default async function HomePage() {
     <main>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(HOME_JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(HOME_JSON_LD) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(ORG_JSON_LD) }}
       />
       <SiteHeader user={user} />
 

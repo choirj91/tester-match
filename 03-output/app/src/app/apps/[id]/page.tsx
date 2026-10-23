@@ -18,6 +18,7 @@ import { KpiSection } from "./kpi-section";
 import { isGroupsAutoJoinEnabled } from "@/lib/google-groups";
 import { UpgradeGroupBanner } from "./upgrade-group-banner";
 import { TesterMonitor } from "./tester-monitor";
+import { isGoogleGroupUrl, isPlayStoreUrl } from "@/lib/play-url";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -196,7 +197,7 @@ export default async function AppDetailPage({ params, searchParams }: Props) {
               이 등록되어 있어야 합니다. 테스터에게는 그룹 1클릭 가입 안내가 자동으로
               표시됩니다.
             </Notice>
-          ) : app.google_group_url ? (
+          ) : isGoogleGroupUrl(app.google_group_url) ? (
             <Notice kind="caution" title="Google 그룹 (1단계 필수)" className="mt-4">
               <p>테스터가 초대 링크를 사용하기 전 이 그룹에 먼저 가입해야 합니다.</p>
               <div className="mt-2">
@@ -255,17 +256,17 @@ function buildShareText(args: {
     lines.push(`→ ${PLAY_GROUP_JOIN_URL}`);
     lines.push("한 번 가입하면 Tester Match 의 모든 앱 테스트에 참여할 수 있어요!");
     stepIdx++;
-  } else if (args.googleGroupUrl) {
+  } else if (isGoogleGroupUrl(args.googleGroupUrl)) {
     lines.push(`${stepMarks[stepIdx - 1]} Google 그룹에 가입해 주세요 (버튼만 누르면 바로 승인)`);
     lines.push(`→ ${args.googleGroupUrl}`);
     stepIdx++;
   }
-  if (args.webInviteUrl) {
+  if (isPlayStoreUrl(args.webInviteUrl)) {
     lines.push(`${stepMarks[stepIdx - 1]} 비공개 테스트에 참여해 주세요 ('테스터 되기' 클릭)`);
     lines.push(`→ ${args.webInviteUrl}`);
     stepIdx++;
   }
-  if (args.storeInviteUrl) {
+  if (isPlayStoreUrl(args.storeInviteUrl)) {
     lines.push(`${stepMarks[stepIdx - 1]} Play 스토어에서 앱을 설치해 주세요`);
     lines.push(`→ ${args.storeInviteUrl}`);
     stepIdx++;
@@ -292,6 +293,14 @@ function Row({ label, url }: { label: string; url: string | null }) {
     return (
       <p className="text-ink-600">
         <strong className="font-semibold">{label}:</strong> 미등록
+      </p>
+    );
+  }
+  if (!isPlayStoreUrl(url) && !isGoogleGroupUrl(url)) {
+    return (
+      <p className="text-ink-600">
+        <strong className="font-semibold">{label}:</strong> Google 주소가 아니라 표시하지 않습니다. 앱
+        수정에서 다시 등록해 주세요.
       </p>
     );
   }

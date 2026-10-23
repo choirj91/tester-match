@@ -18,6 +18,8 @@ import { SEAT_REWARD_MAX } from "@/lib/seat-reward-rules";
 import { AppCommentsSection } from "./comments-section";
 import { AdminBadge } from "@/components/admin-badge";
 import { PlayGroupJoinPrompt } from "@/components/play-group-join-prompt";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { isGoogleGroupUrl, isPlayStoreUrl } from "@/lib/play-url";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -164,7 +166,7 @@ export default async function BrowseDetailPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(appJsonLd) }}
       />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-[760px] px-5 pt-8 pb-14">
@@ -226,7 +228,7 @@ export default async function BrowseDetailPage({ params }: Props) {
                 <ArrowRight className="size-4" strokeWidth={1.8} aria-hidden="true" />
               </ButtonLink>
             </Notice>
-          ) : app.google_group_url ? (
+          ) : isGoogleGroupUrl(app.google_group_url) ? (
             <Notice kind="caution" title={<StepTitle step="1단계 필수">Google 그룹에 먼저 가입하세요</StepTitle>}>
               <p className="m-0">
                 Google Play Closed Testing은 지정된 Google 그룹 구성원만 초대 링크를 사용할
@@ -363,7 +365,7 @@ function LinkRow({ label, url }: { label: string; url: string | null }) {
     <div className="flex flex-col gap-1 border-b border-ink-200 py-3 sm:flex-row sm:items-baseline sm:gap-4">
       <dt className="w-28 shrink-0 text-sm font-semibold text-ink-900">{label}</dt>
       <dd className="m-0 min-w-0">
-        {url ? (
+        {isPlayStoreUrl(url) ? (
           <a
             href={url}
             target="_blank"
@@ -373,7 +375,9 @@ function LinkRow({ label, url }: { label: string; url: string | null }) {
             {url}
           </a>
         ) : (
-          <span className="text-sm text-ink-600">미등록</span>
+          <span className="text-sm text-ink-600">
+            {url ? "Google Play 주소가 아니라 표시하지 않습니다." : "미등록"}
+          </span>
         )}
       </dd>
     </div>

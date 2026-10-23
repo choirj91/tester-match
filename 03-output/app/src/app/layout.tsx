@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { FloatButtons } from "@/components/kakao-float-button";
 import { PageTracker } from "@/components/page-tracker";
+import { SecurityNoticePopup } from "@/components/security-notice-popup";
 import { SiteFooter } from "@/components/site-footer";
 
 const ADSENSE_CLIENT = "ca-pub-6738372737459853";
@@ -52,8 +53,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Tester Match — Google Play 비공개 테스트 12명을 7일 안에",
-    description:
-      "안드로이드 테스터 12명/14일 요건을 인디 개발자끼리 품앗이로 완주하세요.",
+    description: "안드로이드 테스터 12명/14일 요건을 인디 개발자끼리 품앗이로 완주하세요.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -91,13 +91,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           crossOrigin="anonymous"
         />
       </head>
-      <body className="bg-white text-ink-900 antialiased">
+      <body className="text-ink-900 bg-white antialiased">
         <div className="flex min-h-screen flex-col max-[760px]:pb-[88px]">
           <div className="flex-1">{children}</div>
           <SiteFooter />
         </div>
         <FloatButtons />
         <PageTracker />
+        <SecurityNoticePopup />
       </body>
     </html>
   );

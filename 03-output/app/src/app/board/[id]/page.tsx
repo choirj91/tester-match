@@ -10,6 +10,7 @@ import { AdminBadge } from "@/components/admin-badge";
 import { Linkify } from "@/components/linkify";
 import { NOTICE_CATEGORY } from "@/lib/validators/post";
 import { Badge } from "@/components/ui/badge";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -106,7 +107,7 @@ export default async function PostDetailPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(postJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(postJsonLd) }}
       />
       <SiteHeader user={user} />
       <main className="mx-auto max-w-3xl px-5 pt-12 pb-[88px]">

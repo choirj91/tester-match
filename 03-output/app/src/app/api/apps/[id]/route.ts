@@ -8,6 +8,10 @@ import { TESTER_GROUP_URL } from "@/lib/tester-group";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Ctx) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ ok: false, message: "로그인이 필요합니다." }, { status: 401 });
+  }
   const { id } = await params;
   const appId = Number(id);
   if (!Number.isInteger(appId)) {
@@ -15,13 +19,15 @@ export async function GET(_req: Request, { params }: Ctx) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
+  // 초대 링크가 들어 있어 소유자와 관리자만 조회한다 — 참여자는 /browse/[id] 에서 참여 신청 후에 본다
+  let query = supabase
     .from("apps")
     .select(
       "id, owner_user_id, name, short_description, store_invite_url, web_invite_url, required_testers, status, created_at, updated_at",
     )
-    .eq("id", appId)
-    .maybeSingle();
+    .eq("id", appId);
+  if (user.role !== "admin") query = query.eq("owner_user_id", user.id);
+  const { data, error } = await query.maybeSingle();
 
   if (error || !data) {
     return NextResponse.json({ ok: false, message: "찾을 수 없음" }, { status: 404 });
