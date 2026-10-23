@@ -22,13 +22,21 @@ type ParsedApp = {
   web_invite_url: string;
 };
 
+type ParseTone = "ok" | "warn" | "err";
+
+const PARSE_TONE_CLASS: Record<ParseTone, string> = {
+  ok: "text-success-700",
+  warn: "text-warning-700",
+  err: "text-danger-700",
+};
+
 export function AppForm({ initialNickname, email }: Props) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
   const [parseUrl, setParseUrl] = useState("");
-  const [parseMsg, setParseMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
+  const [parseMsg, setParseMsg] = useState<{ tone: ParseTone; text: string } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   function setField(name: string, value: string) {
@@ -55,17 +63,24 @@ export function AppForm({ initialNickname, email }: Props) {
         body: JSON.stringify({ url: parseUrl.trim() }),
       });
       const j = (await res.json()) as
-        | { ok: true; data: ParsedApp }
+        | { ok: true; found: boolean; data: ParsedApp }
         | { ok: false; message: string };
       if (!res.ok || !j.ok) {
         setParseMsg({ tone: "err", text: !j.ok ? j.message : "파싱 실패" });
         return;
       }
       const d = j.data;
-      setField("name", d.name);
-      setField("short_description", d.short_description);
       setField("store_invite_url", d.store_invite_url);
       setField("web_invite_url", d.web_invite_url);
+      if (!j.found) {
+        setParseMsg({
+          tone: "warn",
+          text: `초대 링크만 채웠습니다. 비공개 테스트 중인 앱은 Play Store 정보를 외부에서 불러올 수 없어요. 앱 이름·설명은 직접 입력해주세요. (패키지 ID: ${d.package_id})`,
+        });
+        return;
+      }
+      setField("name", d.name);
+      setField("short_description", d.short_description);
       setParseMsg({
         tone: "ok",
         text: `"${d.name}" 정보를 채웠습니다. 목표 인원만 확인하면 됩니다.`,
@@ -124,6 +139,7 @@ export function AppForm({ initialNickname, email }: Props) {
         </div>
         <p className="mt-1.5 text-sm text-ink-700">
           Play Store 앱 상세 URL 을 붙여넣으면 이름·설명·초대 링크를 자동으로 채웁니다.
+          비공개 테스트 중인 앱은 초대 링크만 채워지니 이름·설명은 직접 입력해주세요.
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input
@@ -145,7 +161,7 @@ export function AppForm({ initialNickname, email }: Props) {
           <p
             role={parseMsg.tone === "err" ? "alert" : "status"}
             className={`mt-2 flex items-center gap-1.5 text-[13px] font-medium ${
-              parseMsg.tone === "ok" ? "text-success-700" : "text-danger-700"
+              PARSE_TONE_CLASS[parseMsg.tone]
             }`}
           >
             {parseMsg.tone === "ok" ? (
