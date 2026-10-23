@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { FloatButtons } from "@/components/kakao-float-button";
 import { PageTracker } from "@/components/page-tracker";
-import { SecurityNoticePopup } from "@/components/security-notice-popup";
 import { SiteFooter } from "@/components/site-footer";
 
 const ADSENSE_CLIENT = "ca-pub-6738372737459853";
@@ -98,7 +97,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </div>
         <FloatButtons />
         <PageTracker />
-        <SecurityNoticePopup />
       </body>
     </html>
   );
