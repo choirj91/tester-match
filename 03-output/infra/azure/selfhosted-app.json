@@ -2,13 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "metadata": {
-    "description": "ADR-0015 phase 2: a Node web app with PostgREST and GoTrue (Supabase Auth) sidecars on Azure PostgreSQL, secrets as Key Vault references. Used for the staging app first; the same settings are applied to the production app at cutover."
+    "description": "ADR-0015 phase 2: a Node web app with PostgREST and GoTrue (Supabase Auth) sidecars on Azure PostgreSQL, secrets as Key Vault references. Applied to the production app (there is no staging app)."
   },
   "parameters": {
     "location": { "type": "string", "defaultValue": "koreacentral" },
     "appName": { "type": "string" },
     "publicUrl": { "type": "string", "metadata": { "description": "https://host the browser uses (no trailing slash)." } },
-    "envTag": { "type": "string", "defaultValue": "stg" },
+    "envTag": { "type": "string", "defaultValue": "prod" },
     "postgrestImage": { "type": "string", "defaultValue": "postgrest/postgrest:v16.4" },
     "gotrueImage": { "type": "string", "defaultValue": "supabase/auth:v2.197.0" },
     "googleEnabled": { "type": "string", "defaultValue": "false" },

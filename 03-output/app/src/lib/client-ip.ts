@@ -9,7 +9,7 @@
  *   잠겨 있을 때만 안전하다.
  * - x-azure-clientip: Front Door 를 앞에 둘 때.
  * 앞단을 추가하면(프록시·Front Door) 마지막 XFF 항목은 그 앞단의 주소가 되어 모든 가입이
- * 한 버킷을 공유한다 — 구성을 바꾸면 이 값을 반드시 같이 바꾼다. 전환 전 스테이징에서 실측.
+ * 한 버킷을 공유한다 — 구성을 바꾸면 이 값을 반드시 같이 바꾼다. 운영 전환 전 실측.
  */
 export const DEFAULT_CLIENT_IP_HEADER = "x-forwarded-for";
 

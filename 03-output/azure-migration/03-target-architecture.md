@@ -76,7 +76,6 @@ DB 접속: App Service → PostgreSQL 은 공용 엔드포인트 + 방화벽(App
 | 배포용 앱 등록 | `sp-testermatch-deploy` (대상 테넌트, GitHub OIDC 페더레이션) | 1 | — |
 | PostgreSQL | `psql-testermatch-prod-krc` | 2 | Burstable B1ms |
 | 스토리지 | `sttestermatchprod` | 2 | StorageV2 Hot LRS |
-| 스테이징 PostgreSQL | `psql-testermatch-stg-krc` (리허설 후 삭제) | 2 | B1ms |
 | Communication Services + Email | `acs-testermatch-prod` + 이메일 도메인 `knockknock.company` (데이터 위치 Korea) | 3 | 종량 |
 | DNS 영역 | `knockknock.company` (공개, 위치 global) — **공용 그룹 `rg-knockknock-shared`** (홈페이지와 공유, 두 래퍼 모두 범위 밖 → 생성·레코드 변경은 사용자 승인 하에 공용 래퍼 또는 포털) | 3 | — |
 
