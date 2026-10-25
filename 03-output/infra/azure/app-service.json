@@ -59,7 +59,7 @@
         "httpsOnly": true,
         "clientAffinityEnabled": false,
         "siteConfig": {
-          "linuxFxVersion": "NODE|20-lts",
+          "linuxFxVersion": "NODE|22-lts",
           "appCommandLine": "node server.js",
           "alwaysOn": true,
           "http20Enabled": true,
