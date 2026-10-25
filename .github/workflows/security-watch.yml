@@ -42,7 +42,7 @@ jobs:
           node-version: 22
 
       - name: Unit tests for the judging rules
-        run: node --test 05-harness/security-watch/
+        run: node --test 05-harness/security-watch/*.test.mjs
 
       - name: Azure login (read-only)
         id: azure
