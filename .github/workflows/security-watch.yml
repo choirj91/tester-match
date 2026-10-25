@@ -1,0 +1,69 @@
+name: Security Watch
+
+# 매일 07:00 KST 보안 점검 → 운영 알림 Slack 채널로 카테고리별 결과 전송.
+# 점검 내용과 판정 규칙: 05-harness/security-watch/check.mjs
+#
+# Azure 는 점검 전용 읽기 전용 관리 ID 로 로그인한다 (리소스 그룹 Reader, OIDC 주체는
+# repo:choirj91/tester-match:ref:refs/heads/main — main 의 예약·수동 실행만 로그인 가능).
+# 리소스 이름 등 운영 식별자는 저장소에 두지 않고 SECWATCH_* 시크릿으로 받는다.
+#
+# 위험(danger) 이 하나라도 있으면 Slack 전송 후 이 실행도 실패로 표시된다.
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 07:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: security-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: 보안 점검
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.3
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Unit tests for the judging rules
+        run: node --test 05-harness/security-watch/
+
+      - name: Azure login (read-only)
+        id: azure
+        continue-on-error: true
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.SECWATCH_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.SECWATCH_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.SECWATCH_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Allow az CLI extensions without prompts
+        if: steps.azure.outcome == 'success'
+        run: az config set extension.use_dynamic_install=yes_without_prompt extension.dynamic_install_allow_preview=true
+
+      - name: Run checks and post to Slack
+        env:
+          SECWATCH_AZURE_OK: ${{ steps.azure.outcome == 'success' }}
+          SECWATCH_SLACK_WEBHOOK_URL: ${{ secrets.SECWATCH_SLACK_WEBHOOK_URL }}
+          SECWATCH_RG: ${{ secrets.SECWATCH_RG }}
+          SECWATCH_WEBAPP: ${{ secrets.SECWATCH_WEBAPP }}
+          SECWATCH_APPINSIGHTS: ${{ secrets.SECWATCH_APPINSIGHTS }}
+          SECWATCH_EXPECTED_APPS: ${{ secrets.SECWATCH_EXPECTED_APPS }}
+          SECWATCH_FORBIDDEN_HOSTS: ${{ secrets.SECWATCH_FORBIDDEN_HOSTS }}
+        run: node 05-harness/security-watch/check.mjs
