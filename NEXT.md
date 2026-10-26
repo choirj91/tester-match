@@ -9,7 +9,7 @@
 ## 🔥 즉시 (사용자 액션 — 코드 아님)
 
 - [ ] **보안 점검 ⑥ 낯선 DB 쿼리** (2026-10-27 설계 승인 — 함수 타이머 + pg_stat_statements, Query Store 는 Burstable 비권장이라 제외). 운영 변경은 단계마다 승인
-  - [ ] 역할 `secwatch_reader` 생성 (`03-output/infra/azure/db/05-secwatch-role.sql`, pg_read_all_stats 만) + Key Vault 비밀 `secwatch-pg-password`
+  - [ ] 역할 `secwatch_reader` 생성 (`03-output/infra/azure/db/05-secwatch-role.sql`, pg_read_all_stats 만 — 서버에는 `scram-verifier.mjs` 로 만든 SCRAM 값만 보낸다) + Key Vault 비밀 `secwatch-pg-password`(평문)
   - [ ] 함수 앱 설정 `SECWATCH_PG_*` 4개 → cron 함수 zip 배포 (host.json 표본 추출에서 Trace 제외 포함) → 다음 날 07:00 Slack ⑥ 확인
   - [ ] **2026-11-03 (화) 기준선 캡처**: `node 05-harness/security-watch/pg-baseline.mjs` → 빠진 항목(규칙 해당)은 psql 로 SQL 확인 후 `--allow <queryid>` → PR. 11-02 가 아닌 이유: 월 10:00 weekly-hot-posts 가 11-02 06:30 스냅샷 뒤에 돈다
 

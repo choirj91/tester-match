@@ -15,7 +15,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildBaseline, parseSnapshots, publicTablesFrom, TRACE_PREFIX } from "./pg-queries.mjs";
+import { buildBaseline, parseSnapshots, publicTablesFrom, SNAPSHOT_FUNCTION, TRACE_PREFIX } from "./pg-queries.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = join(HERE, "../..");
@@ -35,7 +35,8 @@ const subscription = tmAz(["account", "show", "--query", "id", "-o", "tsv"]).tri
 const result = JSON.parse(
   tmAz([
     "monitor", "app-insights", "query", "--app", APPI, "-g", RG, "--subscription", subscription, "--offset", "3d",
-    "--analytics-query", `traces | where timestamp > ago(3d) and message startswith '${TRACE_PREFIX}' | project message`,
+    "--analytics-query",
+    `traces | where timestamp > ago(3d) and operation_Name == '${SNAPSHOT_FUNCTION}' and message startswith '${TRACE_PREFIX}' | project message`,
     "-o", "json",
   ]),
 );

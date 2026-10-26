@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/functions/*.js",
   "scripts": {
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@azure/functions": "^4.6.0",

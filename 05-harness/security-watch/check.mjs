@@ -23,7 +23,7 @@ import {
   scriptTags,
   stylesheetHrefs,
 } from "./lib.mjs";
-import { judgeDbQueries, parseSnapshots, publicTablesFrom, TRACE_PREFIX } from "./pg-queries.mjs";
+import { judgeDbQueries, parseSnapshots, publicTablesFrom, SNAPSHOT_FUNCTION, TRACE_PREFIX } from "./pg-queries.mjs";
 
 const env = process.env;
 const SITE = (env.SECWATCH_SITE_URL || "https://tester-match.knockknock.company").replace(/\/$/, "");
@@ -296,14 +296,19 @@ function checkCloud() {
 
 // ⑥ Unfamiliar database queries — pg_stat_statements snapshots the cron Function App logs at 06:30
 // KST. Three days back so yesterday's snapshot is there to diff against. Rules: pg-queries.mjs.
+// The scheduled run expects this morning's snapshot; a manual run later in the day accepts 26 hours.
 function checkDbQueries() {
   const title = "⑥ 낯선 DB 쿼리 (24시간)";
   if (!azureReady) return category("dbq", title, [{ status: "unknown", text: "Azure 읽기 전용 로그인 실패 또는 설정 누락" }]);
-  const traces = ai(`traces | where timestamp > ago(3d) and message startswith '${TRACE_PREFIX}' | project message`, "3d");
+  const traces = ai(
+    `traces | where timestamp > ago(3d) and operation_Name == '${SNAPSHOT_FUNCTION}' and message startswith '${TRACE_PREFIX}' | project message`,
+    "3d",
+  );
   const dir = "03-output/supabase/migrations";
   const publicTables = publicTablesFrom(readdirSync(dir).filter((f) => f.endsWith(".sql")).map((f) => readFileSync(`${dir}/${f}`, "utf8")));
   const baseline = JSON.parse(readFileSync("05-harness/security-watch/pg-baseline.json", "utf8"));
-  return category("dbq", title, judgeDbQueries({ snapshots: parseSnapshots(traces), baseline, publicTables }));
+  const maxAgeHours = env.GITHUB_EVENT_NAME === "schedule" ? 3 : 26;
+  return category("dbq", title, judgeDbQueries({ snapshots: parseSnapshots(traces), baseline, publicTables, maxAgeHours }));
 }
 
 async function run(fn, key, title) {

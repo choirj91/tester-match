@@ -29,7 +29,9 @@
 
 ## 보안 점검 ⑥ — DB 쿼리 스냅샷 (2026-10-27)
 
-`secwatch-pg-snapshot` 은 매일 06:30 KST 에 전용 역할 `secwatch_reader`(pg_read_all_stats 만, `../db/05-secwatch-role.sql`)로 `postgres` DB 에 읽기 전용으로 붙어 `pg_stat_statements` 를 읽고 `secwatch-pgss {json}` trace 로 남긴다. 07:00 의 GitHub 보안 점검(`05-harness/security-watch/pg-queries.mjs`)이 전날 스냅샷과 비교해 판정한다 — 규칙을 바꿔도 이 함수는 다시 배포하지 않는다. 문자열 리터럴은 DB 밖으로 나가기 전에 지우고, azuresu(Azure 제어 평면) 항목은 개수만 남긴다. 방화벽은 그대로 — 이 앱은 웹앱과 같은 B1 플랜이라 나가는 IP 가 같다.
+`secwatch-pg-snapshot` 은 매일 06:30 KST 에 전용 역할 `secwatch_reader`(pg_read_all_stats 만, `../db/05-secwatch-role.sql`)로 `postgres` DB 에 읽기 전용으로 붙어 `pg_stat_statements` 를 읽고 `secwatch-pgss {json}` trace 로 남긴다. 07:00 의 GitHub 보안 점검(`05-harness/security-watch/pg-queries.mjs`)이 전날 스냅샷과 비교해 판정한다 — 규칙을 바꿔도 이 함수는 다시 배포하지 않는다. 문자열 리터럴·주석은 DB 밖으로 나가기 전에 지우고, azuresu(Azure 제어 평면) 항목은 개수만 남긴다. `secwatch_reader` 자신의 조회도 남긴다(비밀번호가 새면 보이도록). 방화벽은 그대로 — 이 앱은 웹앱과 같은 B1 플랜이라 나가는 IP 가 같다.
+
+점검은 `operation_Name == 'secwatch-pg-snapshot'` 인 trace 만 읽고, 예약 실행에서는 3시간 안의 스냅샷만 인정한다(수동 실행은 26시간). 하루에 스냅샷이 두 번 이상이면 "위조 의심" 주의 — 관리자 엔드포인트로 직접 돌렸다면 무시.
 
 | 이름 | 값 |
 |---|---|

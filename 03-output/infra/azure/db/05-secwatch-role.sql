@@ -1,13 +1,16 @@
 -- Read-only role for security watch ⑥ (unfamiliar database queries). The cron Function App's
 -- secwatch-pg-snapshot timer logs in as it once a day and reads pg_stat_statements in `postgres`.
--- Run as the server admin on database `postgres`; the password comes from a psql variable and goes
--- to Key Vault as secwatch-pg-password — never commit it:
+-- Run as the server admin on database `postgres`. The plaintext password goes only to Key Vault
+-- (secwatch-pg-password); the server gets a SCRAM verifier, because this statement's text can stay in
+-- pg_stat_statements. Never commit either:
 --   psql "host=<server>.postgres.database.azure.com dbname=postgres user=tmadmin sslmode=require" \
---     -v secwatch_password="$(cat <file>)" -f 05-secwatch-role.sql
+--     -v secwatch_password="$(node scram-verifier.mjs < <password-file>)" -f 05-secwatch-role.sql
 --
--- Privileges: pg_read_all_stats only (normalized SQL and counters, no row data). Through PUBLIC it gets
--- what anon already has — on 2026-10-27 no table grants and 10 SECURITY DEFINER functions anon can call.
--- INHERIT (the default) is required, or the pg_read_all_stats membership grants nothing.
+-- Privileges: pg_read_all_stats only. That shows pg_stat_statements and pg_stat_activity for every
+-- role: normalized SQL and counters, plus whatever literals utility statements and live queries carry.
+-- No table rows. Through PUBLIC it gets what anon already has — on 2026-10-27 no table grants and
+-- 10 SECURITY DEFINER functions anon can call. INHERIT (the default) is required, or the
+-- pg_read_all_stats membership grants nothing. The watch also judges this role's own queries.
 \set ON_ERROR_STOP on
 
 do $$

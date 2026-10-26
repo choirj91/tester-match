@@ -9,7 +9,8 @@
 ## 2026-10-27 (화) — 보안 점검 ⑥ 낯선 DB 쿼리
 
 - **결정** (사용자 승인): 수집은 cron 함수 타이머가 pg_stat_statements 를 읽어 App Insights 로 → 07:00 점검이 전날과 비교. Query Store 는 Microsoft 문서가 Burstable 에서 쓰지 말라고 하고 azure_sys 를 모든 DB 로그인이 읽을 수 있어 제외. 방화벽 변경 없음(함수와 웹앱이 나가는 IP 18개 공유, 모두 허용됨). 비용 ~$0
-- **한 일**: 함수 `secwatch-pg-snapshot`(문자열 리터럴 제거·azuresu 제외) · 판정 `pg-queries.mjs`(COPY 내보내기·GoTrue→public·개인정보 전체 조회=위험, 기준선 밖 새 형태=주의, Actions 로그가 공개라 SQL 원문은 보고에 안 씀) · 기준선 캡처 스크립트 · 역할 SQL. 테스트 함수 27·점검 38 통과, 운영 pgss 를 읽기 전용으로 읽어 판정 리허설(GoTrue 18형태 모두 auth.* 로 해석, 오탐 0)
+- **한 일**: 함수 `secwatch-pg-snapshot`(문자열 리터럴·주석 제거·azuresu 제외) · 판정 `pg-queries.mjs`(COPY 내보내기·서버 파일 COPY·GoTrue→public·PostgREST 역할 권한 변경·개인정보 전체 조회=위험, 기준선 형태의 평소 5배 개인정보 조회=위험, 새 형태=주의, Actions 로그가 공개라 SQL 원문은 보고에 안 씀) · 기준선 캡처 스크립트 · 역할 SQL + SCRAM 값 도구. 독립 리뷰(HIGH 3·MEDIUM 6·LOW 3) 반영. 테스트 함수 35·점검 48 통과(Node 22·26), 운영 pgss 읽기 전용 판정 리허설 121형태 오탐 0, 역할 SQL 로컬 PG17 리허설
+- **교훈**: PostgREST 는 결과를 json_agg 한 줄로 돌려줘 pg_stat_statements 의 rows 가 늘 호출 수와 같다 — 대량 조회는 행이 아니라 호출 수로 봐야 한다
 - **다음**: 운영 반영 3단계(역할·비밀 → 앱 설정·배포 → Slack 확인) 승인 후 진행, 2026-11-03 기준선 캡처
 
 ## 2026-10-04 (일) #2 — 앱 중복 행 조사 + 1단계 정리
