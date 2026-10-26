@@ -3,7 +3,7 @@
   "functionTimeout": "01:00:00",
   "logging": {
     "applicationInsights": {
-      "samplingSettings": { "isEnabled": true, "excludedTypes": "Request" }
+      "samplingSettings": { "isEnabled": true, "excludedTypes": "Request;Trace" }
     }
   },
   "extensionBundle": {

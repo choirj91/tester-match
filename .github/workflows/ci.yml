@@ -57,6 +57,27 @@ jobs:
           NEXT_PUBLIC_PORTONE_STORE_ID: ci-placeholder
           NEXT_PUBLIC_PORTONE_CHANNEL_KEY: ci-placeholder
 
+  harness-tests:
+    name: Security watch · cron functions tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Node 22 does not expand a directory given to --test, so pass file globs (PR #33).
+      - name: Security watch rules
+        working-directory: .
+        run: node --test 05-harness/security-watch/*.test.mjs
+
+      - name: Cron functions
+        working-directory: 03-output/infra/azure/cron-functions
+        run: npm ci --no-audit --no-fund && node --test test/*.test.js
+
   migration-check:
     name: Supabase migration syntax
     runs-on: ubuntu-latest

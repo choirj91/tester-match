@@ -12,6 +12,7 @@
 | seat-reward-release | `0 15 */6 * * *` | 6시간 (:15) | more:true 까지 |
 | paid-orders-report | `0 30 23 * * *` | 08:30 | 스윕 반복 후 리포트 (스윕 실패해도 리포트는 보냄) |
 | weekly-report | `0 0 13 * * 5` | 금 22:00 | — (지난 금 22:00 → 이번 금 22:00 회원별 크레딧·신뢰도 증가, 관리자 메일·Slack) |
+| secwatch-pg-snapshot | `0 30 21 * * *` | 06:30 | — 앱 호출 없음. DB 의 pg_stat_statements 를 읽어 App Insights traces 로 (아래 "보안 점검 ⑥") |
 
 ## 앱 설정
 
@@ -24,6 +25,20 @@
 | `CRON_SLACK_MODE` | `all`(기본) 또는 `failures` — 실패한 실행만 받으려면 `failures` |
 
 `host.json` 의 `functionTimeout` 은 1시간 — 반복 작업 최악 40회 × 60초 + 리포트 1회를 담는다.
+`samplingSettings.excludedTypes` 에 `Trace` 가 있어야 한다 — 표본 추출이 스냅샷 조각을 버리면 보안 점검이 "일부만 도착"으로 판정한다.
+
+## 보안 점검 ⑥ — DB 쿼리 스냅샷 (2026-10-27)
+
+`secwatch-pg-snapshot` 은 매일 06:30 KST 에 전용 역할 `secwatch_reader`(pg_read_all_stats 만, `../db/05-secwatch-role.sql`)로 `postgres` DB 에 읽기 전용으로 붙어 `pg_stat_statements` 를 읽고 `secwatch-pgss {json}` trace 로 남긴다. 07:00 의 GitHub 보안 점검(`05-harness/security-watch/pg-queries.mjs`)이 전날 스냅샷과 비교해 판정한다 — 규칙을 바꿔도 이 함수는 다시 배포하지 않는다. 문자열 리터럴은 DB 밖으로 나가기 전에 지우고, azuresu(Azure 제어 평면) 항목은 개수만 남긴다. 방화벽은 그대로 — 이 앱은 웹앱과 같은 B1 플랜이라 나가는 IP 가 같다.
+
+| 이름 | 값 |
+|---|---|
+| `SECWATCH_PG_ENABLED` | `1` 일 때만 실행. 역할과 Key Vault 비밀을 만든 뒤 켠다 |
+| `SECWATCH_PG_HOST` | DB 서버 FQDN |
+| `SECWATCH_PG_USER` | `secwatch_reader` |
+| `SECWATCH_PG_PASSWORD` | Key Vault 참조 `secwatch-pg-password` |
+
+기준선은 `05-harness/security-watch/pg-baseline.json` — 2026-11-03 에 `node 05-harness/security-watch/pg-baseline.mjs` 로 캡처해 PR. 그 전에는 위험 규칙(COPY 내보내기·GoTrue→public·개인정보 전체 조회)만 판정한다.
 
 ## 배포·운영
 

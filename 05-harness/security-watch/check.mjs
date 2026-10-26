@@ -9,7 +9,7 @@
  */
 import { execFileSync } from "node:child_process";
 import dns from "node:dns/promises";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import tls from "node:tls";
 import {
   buildSlackPayload,
@@ -23,6 +23,7 @@ import {
   scriptTags,
   stylesheetHrefs,
 } from "./lib.mjs";
+import { judgeDbQueries, parseSnapshots, publicTablesFrom, TRACE_PREFIX } from "./pg-queries.mjs";
 
 const env = process.env;
 const SITE = (env.SECWATCH_SITE_URL || "https://tester-match.knockknock.company").replace(/\/$/, "");
@@ -228,8 +229,8 @@ function az(args) {
   return JSON.parse(out || "null");
 }
 
-function ai(query) {
-  const r = az(["monitor", "app-insights", "query", "--app", APPI, "-g", RG, "--offset", "1d", "--analytics-query", query]);
+function ai(query, offset = "1d") {
+  const r = az(["monitor", "app-insights", "query", "--app", APPI, "-g", RG, "--offset", offset, "--analytics-query", query]);
   const t = r.tables[0];
   return t.rows.map((row) => Object.fromEntries(t.columns.map((c, i) => [c.name, row[i]])));
 }
@@ -293,6 +294,18 @@ function checkCloud() {
   return category("cloud", "⑤ 클라우드 구성", items);
 }
 
+// ⑥ Unfamiliar database queries — pg_stat_statements snapshots the cron Function App logs at 06:30
+// KST. Three days back so yesterday's snapshot is there to diff against. Rules: pg-queries.mjs.
+function checkDbQueries() {
+  const title = "⑥ 낯선 DB 쿼리 (24시간)";
+  if (!azureReady) return category("dbq", title, [{ status: "unknown", text: "Azure 읽기 전용 로그인 실패 또는 설정 누락" }]);
+  const traces = ai(`traces | where timestamp > ago(3d) and message startswith '${TRACE_PREFIX}' | project message`, "3d");
+  const dir = "03-output/supabase/migrations";
+  const publicTables = publicTablesFrom(readdirSync(dir).filter((f) => f.endsWith(".sql")).map((f) => readFileSync(`${dir}/${f}`, "utf8")));
+  const baseline = JSON.parse(readFileSync("05-harness/security-watch/pg-baseline.json", "utf8"));
+  return category("dbq", title, judgeDbQueries({ snapshots: parseSnapshots(traces), baseline, publicTables }));
+}
+
 async function run(fn, key, title) {
   try {
     return await fn();
@@ -307,6 +320,7 @@ const categories = [
   await run(checkSurface, "surface", "③ 보안 설정·노출"),
   await run(checkAttacks, "attacks", "④ 공격 시도·유출 징후 (24시간)"),
   await run(checkCloud, "cloud", "⑤ 클라우드 구성"),
+  await run(checkDbQueries, "dbq", "⑥ 낯선 DB 쿼리 (24시간)"),
 ];
 
 const date = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });

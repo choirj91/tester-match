@@ -18,6 +18,7 @@
 | Azure DNS | 공개 영역 1개 $0.5 + 질의 $0.4/백만 | ~$1 |
 | Application Insights / Log Analytics | 월 5 GB 무료, 초과 $3.11/GB | $0~5 |
 | Key Vault | Standard, 작업당 과금 | ~$0.1 |
+| 보안 점검 ⑥ DB 쿼리 스냅샷 (2026-10-27) | 함수 타이머 1개 추가(기존 B1 플랜 위, 일 1회·DB 조회 1번) · App Insights traces ~5 MB/월 (현재 월 ~1.4 GB, 5 GB 무료 안) · Key Vault 비밀 1개. Query Store(Burstable 비권장)는 쓰지 않음 | ~$0 |
 | **합계** | | **약 $40~45 (≈6만원)** |
 
 이전 기간에는 Azure 와 Cloudflare·Supabase 가 병행되고, 2단계 리허설 동안 스테이징 PostgreSQL(B1ms, ~$23) 이 일시 추가된다.

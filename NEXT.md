@@ -8,6 +8,11 @@
 
 ## 🔥 즉시 (사용자 액션 — 코드 아님)
 
+- [ ] **보안 점검 ⑥ 낯선 DB 쿼리** (2026-10-27 설계 승인 — 함수 타이머 + pg_stat_statements, Query Store 는 Burstable 비권장이라 제외). 운영 변경은 단계마다 승인
+  - [ ] 역할 `secwatch_reader` 생성 (`03-output/infra/azure/db/05-secwatch-role.sql`, pg_read_all_stats 만) + Key Vault 비밀 `secwatch-pg-password`
+  - [ ] 함수 앱 설정 `SECWATCH_PG_*` 4개 → cron 함수 zip 배포 (host.json 표본 추출에서 Trace 제외 포함) → 다음 날 07:00 Slack ⑥ 확인
+  - [ ] **2026-11-03 (화) 기준선 캡처**: `node 05-harness/security-watch/pg-baseline.mjs` → 빠진 항목(규칙 해당)은 psql 로 SQL 확인 후 `--allow <queryid>` → PR. 11-02 가 아닌 이유: 월 10:00 weekly-hot-posts 가 11-02 06:30 스냅샷 뒤에 돈다
+
 - [x] **1:1 문의 + Slack 알림** (2026-10-04 배포 `b33e5bc`, 운영 3c3f64c3) — 게시판 "질문" 분류를 없애고 푸터 [문의] → `/inquiries` (회원 전용, 본인·관리자만 열람), 관리자 `/admin/inquiries`
   - [x] 운영 DB에 `inquiries` 테이블 적용 (`20261004000001`) — 테스트 문의 1건(#1, 종결) 남아 있음
   - [x] **Slack 웹훅 등록** (2026-10-04 사용자 등록 완료): `cd 03-output/app && npx wrangler pages secret put SLACK_INQUIRY_WEBHOOK_URL --project-name tester-match` → 값 붙여넣기. 로컬은 `03-output/app/.env.local` 에 `SLACK_INQUIRY_WEBHOOK_URL=` 한 줄. 등록 후 배포해야 적용

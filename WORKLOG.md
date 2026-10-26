@@ -6,6 +6,12 @@
 
 ---
 
+## 2026-10-27 (화) — 보안 점검 ⑥ 낯선 DB 쿼리
+
+- **결정** (사용자 승인): 수집은 cron 함수 타이머가 pg_stat_statements 를 읽어 App Insights 로 → 07:00 점검이 전날과 비교. Query Store 는 Microsoft 문서가 Burstable 에서 쓰지 말라고 하고 azure_sys 를 모든 DB 로그인이 읽을 수 있어 제외. 방화벽 변경 없음(함수와 웹앱이 나가는 IP 18개 공유, 모두 허용됨). 비용 ~$0
+- **한 일**: 함수 `secwatch-pg-snapshot`(문자열 리터럴 제거·azuresu 제외) · 판정 `pg-queries.mjs`(COPY 내보내기·GoTrue→public·개인정보 전체 조회=위험, 기준선 밖 새 형태=주의, Actions 로그가 공개라 SQL 원문은 보고에 안 씀) · 기준선 캡처 스크립트 · 역할 SQL. 테스트 함수 27·점검 38 통과, 운영 pgss 를 읽기 전용으로 읽어 판정 리허설(GoTrue 18형태 모두 auth.* 로 해석, 오탐 0)
+- **다음**: 운영 반영 3단계(역할·비밀 → 앱 설정·배포 → Slack 확인) 승인 후 진행, 2026-11-03 기준선 캡처
+
 ## 2026-10-04 (일) #2 — 앱 중복 행 조사 + 1단계 정리
 
 - **발견**: 살아있는 앱 1,169행 중 같은 소유자·이름·스토어 링크 중복 **80그룹·164행(잉여 84행)**. 65그룹은 05-05 일괄 import 원본의 반복 행, 15그룹은 일반 등록 재제출. 둘러보기 7.2% 반복 노출, 07-19 그룹 전환 알림 69건 반복 발송(63명). 상세·그룹별 표·실행 SQL·되돌리기: [04-review/history/2026-10-04-duplicate-apps-investigation.md](04-review/history/2026-10-04-duplicate-apps-investigation.md)

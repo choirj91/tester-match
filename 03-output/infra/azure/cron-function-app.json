@@ -10,6 +10,8 @@
     "planName": { "type": "string", "defaultValue": "asp-testermatch-prod-krc" },
     "appUrl": { "type": "string", "defaultValue": "https://tester-match.knockknock.company" },
     "timersEnabled": { "type": "string", "defaultValue": "0", "allowedValues": [ "0", "1" ] },
+    "secwatchPgEnabled": { "type": "string", "defaultValue": "0", "allowedValues": [ "0", "1" ], "metadata": { "description": "Security watch 6: daily pg_stat_statements snapshot. Turn on after db/05-secwatch-role.sql ran and the Key Vault secret secwatch-pg-password exists." } },
+    "pgServerName": { "type": "string", "defaultValue": "psql-testermatch-prod-krc" },
     "tags": {
       "type": "object",
       "defaultValue": {
@@ -52,7 +54,11 @@
             { "name": "APPLICATIONINSIGHTS_CONNECTION_STRING", "value": "[reference(resourceId('Microsoft.Insights/components', variables('appiName')), '2020-02-02').ConnectionString]" },
             { "name": "APP_URL", "value": "[parameters('appUrl')]" },
             { "name": "CRON_SECRET", "value": "[concat(variables('kvRef'), 'cron-secret/)')]" },
-            { "name": "CRON_TIMERS_ENABLED", "value": "[parameters('timersEnabled')]" }
+            { "name": "CRON_TIMERS_ENABLED", "value": "[parameters('timersEnabled')]" },
+            { "name": "SECWATCH_PG_ENABLED", "value": "[parameters('secwatchPgEnabled')]" },
+            { "name": "SECWATCH_PG_HOST", "value": "[concat(parameters('pgServerName'), '.postgres.database.azure.com')]" },
+            { "name": "SECWATCH_PG_USER", "value": "secwatch_reader" },
+            { "name": "SECWATCH_PG_PASSWORD", "value": "[concat(variables('kvRef'), 'secwatch-pg-password/)')]" }
           ]
         }
       }
