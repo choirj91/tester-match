@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { PATHNAME_HEADER } from "@/lib/consent-gate";
 
 /**
  * 구 도메인(tester-match.pages.dev) → 커스텀 도메인 영구 리다이렉트.
@@ -27,5 +28,8 @@ export function middleware(req: NextRequest) {
     url.port = "";
     return NextResponse.redirect(url, 308);
   }
-  return NextResponse.next();
+  // 약관 동의 확인(lib/auth)이 어느 화면인지 알 수 있게 경로를 넘긴다 — 브라우저가 보낸 같은 이름의 값은 덮어쓴다
+  const headers = new Headers(req.headers);
+  headers.set(PATHNAME_HEADER, `${req.nextUrl.pathname}${req.nextUrl.search}`);
+  return NextResponse.next({ request: { headers } });
 }

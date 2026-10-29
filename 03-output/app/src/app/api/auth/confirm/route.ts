@@ -27,6 +27,8 @@ import {
   withAttributionTimeout,
   type RecordReferralOutcome,
 } from "@/lib/referrals";
+import { recordPolicyConsents } from "@/lib/policy-consent";
+import { POLICY_KINDS } from "@/policies/registry";
 
 const COOKIE_BASE = { httpOnly: true, secure: true, sameSite: "lax", path: "/" } as const;
 const PASSWORD_SAVE_ATTEMPTS = 2;
@@ -147,6 +149,11 @@ async function confirmSignup(
   if (memberError || (outcome !== "linked" && outcome !== "already_linked")) {
     console.error("[auth/confirm] member row not created", memberError?.code ?? outcome);
     return { ok: false, reason: "member" };
+  }
+
+  // 확인 화면에서 체크한 약관 동의를 버전과 함께 남긴다. 실패해도 가입은 끝난 것이다 — 첫 화면에서 동의 화면이 다시 받는다.
+  if (outcome === "linked") {
+    await recordPolicyConsents(admin, data.user.id, POLICY_KINDS, "signup", new Date());
   }
 
   // 추천 링크로 들어온 가입이면 추천 관계를 기록한다 (ADR-0019). 실패해도 가입은 끝난 것이다 — 성공 여부를 바꾸지 않는다.

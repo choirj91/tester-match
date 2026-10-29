@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
+import { Children, Fragment, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
 import type { AppUser } from "@/lib/auth";
 import { CONTACT_EMAIL } from "@/lib/site";
@@ -16,6 +16,8 @@ type Props = {
   active: (typeof NAV)[number]["href"];
   title: string;
   effectiveDate: string;
+  /** 제목 아래 안내 (개정 예고, 다른 버전 보기 등) */
+  notice?: ReactNode;
   children: React.ReactNode;
 };
 
@@ -34,10 +36,20 @@ function textOf(node: ReactNode): string {
   return "";
 }
 
+/** 버전별 본문(src/policies)은 Fragment 하나로 온다 — 조(h2)를 찾을 수 있게 한 겹 펼친다 */
+function flatChildren(children: ReactNode): ReactNode[] {
+  return Children.toArray(children).flatMap((child) => {
+    if (!isValidElement<{ children?: ReactNode }>(child) || child.type !== Fragment) return [child];
+    return Children.toArray(child.props.children).map((inner) =>
+      isValidElement(inner) ? cloneElement(inner, { key: `${child.key}${inner.key}` }) : inner,
+    );
+  });
+}
+
 /** 본문의 조(h2)에 앵커를 붙이고 목차를 만든다 — 문구는 건드리지 않는다 */
 function withToc(children: ReactNode): { body: ReactNode[]; toc: TocItem[] } {
   const toc: TocItem[] = [];
-  const body = Children.toArray(children).map((child) => {
+  const body = flatChildren(children).map((child) => {
     if (!isValidElement(child) || child.type !== "h2") return child;
     const h2 = child as ReactElement<{ id?: string; children?: ReactNode }>;
     const id = h2.props.id ?? `section-${toc.length + 1}`;
@@ -47,7 +59,7 @@ function withToc(children: ReactNode): { body: ReactNode[]; toc: TocItem[] } {
   return { body, toc };
 }
 
-export function PolicyLayout({ user, active, title, effectiveDate, children }: Props) {
+export function PolicyLayout({ user, active, title, effectiveDate, notice, children }: Props) {
   const { body, toc } = withToc(children);
   return (
     <>
@@ -84,6 +96,8 @@ export function PolicyLayout({ user, active, title, effectiveDate, children }: P
               시행일: {effectiveDate}
             </p>
           </header>
+
+          {notice && <div className="mt-6">{notice}</div>}
 
           {toc.length > 0 && (
             <nav aria-label="목차" className="mt-8">
