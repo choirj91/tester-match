@@ -64,7 +64,7 @@ export default async function LoginPage({
       )}
 
       <p className="m-0 mt-6 border-t border-ink-200 pt-4 text-xs leading-relaxed text-ink-600">
-        계속 진행하면{" "}
+        처음 로그인하거나 약관이 바뀌면{" "}
         <Link href="/policies/terms" className={LINK}>
           이용약관
         </Link>
@@ -72,7 +72,7 @@ export default async function LoginPage({
         <Link href="/policies/privacy" className={LINK}>
           개인정보처리방침
         </Link>
-        에 동의하는 것으로 간주합니다.
+        에 대한 동의를 받습니다.
       </p>
     </AuthCard>
   );

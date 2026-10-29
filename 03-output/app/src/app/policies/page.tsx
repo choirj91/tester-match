@@ -37,7 +37,8 @@ export default async function PoliciesIndex() {
         <h1 className="m-0 font-display text-h1 font-semibold text-ink-900">정책 안내</h1>
         <p className="m-0 mt-3 text-base leading-[1.8] text-ink-700">
           낰낰컴퍼니가 운영하는 Tester Match 의 이용 조건·개인정보 처리·환불·크레딧 운영 기준입니다. 변경 시
-          시행 7일 전에 게시판 공지로 안내합니다.
+          시행 7일 전(회원에게 불리한 변경은 30일 전)에 공지하고, 이용약관과 개인정보처리방침은 시행 후 로그인할 때
+          동의를 받습니다.
         </p>
 
         <ul className="m-0 mt-8 list-none border-t-[1.5px] border-ink-900 p-0">
