@@ -50,18 +50,18 @@ describe("버전 목록과 원문 파일", () => {
 });
 
 describe("시행 버전 판정 (KST 0시 경계)", () => {
-  test("2026-11-28 KST 0시 직전까지는 10-13 판, 0시부터 11-28 판", () => {
-    expect(effectiveVersion("terms", new Date("2026-11-27T14:59:59.999Z"))?.version).toBe(
+  test("2026-12-01 KST 0시 직전까지는 10-13 판, 0시부터 12-01 판", () => {
+    expect(effectiveVersion("terms", new Date("2026-11-30T14:59:59.999Z"))?.version).toBe(
       "2026-10-13",
     );
-    expect(effectiveVersion("terms", new Date("2026-11-27T15:00:00.000Z"))?.version).toBe(
-      "2026-11-28",
+    expect(effectiveVersion("terms", new Date("2026-11-30T15:00:00.000Z"))?.version).toBe(
+      "2026-12-01",
     );
   });
 
   test("개정 예고는 시행 전까지만 보인다", () => {
-    expect(upcomingVersion("terms", new Date("2026-10-29T00:00:00Z"))?.version).toBe("2026-11-28");
-    expect(upcomingVersion("terms", new Date("2026-11-27T15:00:00Z"))).toBeUndefined();
+    expect(upcomingVersion("terms", new Date("2026-10-29T00:00:00Z"))?.version).toBe("2026-12-01");
+    expect(upcomingVersion("terms", new Date("2026-11-30T15:00:00Z"))).toBeUndefined();
   });
 
   test("시행일 전에는 아무 버전도 없다", () => {
@@ -69,13 +69,13 @@ describe("시행 버전 판정 (KST 0시 경계)", () => {
   });
 
   test("버전은 시행 순서로 정렬된다", () => {
-    expect(versionsOf("terms").map((v) => v.version)).toEqual(["2026-10-13", "2026-11-28"]);
+    expect(versionsOf("terms").map((v) => v.version)).toEqual(["2026-10-13", "2026-12-01"]);
   });
 });
 
 describe("pendingPolicyKinds", () => {
   const before = new Date("2026-11-20T00:00:00+09:00");
-  const after = new Date("2026-11-28T00:00:00+09:00");
+  const after = new Date("2026-12-01T00:00:00+09:00");
   const legacy = [
     { kind: "terms", version: "2026-10-13" },
     { kind: "privacy", version: "2026-10-13" },
@@ -95,7 +95,7 @@ describe("pendingPolicyKinds", () => {
 
   test("개정 약관에 동의하면 끝난다", () => {
     expect(
-      pendingPolicyKinds([...legacy, { kind: "terms", version: "2026-11-28" }], after),
+      pendingPolicyKinds([...legacy, { kind: "terms", version: "2026-12-01" }], after),
     ).toEqual([]);
   });
 
