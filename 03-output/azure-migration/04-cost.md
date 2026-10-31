@@ -20,7 +20,7 @@
 | Key Vault | Standard, 작업당 과금 | ~$0.1 |
 | **합계** | | **약 $40~45 (≈6만원)** |
 
-이전 기간에는 Azure 와 Cloudflare·Supabase 가 병행되고, 2단계 리허설 동안 스테이징 PostgreSQL(B1ms, ~$23) 이 일시 추가된다.
+이전 기간에는 Azure 와 Cloudflare·Supabase 가 병행되었다. 스테이징 환경은 두지 않는다 (2026-10-23 삭제).
 
 ## 2. 확장할 때 (코드 변경 없음, SKU 만)
 
