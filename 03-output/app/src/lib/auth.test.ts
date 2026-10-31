@@ -55,7 +55,7 @@ function atPath(path: string) {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-11-28T09:00:00+09:00"));
+  vi.setSystemTime(new Date("2026-12-01T09:00:00+09:00"));
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.mocked(createSupabaseServerClient).mockResolvedValue({
     auth: { getUser: async () => ({ data: { user: { id: "auth-7", app_metadata: {} } } }) },
@@ -84,7 +84,7 @@ describe("getCurrentUser — 약관 동의 확인", () => {
   test("개정 약관에 동의했으면 그대로 진행한다", async () => {
     atPath("/apps/3");
     vi.mocked(createSupabaseAdminClient).mockReturnValue(
-      adminStub({ data: [...LEGACY, { kind: "terms", version: "2026-11-28" }], error: null }) as never,
+      adminStub({ data: [...LEGACY, { kind: "terms", version: "2026-12-01" }], error: null }) as never,
     );
     await expect(getCurrentUser()).resolves.toMatchObject({ pendingPolicies: [] });
   });

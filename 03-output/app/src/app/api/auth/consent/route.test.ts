@@ -38,7 +38,7 @@ let rpc = vi.fn();
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-11-28T09:00:00+09:00"));
+  vi.setSystemTime(new Date("2026-12-01T09:00:00+09:00"));
   vi.spyOn(console, "error").mockImplementation(() => {});
   rpc = vi.fn(async () => ({ data: "recorded", error: null }));
   vi.mocked(createSupabaseAdminClient).mockReturnValue({ rpc } as never);
@@ -57,7 +57,7 @@ describe("POST /api/auth/consent", () => {
     expect(location(res)).toBe("/apps/3");
     expect(rpc).toHaveBeenCalledWith("record_policy_consents", {
       p_auth_user_id: "auth-7",
-      p_terms_version: "2026-11-28",
+      p_terms_version: "2026-12-01",
       p_privacy_version: null,
       p_source: "consent_screen",
     });
